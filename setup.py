@@ -11,7 +11,7 @@ setuptools.setup(
      author_email="hkube.dev@gmail.com",
      description="Hkube Python Wrapper",
      long_description=long_description,
-   long_description_content_type="text/markdown",
+     long_description_content_type="text/markdown",
      url="https://github.com/kube-HPC/python-wrapper.hkube",
      packages=setuptools.find_packages(),
      classifiers=[
