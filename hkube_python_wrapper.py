@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 import os
 import sys
@@ -7,7 +6,6 @@ from src.websocketClient import wc
 from src.consts import messages, methods
 from events import Events
 import threading
-import algorithm_unique_folder
 
 
 class Algorunner:

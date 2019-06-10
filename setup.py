@@ -5,8 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
      name='hkube_python_wrapper',  
-     version='0.1',
-     scripts=['hkube_python_wrapper'] ,
+     version='0.5',
      author="Hkube",
      author_email="hkube.dev@gmail.com",
      description="Hkube Python Wrapper",
