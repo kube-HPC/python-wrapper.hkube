@@ -2,11 +2,14 @@
 import os
 import sys
 import importlib
-from src.websocketClient import wc
-from src.consts import messages, methods
+from .wc import WebsocketClient
+import hkube_python_wrapper.messages as messages
+import hkube_python_wrapper.methods as methods
 from events import Events
 import threading
+import algorithm_unique_folder
 
+algorithm_path = "algorithm_unique_folder"
 
 class Algorunner:
     def __init__(self, options):
@@ -25,7 +28,7 @@ class Algorunner:
         try:
             cwd = os.getcwd()
             alg = options.algorithm
-            package = alg["path"]
+            package = algorithm_path
             entry = alg["entryPoint"]
             entryPoint = entry.replace("/", ".")
             entryPoint = os.path.splitext(entryPoint)[0]
@@ -59,7 +62,7 @@ class Algorunner:
         else:
             self._url = '{protocol}://{host}:{port}'.format(**socket)
 
-        self._wsc = wc.WebsocketClient()
+        self._wsc = WebsocketClient()
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
