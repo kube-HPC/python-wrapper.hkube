@@ -7,9 +7,7 @@ import hkube_python_wrapper.messages as messages
 import hkube_python_wrapper.methods as methods
 from events import Events
 import threading
-import algorithm_unique_folder
 
-algorithm_path = "algorithm_unique_folder"
 
 class Algorunner:
     def __init__(self, options):
@@ -18,20 +16,15 @@ class Algorunner:
         self._input = None
         self._events = Events()
         self._loadAlgorithmError = None
-        self._bootstrap(options)
 
-    def _bootstrap(self, options):
-        self._loadAlgorithm(options)
-        self._connectToWorker(options)
-
-    def _loadAlgorithm(self, options):
+    def loadAlgorithm(self, options):
         try:
             cwd = os.getcwd()
-            alg = options.algorithm
-            package = algorithm_path
-            entry = alg["entryPoint"]
+            package = options["path"]
+            entry = options["entryPoint"]
             entryPoint = entry.replace("/", ".")
             entryPoint = os.path.splitext(entryPoint)[0]
+             __import__(package)
             os.chdir('{cwd}/{package}'.format(cwd=cwd, package=package))
             print('loading {entry}'.format(entry=entry))
             mod = importlib.import_module('.{entryPoint}'.format(entryPoint=entryPoint), package=package)
@@ -55,12 +48,11 @@ class Algorunner:
             self._loadAlgorithmError = e
             print(e)
 
-    def _connectToWorker(self, options):
-        socket = options.socket
-        if (socket["url"] is not None):
-            self._url = socket["url"]
+    def connectToWorker(self, options):
+        if (options["url"] is not None):
+            self._url = options["url"]
         else:
-            self._url = '{protocol}://{host}:{port}'.format(**socket)
+            self._url = '{protocol}://{host}:{port}'.format(**options)
 
         self._wsc = WebsocketClient()
         self._registerToWorkerEvents()
