@@ -55,6 +55,7 @@ class WebsocketClient:
             self._ws.send(json.dumps(message))
         except Exception as e:
             print(e)
+            raise
 
     def startWS(self, url):
         self._ws = websocket.WebSocketApp(
