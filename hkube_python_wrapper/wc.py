@@ -1,10 +1,7 @@
 import websocket
-import json
+import simplejson as json
 from events import Events
 import time
-
-# TODO:
-# 1) handle bytes instead of json
 
 
 class WebsocketClient:
@@ -50,11 +47,8 @@ class WebsocketClient:
         self.events.on_connection()
 
     def send(self, message):
-        try:
-            print('sending message to worker: {command}'.format(**message))
-            self._ws.send(json.dumps(message))
-        except Exception as e:
-            print(e)
+        print('sending message to worker: {command}'.format(**message))
+        self._ws.send(json.dumps(message))
 
     def startWS(self, url):
         self._ws = websocket.WebSocketApp(

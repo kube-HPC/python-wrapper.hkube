@@ -10,7 +10,7 @@ import threading
 
 
 class Algorunner:
-    def __init__(self, options):
+    def __init__(self):
         self._url = None
         self._algorithm = dict()
         self._input = None
@@ -24,7 +24,7 @@ class Algorunner:
             entry = options["entryPoint"]
             entryPoint = entry.replace("/", ".")
             entryPoint = os.path.splitext(entryPoint)[0]
-             __import__(package)
+            __import__(package)
             os.chdir('{cwd}/{package}'.format(cwd=cwd, package=package))
             print('loading {entry}'.format(entry=entry))
             mod = importlib.import_module('.{entryPoint}'.format(entryPoint=entryPoint), package=package)
@@ -88,20 +88,17 @@ class Algorunner:
                 if (method is not None):
                     method(options)
 
-                self._wsc.send({"command": messages.outgoing["initialized"]})
+                self._sendCommand(messages.outgoing["initialized"], None)
 
         except Exception as e:
             self._sendError(e)
 
     def _start(self, options):
         try:
-            self._wsc.send({"command": messages.outgoing["started"]})
+            self._sendCommand(messages.outgoing["started"], None)
             method = self._getMethod(methods.start)
             output = method(self._input)
-            self._wsc.send({
-                "command": messages.outgoing["done"],
-                "data": output
-            })
+            self._sendCommand(messages.outgoing["done"], output)
 
         except Exception as e:
             self._sendError(e)
@@ -112,8 +109,8 @@ class Algorunner:
             if (method is not None):
                 method(options)
 
-            self._wsc.send({"command": messages.outgoing["stopped"]})
-
+            self._sendCommand(messages.outgoing["stopped"], None)
+            
         except Exception as e:
             self._sendError(e)
 
@@ -131,13 +128,22 @@ class Algorunner:
 
         except Exception as e:
             self._sendError(e)
+            
+    def _sendCommand(self, command, data):
+        try:
+            self._wsc.send({"command": command, "data": data})
+        except Exception as e:
+            self._sendError(e)
 
     def _sendError(self, error):
-        print(error)
-        self._wsc.send({
-            "command": messages.outgoing["error"],
-            "error": {
-                "code": "Failed",
-                "message": str(error)
-            }
-        })
+        try:
+            print(error)
+            self._wsc.send({
+                "command": messages.outgoing["error"],
+                "error": {
+                    "code": "Failed",
+                    "message": str(error)
+                }
+            })
+        except Exception as e:
+            print(e)
