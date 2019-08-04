@@ -8,7 +8,7 @@ class WebsocketClient:
     def __init__(self):
         self.events = Events()
         self._ws = None
-        self._reconnectInterval = 5
+        self._reconnectInterval = 0.1
         self._active = True
         self._switcher = {
             "initialize": self.init,
