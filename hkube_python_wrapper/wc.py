@@ -17,6 +17,7 @@ class WebsocketClient:
             "stop": self.stop,
             "exit": self.exit
         }
+        self._firstConnect=False
 
     def init(self, data):
         self.events.on_init(data)
@@ -39,12 +40,14 @@ class WebsocketClient:
         func(data)
 
     def on_error(self, error):
-        print(error)
+        if self._firstConnect:
+            print(error)
 
     def on_close(self):
         self.events.on_disconnect()
 
     def on_open(self):
+        self._firstConnect=True
         self.events.on_connection()
 
     def send(self, message):

@@ -16,6 +16,33 @@ class Algorunner:
         self._input = None
         self._events = Events()
         self._loadAlgorithmError = None
+        self._connected=False
+        self._thread=None
+
+    def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None):
+        try:
+            cwd = os.getcwd()
+            print('Initializing algorithm callbacks')
+            self._algorithm['start'] = start
+            self._algorithm['init'] = init
+            self._algorithm['stop'] = stop
+            self._algorithm['exit'] = exit
+            for m in dir(methods):
+                if not m.startswith("__"):
+                    method = getattr(methods, m)
+                    methodName = method["name"]
+                    if self._algorithm[methodName] != None:
+                        print('found method {methodName}'.format(methodName=methodName))
+                    else:
+                        mandatory = "mandatory" if method["mandatory"] else "optional"
+                        error = 'unable to find {mandatory} method {methodName}'.format(
+                            mandatory=mandatory, methodName=methodName)
+                        if (method["mandatory"]):
+                            raise Exception(error)
+                        print(error)
+        except Exception as e:
+            self._loadAlgorithmError = e
+            print(e)
 
     def loadAlgorithm(self, options):
         try:
@@ -27,7 +54,8 @@ class Algorunner:
             __import__(package)
             os.chdir('{cwd}/{package}'.format(cwd=cwd, package=package))
             print('loading {entry}'.format(entry=entry))
-            mod = importlib.import_module('.{entryPoint}'.format(entryPoint=entryPoint), package=package)
+            mod = importlib.import_module('.{entryPoint}'.format(
+                entryPoint=entryPoint), package=package)
             print('algorithm code loaded')
 
             for m in dir(methods):
@@ -36,10 +64,12 @@ class Algorunner:
                     methodName = method["name"]
                     try:
                         self._algorithm[methodName] = getattr(mod, methodName)
-                        print('found method {methodName}'.format(methodName=methodName))
+                        print('found method {methodName}'.format(
+                            methodName=methodName))
                     except Exception as e:
                         mandatory = "mandatory" if method["mandatory"] else "optional"
-                        error = 'unable to find {mandatory} method {methodName}'.format(mandatory=mandatory, methodName=methodName)
+                        error = 'unable to find {mandatory} method {methodName}'.format(
+                            mandatory=mandatory, methodName=methodName)
                         if (method["mandatory"]):
                             raise Exception(error)
                         print(error)
@@ -58,8 +88,11 @@ class Algorunner:
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
-        t = threading.Thread(target=self._wsc.startWS, args=(self._url, ))
-        t.start()
+        self._thread = threading.Thread(target=self._wsc.startWS, args=(self._url, ))
+        self._thread.start()
+
+    def close(self):
+        self._wsc.stopWS()
 
     def _registerToWorkerEvents(self):
         self._wsc.events.on_connection += self._connection
@@ -70,10 +103,13 @@ class Algorunner:
         self._wsc.events.on_exit += self._exit
 
     def _connection(self):
+        self._connected=True
         print('connected to ' + self._url)
 
     def _disconnect(self):
-        print('disconnected from '+ self._url)
+        if self._connected:
+            print('disconnected from ' + self._url)
+        self._connected=False
 
     def _getMethod(self, method):
         return self._algorithm.get(method["name"])
@@ -97,7 +133,7 @@ class Algorunner:
         try:
             self._sendCommand(messages.outgoing["started"], None)
             method = self._getMethod(methods.start)
-            output = method(self._input)
+            output = method(self._input, self._wsc)
             self._sendCommand(messages.outgoing["done"], output)
 
         except Exception as e:
@@ -110,7 +146,7 @@ class Algorunner:
                 method(options)
 
             self._sendCommand(messages.outgoing["stopped"], None)
-            
+
         except Exception as e:
             self._sendError(e)
 
@@ -120,7 +156,7 @@ class Algorunner:
             method = self._getMethod(methods.exit)
             if (method is not None):
                 method(options)
-           
+
             option = options if options is not None else dict()
             code = option.get('exitCode', 0)
             print('Got exit command. Exiting with code', code)
@@ -128,7 +164,7 @@ class Algorunner:
 
         except Exception as e:
             self._sendError(e)
-            
+
     def _sendCommand(self, command, data):
         try:
             self._wsc.send({"command": command, "data": data})
