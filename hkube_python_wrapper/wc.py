@@ -1,3 +1,4 @@
+from __future__ import print_function, division, absolute_import
 import websocket
 import simplejson as json
 from events import Events
