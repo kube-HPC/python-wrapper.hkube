@@ -1,8 +1,11 @@
 from __future__ import print_function, division, absolute_import
+import gevent
 import os
 import sys
 import importlib
 from .wc import WebsocketClient
+from .hkube_api import HKubeApi
+
 import hkube_python_wrapper.messages as messages
 import hkube_python_wrapper.methods as methods
 from events import Events
@@ -85,11 +88,14 @@ class Algorunner:
             self._url = '{protocol}://{host}:{port}'.format(**options)
 
         self._wsc = WebsocketClient()
+        self._hkubeApi = HKubeApi(self._wsc)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
-        self._thread = threading.Thread(target=self._wsc.startWS, args=(self._url, ))
-        self._thread.start()
+        job = gevent.spawn(self._wsc.startWS,self._url)
+        return job
+        # self._thread = threading.Thread(target=self._wsc.startWS, args=(self._url, ))
+        # self._thread.start()
 
     def close(self):
         self._wsc.stopWS()
@@ -133,7 +139,7 @@ class Algorunner:
         try:
             self._sendCommand(messages.outgoing["started"], None)
             method = self._getMethod(methods.start)
-            output = method(self._input, self._wsc)
+            output = method(self._input, self._hkubeApi)
             self._sendCommand(messages.outgoing["done"], output)
 
         except Exception as e:
