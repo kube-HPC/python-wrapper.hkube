@@ -12,7 +12,7 @@ requires = [
     'Events>=0.3',
     'websocket-client>=0.54.0',
     'simplejson',
-    'gevent>=1.4.0'
+    'gevent>=1.3.7'
 ]
 
 with open("README.md", "r") as f:
