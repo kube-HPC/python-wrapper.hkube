@@ -1,9 +1,9 @@
+import os
+import simplejson as json
+import sys
 from hkube_python_wrapper import Algorunner, HKubeApi
 from gevent import monkey
 monkey.patch_all()
-import sys
-import simplejson as json
-import os
 
 
 socket = {
@@ -16,10 +16,12 @@ socket = {
 
 def start(args, hkubeApi=None):
     print('start called')
-    waiter = hkubeApi.start_algorithm('eval-alg', [5, 6], resultAsRaw=True)
+    waiter1 = hkubeApi.start_algorithm('eval-alg', [5, 6], resultAsRaw=True)
     waiter2 = hkubeApi.start_algorithm(
         'green-alg', [6, 'stam'], resultAsRaw=True)
-    ret = [waiter.get().get('response'), waiter2.get().get('response')]
+    res = [waiter1.get(), waiter2.get()]
+    ret = list(map(lambda x: {'error': x.get('error')} if x.get(
+        'error') != None else {'response': x.get('response')}, res))
     return ret
 
 
@@ -28,7 +30,6 @@ def main():
     alg.loadAlgorithmCallbacks(start)
     job = alg.connectToWorker(socket)
     job.join()
-
 
 if __name__ == '__main__':
     main()

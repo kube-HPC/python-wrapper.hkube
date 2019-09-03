@@ -94,8 +94,6 @@ class Algorunner:
         print('connecting to {url}'.format(url=self._url))
         job = gevent.spawn(self._wsc.startWS,self._url)
         return job
-        # self._thread = threading.Thread(target=self._wsc.startWS, args=(self._url, ))
-        # self._thread.start()
 
     def close(self):
         self._wsc.stopWS()
