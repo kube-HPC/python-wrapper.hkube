@@ -9,7 +9,6 @@ from .hkube_api import HKubeApi
 import hkube_python_wrapper.messages as messages
 import hkube_python_wrapper.methods as methods
 from events import Events
-import threading
 
 
 class Algorunner:
@@ -20,7 +19,7 @@ class Algorunner:
         self._events = Events()
         self._loadAlgorithmError = None
         self._connected=False
-        self._thread=None
+        self.hkubeApi=None
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None):
         try:
@@ -43,6 +42,9 @@ class Algorunner:
                         if (method["mandatory"]):
                             raise Exception(error)
                         print(error)
+            # fix start if it has only one argument
+            if start.func_code.co_argcount==1:
+                self._algorithm['start']=lambda args,api: start(args)
         except Exception as e:
             self._loadAlgorithmError = e
             print(e)
@@ -67,6 +69,10 @@ class Algorunner:
                     methodName = method["name"]
                     try:
                         self._algorithm[methodName] = getattr(mod, methodName)
+                        # fix start if it has only one argument
+                        if methodName=='start' and self._algorithm['start'].func_code.co_argcount==1:
+                            self._algorithm['startOrig']=self._algorithm['start']
+                            self._algorithm['start']=lambda args,api: self._algorithm['startOrig'](args)
                         print('found method {methodName}'.format(
                             methodName=methodName))
                     except Exception as e:
@@ -76,7 +82,6 @@ class Algorunner:
                         if (method["mandatory"]):
                             raise Exception(error)
                         print(error)
-
         except Exception as e:
             self._loadAlgorithmError = e
             print(e)
@@ -88,7 +93,7 @@ class Algorunner:
             self._url = '{protocol}://{host}:{port}'.format(**options)
 
         self._wsc = WebsocketClient()
-        self._hkubeApi = HKubeApi(self._wsc)
+        self.hkubeApi = HKubeApi(self._wsc)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
@@ -137,7 +142,7 @@ class Algorunner:
         try:
             self._sendCommand(messages.outgoing["started"], None)
             method = self._getMethod(methods.start)
-            output = method(self._input, self._hkubeApi)
+            output = method(self._input, self.hkubeApi)
             self._sendCommand(messages.outgoing["done"], output)
 
         except Exception as e:
