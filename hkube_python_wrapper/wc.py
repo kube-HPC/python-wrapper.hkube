@@ -1,4 +1,7 @@
 from __future__ import print_function, division, absolute_import
+import gevent
+from gevent import monkey
+monkey.patch_all()
 import websocket
 import simplejson as json
 from events import Events
@@ -15,9 +18,11 @@ class WebsocketClient:
             "initialize": self.init,
             "start": self.start,
             "stop": self.stop,
-            "exit": self.exit
+            "exit": self.exit,
+            "algorithmExecutionDone": self.algorithmExecutionDone,
+            "algorithmExecutionError": self.algorithmExecutionError
         }
-        self._firstConnect=False
+        self._firstConnect = False
 
     def init(self, data):
         self.events.on_init(data)
@@ -31,13 +36,19 @@ class WebsocketClient:
     def exit(self, data):
         self.events.on_exit(data)
 
+    def algorithmExecutionDone(self, data):
+        self.events.on_algorithmExecutionDone(data)
+
+    def algorithmExecutionError(self, data):
+        self.events.on_algorithmExecutionError(data)
+
     def on_message(self, message):
         decoded = json.loads(message)
         command = decoded["command"]
         print('got message from worker: {command}'.format(command=command))
         func = self._switcher.get(command)
         data = decoded.get("data", None)
-        func(data)
+        gevent.spawn(func,data)
 
     def on_error(self, error):
         if self._firstConnect:
@@ -47,7 +58,7 @@ class WebsocketClient:
         self.events.on_disconnect()
 
     def on_open(self):
-        self._firstConnect=True
+        self._firstConnect = True
         self.events.on_connection()
 
     def send(self, message):

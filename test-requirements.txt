@@ -1,0 +1,4 @@
+Events 
+websocket-client 
+simplejson
+gevent>=1.3.7

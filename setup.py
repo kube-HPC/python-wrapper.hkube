@@ -11,7 +11,8 @@ packages=setuptools.find_packages()
 requires = [
     'Events>=0.3',
     'websocket-client>=0.54.0',
-    'simplejson'
+    'simplejson',
+    'gevent>=1.3.7'
 ]
 
 with open("README.md", "r") as f:

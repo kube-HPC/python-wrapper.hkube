@@ -6,6 +6,15 @@ outgoing = {
     "stopped": "stopped",
     "progress": "progress",
     "error": "errorMessage",
-    "done": "done"
+    "done": "done",
+    "startAlgorithmExecution": "startAlgorithmExecution",
+    "stopAlgorithmExecution": 'stopAlgorithmExecution',
+
 }
-incoming = {"initialize": "initialize", "start": "start", "stop": "stop"}
+incoming = {
+    "initialize": "initialize",
+    "start": "start",
+    "stop": "stop",
+    "algorithmExecutionError": 'algorithmExecutionError',
+    "algorithmExecutionDone": 'algorithmExecutionDone'
+}
