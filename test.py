@@ -27,12 +27,20 @@ def start(args, hkubeApi=None):
 
 
 
-def main():
+def main_callbacks():
     alg = Algorunner()
     alg.loadAlgorithmCallbacks(start)
     job = alg.connectToWorker(socket)
     job.join()
 
+def main_file():
+    alg = Algorunner()
+    alg.loadAlgorithm({
+        "path":"test_alg",
+        "entryPoint":"test_alg1.py"
+    })
+    job = alg.connectToWorker(socket)
+    job.join()
 
 if __name__ == '__main__':
-    main()
+    main_file()

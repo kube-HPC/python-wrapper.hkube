@@ -70,7 +70,7 @@ class Algorunner:
                     try:
                         self._algorithm[methodName] = getattr(mod, methodName)
                         # fix start if it has only one argument
-                        if methodName=='start' and self._algorithm['start'].func_code.co_argcount==1:
+                        if methodName=='start' and self._algorithm['start'].__code__.co_argcount==1:
                             self._algorithm['startOrig']=self._algorithm['start']
                             self._algorithm['start']=lambda args,api: self._algorithm['startOrig'](args)
                         print('found method {methodName}'.format(
