@@ -43,7 +43,7 @@ class Algorunner:
                             raise Exception(error)
                         print(error)
             # fix start if it has only one argument
-            if start.func_code.co_argcount==1:
+            if start.__code__.co_argcount==1:
                 self._algorithm['start']=lambda args,api: start(args)
         except Exception as e:
             self._loadAlgorithmError = e
