@@ -14,7 +14,7 @@ socket = {
 }
 
 
-def start(args, hkubeApi: HKubeApi=None):
+def start(args, hkubeApi=None):
     print('start called')
     waiter1 = hkubeApi.start_algorithm('eval-alg', [5, 6], resultAsRaw=True)
     waiter2 = hkubeApi.start_stored_subpipeline('simple', {'d': [6, 'stam']})
