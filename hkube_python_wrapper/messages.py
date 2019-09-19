@@ -8,13 +8,20 @@ outgoing = {
     "error": "errorMessage",
     "done": "done",
     "startAlgorithmExecution": "startAlgorithmExecution",
-    "stopAlgorithmExecution": 'stopAlgorithmExecution',
+    "stopAlgorithmExecution": "stopAlgorithmExecution",
+    "startRawSubPipeline": "startRawSubPipeline",
+    "startStoredSubPipeline": "startStoredSubPipeline",
+    "stopSubPipeline": "stopSubPipeline"
 
 }
 incoming = {
     "initialize": "initialize",
     "start": "start",
     "stop": "stop",
-    "algorithmExecutionError": 'algorithmExecutionError',
-    "algorithmExecutionDone": 'algorithmExecutionDone'
+    "algorithmExecutionError": "algorithmExecutionError",
+    "algorithmExecutionDone": "algorithmExecutionDone",
+    "subPipelineStarted": "subPipelineStarted",
+    "subPipelineError": "subPipelineError",
+    "subPipelineDone": "subPipelineDone",
+    "subPipelineStopped": "subPipelineStopped",
 }

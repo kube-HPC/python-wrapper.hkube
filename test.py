@@ -14,12 +14,12 @@ socket = {
 }
 
 
-def start(args, hkubeApi=None):
+def start(args, hkubeApi: HKubeApi=None):
     print('start called')
     waiter1 = hkubeApi.start_algorithm('eval-alg', [5, 6], resultAsRaw=True)
-    waiter2 = hkubeApi.start_algorithm(
-        'green-alg', [6, 'stam'], resultAsRaw=True)
+    waiter2 = hkubeApi.start_stored_subpipeline('simple', {'d': [6, 'stam']})
     res = [waiter1.get(), waiter2.get()]
+    print('got all results')
     ret = list(map(lambda x: {'error': x.get('error')} if x.get(
         'error') != None else {'response': x.get('response')}, res))
     # ret='OK!!!'
@@ -43,4 +43,4 @@ def main_file():
     job.join()
 
 if __name__ == '__main__':
-    main_file()
+    main_callbacks()
