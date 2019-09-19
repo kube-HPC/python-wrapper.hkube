@@ -27,7 +27,7 @@ const main = async () => {
                     break;
             }
         })
-        send({ command: 'initialize', data: { input: [] } })
+        send({ command: 'initialize', data: { input: ['eval-alg'] } })
 
         socket.on('close', code => {
             console.log(`closed with code ${code}`)
