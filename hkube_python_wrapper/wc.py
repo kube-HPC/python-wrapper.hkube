@@ -22,6 +22,7 @@ class WebsocketClient:
             "algorithmExecutionDone": self.algorithmExecutionDone,
             "algorithmExecutionError": self.algorithmExecutionError,
             "subPipelineDone": self.subPipelineDone,
+            "subPipelineStarted": self.subPipelineStarted,
             "subPipelineError": self.subPipelineError,
             "subPipelineStopped": self.subPipelineStopped
         }
@@ -45,6 +46,9 @@ class WebsocketClient:
     def algorithmExecutionError(self, data):
         self.events.on_algorithmExecutionError(data)
 
+    def subPipelineStarted(self, data):
+        self.events.on_subPipelineStarted(data)
+        
     def subPipelineDone(self, data):
         self.events.on_subPipelineDone(data)
 
@@ -58,7 +62,7 @@ class WebsocketClient:
         decoded = json.loads(message)
         command = decoded["command"]
         data = decoded.get("data", None)
-        print('got message from worker: {command}, data: {data}'.format(command=command, data=data))
+        print('got message from worker: {command}'.format(command=command))
         func = self._switcher.get(command)
         gevent.spawn(func,data)
 

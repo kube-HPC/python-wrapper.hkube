@@ -26,24 +26,24 @@ class HKubeApi:
 
 
     def algorithmExecutionDone(self, data):
-        execution = self._algorithmExecutionsMap.get(int(data.get('execId')))
+        execution = self._algorithmExecutionsMap.get(data.get('execId'))
         execution.waiter.set(data)
 
     def subPipelineDone(self, data):
-        print('subPipelineDone', data)
-        execution = self._algorithmExecutionsMap.get(int(data.get('subPipelineId')))
+        execution = self._algorithmExecutionsMap.get(data.get('subPipelineId'))
         execution.waiter.set(data)
 
     def start_algorithm(self, algorithmName, input=[], resultAsRaw=False, blocking=False):
         print('start_algorithm called with {name}'.format(name=algorithmName))
         self._lastExecId += 1
-        execution = AlgorithmExecution(self._lastExecId, WaitForData(True))
-        self._algorithmExecutionsMap[self._lastExecId] = execution
+        execId = str(self._lastExecId)
+        execution = AlgorithmExecution(execId, WaitForData(True))
+        self._algorithmExecutionsMap[execId] = execution
 
         message = {
             "command": messages.outgoing["startAlgorithmExecution"],
             "data": {
-                "execId": self._lastExecId,
+                "execId": execId,
                 "algorithmName": algorithmName,
                 "input": input,
                 "resultAsRaw": resultAsRaw
@@ -58,8 +58,9 @@ class HKubeApi:
     def start_stored_subpipeline(self, name, flowInput={}, blocking=False):
         print('start_stored_subpipeline called with {name}'.format(name=name))
         self._lastExecId += 1
-        execution = AlgorithmExecution(self._lastExecId, WaitForData(True))
-        self._algorithmExecutionsMap[self._lastExecId] = execution
+        execId = str(self._lastExecId)
+        execution = AlgorithmExecution(execId, WaitForData(True))
+        self._algorithmExecutionsMap[execId] = execution
 
         message = {
             "command": messages.outgoing["startStoredSubPipeline"],
@@ -68,7 +69,7 @@ class HKubeApi:
                     "name": name,
                     "flowInput": flowInput
                 },
-                "subPipelineId": self._lastExecId,
+                "subPipelineId": execId,
 
             }
         }
@@ -81,8 +82,9 @@ class HKubeApi:
     def start_raw_subpipeline(self, name, nodes, flowInput, options=None, webhooks=None, blocking=False):
         print('start_raw_subpipeline called with {name}'.format(name=name))
         self._lastExecId += 1
-        execution = AlgorithmExecution(self._lastExecId, WaitForData(True))
-        self._algorithmExecutionsMap[self._lastExecId] = execution
+        execId = str(self._lastExecId)
+        execution = AlgorithmExecution(execId, WaitForData(True))
+        self._algorithmExecutionsMap[execId] = execution
 
         message = {
             "command": messages.outgoing["startRawSubPipeline"],
@@ -94,7 +96,7 @@ class HKubeApi:
                     "webhooks": webhooks,
                     "flowInput": flowInput
                 },
-                "subPipelineId": self._lastExecId,
+                "subPipelineId": execId,
 
             }
         }
