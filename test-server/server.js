@@ -11,14 +11,20 @@ const main = async () => {
         socket.on('message', async data => {
             const payload = JSON.parse(data);
             console.log(`got command ${payload.command}`);
+            let ret;
             switch (payload.command) {
                 case 'initialized':
                     send({ command: 'start' })
                     break;
                 case 'startAlgorithmExecution':
                     const execId = '' + payload.data.execId
-                    const ret = `result from ${payload.data.algorithmName} execId: ${execId}`
+                    ret = `result from ${payload.data.algorithmName} execId: ${execId}`
                     send({ command: 'algorithmExecutionDone', data: { execId, response: ret } })
+                    break;
+                case 'startStoredSubPipeline':
+                    const subPipelineId = '' + payload.data.subPipelineId
+                    ret = `result from ${payload.data.subPipeline.name} subPipelineId: ${subPipelineId}`
+                    send({ command: 'subPipelineDone', data: { subPipelineId, response: ret } })
                     break;
                 case 'done':
                     console.log(`result: ${JSON.stringify(payload.data)}`)

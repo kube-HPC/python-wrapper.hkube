@@ -1,10 +1,6 @@
+from __future__ import print_function, division, absolute_import
 import os
-import simplejson as json
-import sys
-from hkube_python_wrapper import Algorunner, HKubeApi
-from gevent import monkey
-monkey.patch_all()
-
+from hkube_python_wrapper import Algorunner
 
 socket = {
     "port": os.environ.get('WORKER_SOCKET_PORT', "3000"),
@@ -12,7 +8,6 @@ socket = {
     "protocol": os.environ.get('WORKER_SOCKET_PROTOCOL', "ws"),
     "url": os.environ.get('WORKER_SOCKET_URL', None),
 }
-
 
 def start(args, hkubeApi=None):
     print('start called')
@@ -26,21 +21,11 @@ def start(args, hkubeApi=None):
     return ret
 
 
-
-def main_callbacks():
+def main():
     alg = Algorunner()
     alg.loadAlgorithmCallbacks(start)
     job = alg.connectToWorker(socket)
     job.join()
 
-def main_file():
-    alg = Algorunner()
-    alg.loadAlgorithm({
-        "path":"test_alg",
-        "entryPoint":"test_alg1.py"
-    })
-    job = alg.connectToWorker(socket)
-    job.join()
-
-if __name__ == '__main__':
-    main_callbacks()
+if __name__ == "__main__":
+    main()

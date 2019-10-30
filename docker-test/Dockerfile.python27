@@ -1,0 +1,7 @@
+FROM python:2.7
+ADD requirements.txt /hkube/algorithm-runner/requirements.txt
+WORKDIR /hkube/algorithm-runner
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+COPY . /hkube/algorithm-runner
+CMD ["python", "-u", "main.py"]
