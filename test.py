@@ -1,9 +1,8 @@
 import os
 import simplejson as json
 import sys
+import logging
 from hkube_python_wrapper import Algorunner, HKubeApi
-from gevent import monkey
-monkey.patch_all()
 
 
 socket = {
@@ -15,24 +14,26 @@ socket = {
 
 
 def start(args, hkubeApi=None):
-    print('start called')
-    waiter1 = hkubeApi.start_algorithm('eval-alg', [5, 6], resultAsRaw=True)
-    waiter2 = hkubeApi.start_stored_subpipeline('simple', {'d': [6, 'stam']})
-    res = [waiter1.get(), waiter2.get()]
-    print('got all results')
-    ret = list(map(lambda x: {'error': x.get('error')} if x.get(
-        'error') != None else {'response': x.get('response')}, res))
+    logging.info('start called')
+    ret = hkubeApi.start_algorithm('eval-alg', [5, 6], resultAsRaw=True)
+    ret2 = hkubeApi.start_stored_subpipeline('simple', {'d': [6, 'stam']})
+    # ret = waiter1.get()
+    # res = [waiter1.get(), waiter2.get()]
+    # print('got all results')
+    # ret = list(map(lambda x: {'error': x.get('error')} if x.get(
+    #     'error') != None else {'response': x.get('response')}, res))
     # ret='OK!!!'
-    return ret
+    return (ret,ret2)
 
 
 
 def main_callbacks():
+    logging.basicConfig(level=0,format='%(relativeCreated)6d %(threadName)s %(message)s', stream=sys.stdout)
+    
     alg = Algorunner()
     alg.loadAlgorithmCallbacks(start)
     job = alg.connectToWorker(socket)
-    job.join()
-
+    alg.run()
 def main_file():
     alg = Algorunner()
     alg.loadAlgorithm({

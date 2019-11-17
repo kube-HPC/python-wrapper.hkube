@@ -7,7 +7,10 @@ const main = async () => {
     const wss = new WebSocket.Server({ server });
     wss.on('connection', socket => {
         console.log('connected');
-        const send = message => socket.send(JSON.stringify(message));
+        const send = message => {
+            console.log(`sending command ${message.command}`)
+            socket.send(JSON.stringify(message))
+        };
         socket.on('message', async data => {
             const payload = JSON.parse(data);
             console.log(`got command ${payload.command}`);

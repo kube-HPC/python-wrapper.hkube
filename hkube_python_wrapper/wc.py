@@ -1,16 +1,16 @@
 from __future__ import print_function, division, absolute_import
-import gevent
-from gevent import monkey
-monkey.patch_all()
+
 import websocket
 import simplejson as json
 from events import Events
 import time
+import logging
 
 
 class WebsocketClient:
-    def __init__(self):
+    def __init__(self, msg_queue):
         self.events = Events()
+        self.msg_queue=msg_queue
         self._ws = None
         self._reconnectInterval = 0.1
         self._active = True
@@ -62,13 +62,14 @@ class WebsocketClient:
         decoded = json.loads(message)
         command = decoded["command"]
         data = decoded.get("data", None)
-        print('got message from worker: {command}'.format(command=command))
-        func = self._switcher.get(command)
-        gevent.spawn(func,data)
+        logging.info('got message from worker: {command}'.format(command=command))
+        # func = self._switcher.get(command)
+        # func(data)
+        self.msg_queue.put((command,data))
 
     def on_error(self, error):
         if self._firstConnect:
-            print(error)
+            logging.error(error)
 
     def on_close(self):
         self.events.on_disconnect()
@@ -78,7 +79,7 @@ class WebsocketClient:
         self.events.on_connection()
 
     def send(self, message):
-        print('sending message to worker: {command}'.format(**message))
+        logging.info('sending message to worker: {command}'.format(**message))
         self._ws.send(json.dumps(message))
 
     def startWS(self, url):

@@ -1,15 +1,16 @@
 from __future__ import print_function, division, absolute_import
-import gevent
 import os
 import sys
 import importlib
+import logging
 from .wc import WebsocketClient
 from .hkube_api import HKubeApi
 
 import hkube_python_wrapper.messages as messages
 import hkube_python_wrapper.methods as methods
 from events import Events
-
+import threading
+from queue import Queue
 
 class Algorunner:
     def __init__(self):
@@ -20,11 +21,12 @@ class Algorunner:
         self._loadAlgorithmError = None
         self._connected=False
         self.hkubeApi=None
+        self.msg_queue = Queue()
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None):
         try:
             cwd = os.getcwd()
-            print('Initializing algorithm callbacks')
+            logging.info('Initializing algorithm callbacks')
             self._algorithm['start'] = start
             self._algorithm['init'] = init
             self._algorithm['stop'] = stop
@@ -34,20 +36,20 @@ class Algorunner:
                     method = getattr(methods, m)
                     methodName = method["name"]
                     if self._algorithm[methodName] != None:
-                        print('found method {methodName}'.format(methodName=methodName))
+                        logging.info('found method {methodName}'.format(methodName=methodName))
                     else:
                         mandatory = "mandatory" if method["mandatory"] else "optional"
                         error = 'unable to find {mandatory} method {methodName}'.format(
                             mandatory=mandatory, methodName=methodName)
                         if (method["mandatory"]):
                             raise Exception(error)
-                        print(error)
+                        logging.error(error)
             # fix start if it has only one argument
             if start.__code__.co_argcount==1:
                 self._algorithm['start']=lambda args,api: start(args)
         except Exception as e:
             self._loadAlgorithmError = e
-            print(e)
+            logging.error(e)
 
     def loadAlgorithm(self, options):
         try:
@@ -58,10 +60,10 @@ class Algorunner:
             entryPoint = os.path.splitext(entryPoint)[0]
             __import__(package)
             os.chdir('{cwd}/{package}'.format(cwd=cwd, package=package))
-            print('loading {entry}'.format(entry=entry))
+            logging.info('loading {entry}'.format(entry=entry))
             mod = importlib.import_module('.{entryPoint}'.format(
                 entryPoint=entryPoint), package=package)
-            print('algorithm code loaded')
+            logging.info('algorithm code loaded')
 
             for m in dir(methods):
                 if not m.startswith("__"):
@@ -73,7 +75,7 @@ class Algorunner:
                         if methodName=='start' and self._algorithm['start'].__code__.co_argcount==1:
                             self._algorithm['startOrig']=self._algorithm['start']
                             self._algorithm['start']=lambda args,api: self._algorithm['startOrig'](args)
-                        print('found method {methodName}'.format(
+                        logging.info('found method {methodName}'.format(
                             methodName=methodName))
                     except Exception as e:
                         mandatory = "mandatory" if method["mandatory"] else "optional"
@@ -81,10 +83,10 @@ class Algorunner:
                             mandatory=mandatory, methodName=methodName)
                         if (method["mandatory"]):
                             raise Exception(error)
-                        print(error)
+                        logging.error(error)
         except Exception as e:
             self._loadAlgorithmError = e
-            print(e)
+            logging.error(e)
 
     def connectToWorker(self, options):
         if (options["url"] is not None):
@@ -92,13 +94,37 @@ class Algorunner:
         else:
             self._url = '{protocol}://{host}:{port}'.format(**options)
 
-        self._wsc = WebsocketClient()
-        self.hkubeApi = HKubeApi(self._wsc)
+        self._wsc = WebsocketClient(self.msg_queue)
+        self.hkubeApi = HKubeApi(self._wsc, self)
         self._registerToWorkerEvents()
 
-        print('connecting to {url}'.format(url=self._url))
-        job = gevent.spawn(self._wsc.startWS,self._url)
-        return job
+        logging.info('connecting to {url}'.format(url=self._url))
+        t = threading.Thread(name="WsThread",target=self._wsc.startWS, args=(self._url, ))
+        t.start()
+        return t
+
+    def handle(self, command, data):
+        logging.info("got %s:%s",command,data)
+        if (command == 'initialize'):
+            self._init(data)
+        elif (command == 'start'):
+            self._start(data)
+        if (command == 'algorithmExecutionDone' or command == 'algorithmExecutionError'):
+            self.hkubeApi.algorithmExecutionDone(data)
+        elif (command == 'subPipelineDone'):
+            self.hkubeApi.subPipelineDone(data)
+        elif (command == 'subPipelineError'):
+            self.hkubeApi.subPipelineError(data)
+        elif (command == 'subPipelineStopped'):
+            self.hkubeApi.subPipelineStopped(data)
+
+    def get_message(self):
+        return self.msg_queue.get()
+
+    def run(self):
+        while True:
+            (command, data) = self.get_message()
+            self.handle(command,data)
 
     def close(self):
         self._wsc.stopWS()
@@ -106,18 +132,18 @@ class Algorunner:
     def _registerToWorkerEvents(self):
         self._wsc.events.on_connection += self._connection
         self._wsc.events.on_disconnect += self._disconnect
-        self._wsc.events.on_init += self._init
-        self._wsc.events.on_start += self._start
-        self._wsc.events.on_stop += self._stop
-        self._wsc.events.on_exit += self._exit
+        # self._wsc.events.on_init += self._init
+        # self._wsc.events.on_start += self._start
+    #     self._wsc.events.on_stop += self._stop
+    #     self._wsc.events.on_exit += self._exit
 
     def _connection(self):
         self._connected=True
-        print('connected to ' + self._url)
+        logging.info('connected to ' + self._url)
 
     def _disconnect(self):
         if self._connected:
-            print('disconnected from ' + self._url)
+            logging.info('disconnected from ' + self._url)
         self._connected=False
 
     def _getMethod(self, method):
@@ -168,7 +194,7 @@ class Algorunner:
 
             option = options if options is not None else dict()
             code = option.get('exitCode', 0)
-            print('Got exit command. Exiting with code', code)
+            logging.info('Got exit command. Exiting with code', code)
             sys.exit(code)
 
         except Exception as e:
@@ -182,7 +208,7 @@ class Algorunner:
 
     def _sendError(self, error):
         try:
-            print(error)
+            logging.error(error)
             self._wsc.send({
                 "command": messages.outgoing["error"],
                 "error": {
@@ -191,4 +217,4 @@ class Algorunner:
                 }
             })
         except Exception as e:
-            print(e)
+            logging.error(e)
