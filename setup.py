@@ -10,9 +10,10 @@ packages=setuptools.find_packages()
 
 requires = [
     'Events>=0.3',
-    'websocket-client>=0.54.0',
-    'simplejson',
-    'gevent>=1.3.7'
+    'hkube-websocket-client>=0.54.0',
+    'wsaccel',
+    'msgpack',
+    'six'
 ]
 
 with open("README.md", "r") as f:

@@ -1,11 +1,10 @@
 from __future__ import print_function, division, absolute_import
-
+from six import PY2
 import websocket
-import simplejson as json
 from events import Events
 import time
 import logging
-
+import msgpack
 
 class WebsocketClient:
     def __init__(self, msg_queue):
@@ -59,7 +58,8 @@ class WebsocketClient:
         self.events.on_subPipelineStopped(data)
 
     def on_message(self, message):
-        decoded = json.loads(message)
+        logging.info('got message before decode')
+        decoded = msgpack.loads(message, raw=True if PY2 else False)
         command = decoded["command"]
         data = decoded.get("data", None)
         logging.info('got message from worker: {command}'.format(command=command))
@@ -79,16 +79,23 @@ class WebsocketClient:
         self.events.on_connection()
 
     def send(self, message):
-        logging.info('sending message to worker: {command}'.format(**message))
-        self._ws.send(json.dumps(message))
+        logging.info('packing message')
+        msgPacked = msgpack.dumps(message, use_bin_type=True)
+        logging.info('sending message to worker: {command}. data length is {data_len}'.format(command=message['command'], data_len=len(msgPacked)))
+        self._ws.send(msgPacked, opcode=2)
 
+    
+    def on_message_cont(self, message, flag):
+        pass
     def startWS(self, url):
         self._ws = websocket.WebSocketApp(
             url,
             on_message=self.on_message,
             on_error=self.on_error,
             on_open=self.on_open,
-            on_close=self.on_close)
+            on_close=self.on_close,
+            on_cont_message=self.on_message_cont)
+
         while self._active:
             try:
                 self._ws.run_forever()

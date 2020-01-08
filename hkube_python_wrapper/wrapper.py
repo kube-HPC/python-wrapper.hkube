@@ -10,7 +10,12 @@ import hkube_python_wrapper.messages as messages
 import hkube_python_wrapper.methods as methods
 from events import Events
 import threading
-from queue import Queue
+if (sys.version_info > (3, 0)):
+    # Python 3 code in this block
+    from queue import Queue
+else:
+    # Python 2 code in this block
+    from Queue import Queue
 
 class Algorunner:
     def __init__(self):
@@ -104,7 +109,7 @@ class Algorunner:
         return t
 
     def handle(self, command, data):
-        logging.info("got %s:%s",command,data)
+        logging.info("got %s",command)
         if (command == 'initialize'):
             self._init(data)
         elif (command == 'start'):
@@ -118,8 +123,8 @@ class Algorunner:
         elif (command == 'subPipelineStopped'):
             self.hkubeApi.subPipelineStopped(data)
 
-    def get_message(self):
-        return self.msg_queue.get()
+    def get_message(self, blocking=True):
+        return self.msg_queue.get(block=blocking)
 
     def run(self):
         while True:

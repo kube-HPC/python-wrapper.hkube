@@ -7,7 +7,13 @@ import logging
 from events import Events
 import sys
 import os
-
+import time
+if (sys.version_info > (3, 0)):
+    # Python 3 code in this block
+    from queue import Queue, Empty
+else:
+    # Python 2 code in this block
+    from Queue import Queue, Empty
 
 
 class HKubeApi:
@@ -26,6 +32,7 @@ class HKubeApi:
 
 
     def algorithmExecutionDone(self, data):
+        logging.debug('got done with execId %s',data.get('execId'))
         execution = self._algorithmExecutionsMap.get(data.get('execId'))
         execution.waiter.set(data)
 
@@ -52,8 +59,15 @@ class HKubeApi:
         self._wc.send(message)
 
         while not execution.waiter.ready():
-            (command, data) = self._wrapper.get_message()
-            self._wrapper.handle(command, data)
+            try:
+                (command, data) = self._wrapper.get_message(False)
+                self._wrapper.handle(command, data)
+            except Empty:
+                pass
+            time.sleep(0.01)
+        
+        logging.debug('result execId %s',execId)
+
         return execution.waiter.get()
         
         # if blocking:
