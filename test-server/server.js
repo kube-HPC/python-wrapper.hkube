@@ -1,15 +1,20 @@
 const WebSocket = require('ws');
 const http = require('http');
 const PORT = process.env.PORT || '3000';
+const binary = (process.env.WORKER_BINARY==='true')
+const bson = require('bson');
 const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+const parse = binary?(data)=>bson.deserialize(data, { promoteBuffers: true, promoteValues: true }):JSON.parse
+const stringify = binary?bson.serialize:JSON.stringify
 const main = async () => {
     const server = http.createServer();
     const wss = new WebSocket.Server({ server });
     wss.on('connection', socket => {
         console.log('connected');
-        const send = message => socket.send(JSON.stringify(message));
+        const send = message => socket.send(stringify(message));
         socket.on('message', async data => {
-            const payload = JSON.parse(data);
+            const payload = parse(data);
             console.log(`got command ${payload.command}`);
             let ret;
             switch (payload.command) {
