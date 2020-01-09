@@ -3,6 +3,8 @@ import gevent
 from gevent import monkey
 monkey.patch_all()
 import websocket
+from websocket import ABNF
+
 import simplejson as json
 import bson
 from bson.codec_options import CodecOptions, TypeRegistry
@@ -39,6 +41,7 @@ class WebsocketClient:
         self._firstConnect = False
         self._encode=(lambda data: bson.encode(data,codec_options=codec_options )) if self._binary else json.dumps
         self._decode=bson.decode if self._binary else json.loads
+        self._ws_opcode = ABNF.OPCODE_BINARY if self._binary else ABNF.OPCODE_TEXT
         print('Initialized socket with {encoding} encoding'.format(encoding='binary' if self._binary else 'json'))
 
 
@@ -93,8 +96,7 @@ class WebsocketClient:
 
     def send(self, message):
         print('sending message to worker: {command}'.format(**message))
-        opcode=2 if self._binary else 1
-        self._ws.send(self._encode(message),opcode=2 if self._binary else 1)
+        self._ws.send(self._encode(message),opcode=self._ws_opcode)
 
     def startWS(self, url):
         self._ws = websocket.WebSocketApp(

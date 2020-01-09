@@ -10,9 +10,12 @@ packages=setuptools.find_packages()
 
 requires = [
     'Events>=0.3',
-    'websocket-client>=0.54.0',
+    'websocket-client>=0.57.0',
     'simplejson',
-    'gevent>=1.3.7'
+    'gevent>=1.3.7',
+    'pymongo>=3.10.1'
+
+
 ]
 
 with open("README.md", "r") as f:
