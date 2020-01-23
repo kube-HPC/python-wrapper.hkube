@@ -21,6 +21,9 @@ const main = async () => {
                 case 'initialized':
                     send({ command: 'start' })
                     break;
+                case 'errorMessage':
+                    console.log(`got error: ${JSON.stringify(payload)}`)
+                    break;
                 case 'startAlgorithmExecution':
                     const execId = '' + payload.data.execId
                     ret = `result from ${payload.data.algorithmName} execId: ${execId}`

@@ -188,7 +188,7 @@ class Algorunner:
                 "command": messages.outgoing["error"],
                 "error": {
                     "code": "Failed",
-                    "message": str(error)
+                    "message": repr(error)
                 }
             })
         except Exception as e:
