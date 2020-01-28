@@ -23,7 +23,7 @@ def start(args, hkubeApi=None):
     num_threads=1
     results = [{} for x in range(num_threads)]
     def algo(index):
-        results[index] = hkubeApi.start_algorithm('eval-alg', [bytearray(b'\xfa'*2000), 6], resultAsRaw=True)
+        results[index] = hkubeApi.start_algorithm('eval-alg', [bytearray(b'\xfa'*1024*1024*1024), 6], resultAsRaw=True)
 
     for ii in range(num_threads):
         p=Thread(target=algo, args=[ii], name=str(ii+1) )

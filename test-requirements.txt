@@ -1,5 +1,1 @@
-Events 
-gevent>=1.3.7
-hkube-websocket-client>=0.54.0
-wsaccel
-msgpack
+hkube-python-wrapper==0.4.0a2.dev1

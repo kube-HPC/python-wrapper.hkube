@@ -15,7 +15,7 @@ const stringify = binary?bson.serialize:JSON.stringify
 
 const main = async () => {
     const server = http.createServer();
-    const wss = new WebSocket.Server({ server, maxPayload:500e6 });
+    const wss = new WebSocket.Server({ server, maxPayload:500e8 });
     wss.on('connection', socket => {
         console.log('connected');
         const send = message => {
@@ -52,7 +52,7 @@ const main = async () => {
                     send({ command: 'subPipelineDone', data: { subPipelineId, response: ret } })
                     break;
                 case 'done':
-                    console.log(`got result: ${JSON.stringify(payload)}`)
+                    console.log(`got result`)
                     break;
                 default:
                     break;
