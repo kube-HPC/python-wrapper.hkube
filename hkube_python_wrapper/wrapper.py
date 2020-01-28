@@ -98,8 +98,9 @@ class Algorunner:
             self._url = options["url"]
         else:
             self._url = '{protocol}://{host}:{port}'.format(**options)
+        binary = options.get("binary", "False") in ['True', 'true']
 
-        self._wsc = WebsocketClient(self.msg_queue)
+        self._wsc = WebsocketClient(self.msg_queue, binary=binary)
         self.hkubeApi = HKubeApi(self._wsc, self)
         self._registerToWorkerEvents()
 

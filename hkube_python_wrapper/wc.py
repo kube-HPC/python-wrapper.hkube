@@ -1,18 +1,31 @@
 from __future__ import print_function, division, absolute_import
 from six import PY2
 import websocket
+from websocket import ABNF
+import simplejson as json
+import bson
+from bson.codec_options import CodecOptions, TypeRegistry
 from events import Events
 import time
 import logging
 import msgpack
 
+def fallback_encoder(value):
+    if isinstance(value, bytearray):
+        return bson.binary.Binary(value)
+    return value
+
+type_registry = TypeRegistry(fallback_encoder=fallback_encoder)
+codec_options = CodecOptions(type_registry=type_registry)
+
 class WebsocketClient:
-    def __init__(self, msg_queue):
+    def __init__(self, msg_queue, binary=False):
         self.events = Events()
         self.msg_queue=msg_queue
         self._ws = None
         self._reconnectInterval = 0.1
         self._active = True
+        self._binary=binary
         self._switcher = {
             "initialize": self.init,
             "start": self.start,
@@ -26,6 +39,10 @@ class WebsocketClient:
             "subPipelineStopped": self.subPipelineStopped
         }
         self._firstConnect = False
+        self._encode=(lambda data: bson.encode(data,codec_options=codec_options )) if self._binary else json.dumps
+        self._decode=bson.decode if self._binary else json.loads
+        self._ws_opcode = ABNF.OPCODE_BINARY if self._binary else ABNF.OPCODE_TEXT
+        print('Initialized socket with {encoding} encoding'.format(encoding='binary' if self._binary else 'json'))
 
     def init(self, data):
         self.events.on_init(data)
@@ -59,12 +76,10 @@ class WebsocketClient:
 
     def on_message(self, message):
         logging.info('got message before decode')
-        decoded = msgpack.loads(message, raw=True if PY2 else False)
+        decoded = self._decode(message)
         command = decoded["command"]
         data = decoded.get("data", None)
         logging.info('got message from worker: {command}'.format(command=command))
-        # func = self._switcher.get(command)
-        # func(data)
         self.msg_queue.put((command,data))
 
     def on_error(self, error):
@@ -82,7 +97,7 @@ class WebsocketClient:
         logging.info('packing message')
         msgPacked = msgpack.dumps(message, use_bin_type=True)
         logging.info('sending message to worker: {command}. data length is {data_len}'.format(command=message['command'], data_len=len(msgPacked)))
-        self._ws.send(msgPacked, opcode=2)
+        self._ws.send(self._encode(message),opcode=self._ws_opcode)
 
     
     def on_message_cont(self, message, flag):

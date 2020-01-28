@@ -1,12 +1,18 @@
 const WebSocket = require('ws');
 const http = require('http');
-const msgpack = require('msgpack5')();
+const binary = (process.env.WORKER_BINARY==='true')
+const bson = require('bson');
 const PORT = process.env.PORT || '3000';
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 const log = console.log
 console.log = (...args) => { log(new Date(), ...args) }
 const length=100
 const toSend = new Uint8Array(length).fill(1);
+
+const parse = binary?(data)=>bson.deserialize(data, { promoteBuffers: true, promoteValues: true }):JSON.parse
+const stringify = binary?bson.serialize:JSON.stringify
+
+
 const main = async () => {
     const server = http.createServer();
     const wss = new WebSocket.Server({ server, maxPayload:500e6 });
@@ -14,23 +20,20 @@ const main = async () => {
         console.log('connected');
         const send = message => {
             console.log(`sending command ${message.command}`)
-            socket.send(msgpack.encode(message))
-            // socket.send(JSON.stringify(message))
-
+            socket.send(stringify(message));
         };
         socket.on('message', async data => {
             console.log(`got message`);
-            const payload = msgpack.decode(data);
-            if (payload.command && typeof payload.command === 'Buffer') {
-                payload.command = payload.command.toString();
-            }
-            // const payload = JSON.parse(data);
+            const payload = parse(data);
 
             console.log(`got command ${payload.command}`);
             let ret;
             switch (payload.command) {
                 case 'initialized':
                     send({ command: 'start' })
+                    break;
+                case 'errorMessage':
+                    console.log(`got error: ${JSON.stringify(payload)}`)
                     break;
                 case 'startAlgorithmExecution':
                     console.log(payload.data.execId)
