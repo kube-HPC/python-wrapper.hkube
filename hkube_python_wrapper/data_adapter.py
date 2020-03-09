@@ -13,14 +13,6 @@ import dpath.util
 
 
 class DataAdapter:
-    def __init__(self):
-        self._url = None
-        self._algorithm = dict()
-        self._input = None
-        self._events = Events()
-        self._loadAlgorithmError = None
-        self._connected = False
-        self.hkubeApi = None
 
     def getData(self, options):
 
@@ -40,10 +32,23 @@ class DataAdapter:
                 if (link is None):
                     raise Exception('unable to find storage key')
 
+                data = None
+                if(isinstance(link, collections.Sequence)):
+                    data = list(map(self._tryGetDataFromPeerOrStorage, link))
+                else:
+                    data = self._tryGetDataFromPeerOrStorage(link)
+
                 path = k.replace("_", "/")
-                data = self._tryGetDataFromPeerOrStorage(link)
                 dpath.util.set(result, path, data)
 
+        return result
+
+    def setData(self, options):
+        jobId = options.get("jobId")
+        taskId = options.get("taskId")
+        data = options.get("data")
+        result = storageManager.hkube.put(
+            {"jobId": jobId, "taskId": taskId, "data": data})
         return result
 
     def _flatten(self, d, sep="_"):
@@ -104,10 +109,47 @@ class DataAdapter:
     #     {port, host, encoding} = options.discovery
     #     dataRequest = new DataRequest({address: {port, host}, taskId, dataPath, encoding})
     #     response = dataRequest.invoke()
-    #     this.emit(Events.DiscoveryGet, response)
+    #     self.emit(Events.DiscoveryGet, response)
     #     return response.data
 
     def _getFromStorage(self, options):
         return options
         data = storageManager.get(options)
         return data
+
+    def createStorageInfo(self, options):
+        jobId = options.get("jobId")
+        taskId = options.get("taskId")
+
+        path = 'jobId/taskId'
+        metadata = self.createMetadata(options)
+        storageInfo = {
+            "storageInfo": {
+                "path": path
+            },
+            "metadata": metadata
+        }
+        return storageInfo
+
+    def createMetadata(self, options):
+        nodeName = options.get("nodeName")
+        data = options.get("data")
+        savePaths = options.get("savePaths")
+
+        object = {}
+        object[nodeName] = data
+        paths = savePaths or []
+        metadata = dict()
+        for p in paths:
+            value = dpath.util.get(object, p, separator='.', default='DEFAULT')
+            if (value != 'DEFAULT'):
+                self._setMetadata(value, p, metadata)
+
+        return metadata
+
+    def _setMetadata(self, value, path, metadata):
+        if(isinstance(value, collections.Sequence)):
+            meta = {"type": "array", "size": len(value)}
+        else:
+            meta = {"type": str(type(value).__name__)}
+        metadata[path] = meta

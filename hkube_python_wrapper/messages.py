@@ -6,6 +6,7 @@ outgoing = {
     "stopped": "stopped",
     "progress": "progress",
     "error": "errorMessage",
+    "storing": "storing",
     "done": "done",
     "startAlgorithmExecution": "startAlgorithmExecution",
     "stopAlgorithmExecution": "stopAlgorithmExecution",
