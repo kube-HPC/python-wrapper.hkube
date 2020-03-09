@@ -1,20 +1,46 @@
 const WebSocket = require('ws');
 const http = require('http');
+const { Encoding } = require('@hkube/encoding');
 const PORT = process.env.PORT || '3000';
-const binary = (process.env.WORKER_BINARY==='true')
-const bson = require('bson');
+const encodingType = process.env.WORKER_ENCODING || 'bson';
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 
-const parse = binary?(data)=>bson.deserialize(data, { promoteBuffers: true, promoteValues: true }):JSON.parse
-const stringify = binary?bson.serialize:JSON.stringify
+const encoding = new Encoding({ type: encodingType });
+
+const array = [42, 37, 89, 95, 12, 126, 147];
+const storageInfo1 = { data: { array } };
+const storageInfo2 = { myValue: 'bla' };
+const storageInfo3 = array;
+
+const input = [
+    { data: '$$guid-1' },
+    { prop: ['$$guid-2'] },
+    [{ prop: '$$guid-3' }],
+    ['$$guid-4'],
+    '$$guid-5',
+    '$$guid-6',
+    'test-param',
+    true,
+    null,
+    12345
+];
+const storage = {
+    'guid-1': { storageInfo: storageInfo1, path: 'data.array' },
+    'guid-2': { storageInfo: storageInfo2, path: 'myValue' },
+    'guid-3': { storageInfo: storageInfo1, path: 'data.array', index: 3 },
+    'guid-4': { storageInfo: storageInfo1, path: 'data.array', index: 0 },
+    'guid-5': { storageInfo: storageInfo3, index: 2 },
+    'guid-6': { storageInfo: storageInfo1 }
+};
+
 const main = async () => {
     const server = http.createServer();
     const wss = new WebSocket.Server({ server });
-    wss.on('connection', socket => {
+    wss.on('connection', (socket) => {
         console.log('connected');
-        const send = message => socket.send(stringify(message));
+        const send = message => socket.send(encoding.encode(message));
         socket.on('message', async data => {
-            const payload = parse(data);
+            const payload = encoding.decode(data);
             console.log(`got command ${payload.command}`);
             let ret;
             switch (payload.command) {
@@ -41,14 +67,12 @@ const main = async () => {
                     break;
             }
         })
-        send({ command: 'initialize', data: { input: ['eval-alg'] } })
+        send({ command: 'initialize', data: { input, storage } })
 
         socket.on('close', code => {
             console.log(`closed with code ${code}`)
         })
     })
-
-
 
     server.listen(PORT);
 }

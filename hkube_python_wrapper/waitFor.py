@@ -24,7 +24,7 @@ class WaitForData(object):
         self._data = None
         self._event.clear()
 
-    def set(self,data):
+    def set(self, data):
         if self._event.ready():
             raise WaitForDataStateException()
         self._data = data
@@ -33,10 +33,10 @@ class WaitForData(object):
     def get(self, timeout=None):
         if not self._event.wait(timeout):
             raise WaitForDataTimeoutException()
-        data=self._data
+        data = self._data
         if self._autoreset:
             self.reset()
         return data
-        
+
     def ready(self):
         return self._event.ready()

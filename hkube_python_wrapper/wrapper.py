@@ -5,6 +5,7 @@ import sys
 import importlib
 from .wc import WebsocketClient
 from .hkube_api import HKubeApi
+from .data_adapter import DataAdapter
 
 import hkube_python_wrapper.messages as messages
 import hkube_python_wrapper.methods as methods
@@ -18,8 +19,9 @@ class Algorunner:
         self._input = None
         self._events = Events()
         self._loadAlgorithmError = None
-        self._connected=False
-        self.hkubeApi=None
+        self._connected = False
+        self.hkubeApi = None
+        self._dataAdapter = DataAdapter()
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None):
         try:
@@ -34,7 +36,8 @@ class Algorunner:
                     method = getattr(methods, m)
                     methodName = method["name"]
                     if self._algorithm[methodName] != None:
-                        print('found method {methodName}'.format(methodName=methodName))
+                        print('found method {methodName}'.format(
+                            methodName=methodName))
                     else:
                         mandatory = "mandatory" if method["mandatory"] else "optional"
                         error = 'unable to find {mandatory} method {methodName}'.format(
@@ -43,8 +46,8 @@ class Algorunner:
                             raise Exception(error)
                         print(error)
             # fix start if it has only one argument
-            if start.__code__.co_argcount==1:
-                self._algorithm['start']=lambda args,api: start(args)
+            if start.__code__.co_argcount == 1:
+                self._algorithm['start'] = lambda args, api: start(args)
         except Exception as e:
             self._loadAlgorithmError = e
             print(e)
@@ -70,9 +73,10 @@ class Algorunner:
                     try:
                         self._algorithm[methodName] = getattr(mod, methodName)
                         # fix start if it has only one argument
-                        if methodName=='start' and self._algorithm['start'].__code__.co_argcount==1:
-                            self._algorithm['startOrig']=self._algorithm['start']
-                            self._algorithm['start']=lambda args,api: self._algorithm['startOrig'](args)
+                        if methodName == 'start' and self._algorithm['start'].__code__.co_argcount == 1:
+                            self._algorithm['startOrig'] = self._algorithm['start']
+                            self._algorithm['start'] = lambda args, api: self._algorithm['startOrig'](
+                                args)
                         print('found method {methodName}'.format(
                             methodName=methodName))
                     except Exception as e:
@@ -87,18 +91,25 @@ class Algorunner:
             print(e)
 
     def connectToWorker(self, options):
-        if (options["url"] is not None):
-            self._url = options["url"]
-        else:
-            self._url = '{protocol}://{host}:{port}'.format(**options)
-        binary = options.get("binary", "False") in ['True', 'true']
+        socket = options["socket"]
+        encoding = socket["encoding"]
+        storage = options["storageMode"]
+        binary = encoding in ['bson', 'protoc']
 
-        self._wsc = WebsocketClient(binary=binary)
+        if (socket["url"] is not None):
+            self._url = socket["url"]
+        else:
+            self._url = '{protocol}://{host}:{port}'.format(**socket)
+
+        self._url += '?storage={storage}&encoding={encoding}'.format(
+            storage=storage, encoding=encoding)
+
+        self._wsc = WebsocketClient(encoding, binary=binary)
         self.hkubeApi = HKubeApi(self._wsc)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
-        job = gevent.spawn(self._wsc.startWS,self._url)
+        job = gevent.spawn(self._wsc.startWS, self._url)
         return job
 
     def close(self):
@@ -113,13 +124,13 @@ class Algorunner:
         self._wsc.events.on_exit += self._exit
 
     def _connection(self):
-        self._connected=True
+        self._connected = True
         print('connected to ' + self._url)
 
     def _disconnect(self):
         if self._connected:
             print('disconnected from ' + self._url)
-        self._connected=False
+        self._connected = False
 
     def _getMethod(self, method):
         return self._algorithm.get(method["name"])
@@ -142,6 +153,9 @@ class Algorunner:
     def _start(self, options):
         try:
             self._sendCommand(messages.outgoing["started"], None)
+
+            input = self._dataAdapter.getData(self._input)
+
             method = self._getMethod(methods.start)
             output = method(self._input, self.hkubeApi)
             self._sendCommand(messages.outgoing["done"], output)

@@ -2,3 +2,5 @@ Events
 websocket-client 
 simplejson
 gevent>=1.3.7
+pymongo>=3.10.1
+wsaccel

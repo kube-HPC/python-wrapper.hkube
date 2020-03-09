@@ -23,8 +23,6 @@ class HKubeApi:
         self._wc.events.on_subPipelineError += self.subPipelineDone
         self._wc.events.on_subPipelineStopped += self.subPipelineDone
 
-
-
     def algorithmExecutionDone(self, data):
         execution = self._algorithmExecutionsMap.get(data.get('execId'))
         execution.waiter.set(data)
