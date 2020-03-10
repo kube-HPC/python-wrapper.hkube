@@ -1,20 +1,22 @@
 from .fsAdapter import FSAdapter
 
 class StorageManager:
-    def __init__(self,config):
-        self.storage = FSAdapter(config)
+    def __init__(self,adpter):
+        self.adapter = adpter
     def put(self, options):
-        return self.storage.put(options)
+        return self.adapter.put(options)
     def get(self, options):
-        return self.storage.get(options)
+        return self.adapter.get(options)
     def list(self, options):
-        return self.storage.list(options)
+        return self.adapter.list(options)
+    def listPrefix(self, options):
+        return self.adapter.listPrefix(options)
     def delete(self,options):
-        self.storage.delete(options)
+        self.adapter.delete(options)
     def getStream(self,options):
-        return self.storage.getStream(options)
+        return self.adapter.getStream(options)
     def putStream(self,options):
-        return self.storage.putStream(options)
+        return self.adapter.putStream(options)
 
 if __name__ == '__main__':
     config = {'baseDirectory': '/home/golanha/'}

@@ -1,4 +1,6 @@
 from storage.storage_manager import StorageManager
+from storage.task_output_manager import TaskOutputManager
+from storage.fsAdapter import FSAdapter
 import pytest
 import shutil
 import os
@@ -17,30 +19,28 @@ config = {'baseDirectory': 'baseDirectory'}
 ensure_dir('./' + config['baseDirectory'])
 
 
-# if __name__ == '__main__':
 def test_put_get():
-    print('\ntest_put_get!!!!')
-    sm = StorageManager(config)
-    options = {'fileName': 'a.txt', 'directoryName': dirName, 'data': content}
+    sm = StorageManager(FSAdapter(config))
+    options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     a = sm.get(options)
     assert a == content
 
 
 def test_fail_to_get():
-    options = {'fileName': 'a.txt', 'directoryName': dirName, 'data': content}
-    sm = StorageManager(config)
+    options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
+    sm = StorageManager(FSAdapter(config))
     a = sm.get(options)
     assert a == None
 
 
 def test_list():
-    sm = StorageManager(config)
-    options = {'fileName': 'a.txt', 'directoryName': dirName, 'data': content}
+    sm = StorageManager(FSAdapter(config))
+    options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
-    options = {'fileName': 'b.txt', 'directoryName': dirName, 'data': content}
+    options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
     sm.put(options)
-    options = {'fileName': 'c.txt', 'directoryName': dirName + os.path.sep + 'inner', 'data': content}
+    options = {'path': dirName + os.path.sep + 'inner'+ os.path.sep + 'c.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName}
     resultArr = sm.list(options)
@@ -50,23 +50,61 @@ def test_list():
     assert '/myDir/inner/c.txt' in resultArr
 
 
-def test_list_nonExsisting():
-    sm = StorageManager(config)
+def test_prefixlist():
+    sm = StorageManager(FSAdapter(config))
+    options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
+    sm.put(options)
+    options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
+    sm.put(options)
+    options = {'path': dirName + os.path.sep + 'inner' + os.path.sep + 'c.txt', 'data': content}
+    sm.put(options)
+    options = {'path': dirName}
+    resultArr = sm.listPrefix(options)
+    assert resultArr.__len__() == 2
+    assert '/myDir/a.txt' in resultArr
+    assert '/myDir/b.txt' in resultArr
+    assert '/myDir/inner/c.txt' not in resultArr
+
+
+def test_list_noneExsistingPath():
+    sm = StorageManager(FSAdapter(config))
     options = {'path': 'noneExisting'}
     result = sm.list(options)
     assert result == None
 
 
+def test_delete():
+    sm = StorageManager(FSAdapter(config))
+    options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
+    sm.put(options)
+    options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
+    sm.put(options)
+    sm.delete(options)
+    options = {'path': dirName}
+    resultArr = sm.listPrefix(options)
+    assert resultArr.__len__() == 1
+    assert '/myDir/a.txt' in resultArr
+    assert '/myDir/b.txt' not in resultArr
+
+
 def test_get_putStream():
-    sm = StorageManager(config)
-    options = {'fileName': 'a.txt', 'directoryName': dirName, 'data': content}
+    sm = StorageManager(FSAdapter(config))
+    options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     stream = sm.getStream(options)
-    options = {'fileName': 'aa.txt', 'directoryName': dirName, 'data': stream}
+    options = { 'path': dirName+ os.path.sep + 'aa.txt', 'data': stream}
     sm.putStream(options)
-    options = {'fileName': 'aa.txt', 'directoryName': dirName}
+    options = { 'path': dirName+ os.path.sep + 'aa.txt'}
     aa = sm.get(options)
     assert aa == content
+
+
+def test_taks_output_put_get():
+    sm = TaskOutputManager(FSAdapter(config), {'clusterName': 'cName'})
+    sm.put('myJobId', 'myTaksId', content)
+    a = sm.get('myJobId', 'myTaksId')
+    assert a == content
+
 
 @pytest.fixture(scope="function", autouse=True)
 def pytest_runtest_teardown(request):

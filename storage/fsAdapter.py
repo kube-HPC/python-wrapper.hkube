@@ -1,16 +1,15 @@
 import os
 
 
-def getPath(base, dir, fName):
-    return base + os.path.sep + dir + os.path.sep + fName
-
+def getPath(base, dir):
+    return base + os.path.sep + dir
 
 class FSAdapter:
     def __init__(self, config):
         self.basePath = config['baseDirectory']
 
     def put(self, options):
-        filePath = getPath(self.basePath, options['directoryName'], options['fileName'])
+        filePath = getPath(self.basePath, options['path'])
         self.ensure_dir(filePath)
         f = open(filePath, 'w')
         f.write(options['data'])
@@ -18,7 +17,7 @@ class FSAdapter:
         pass
 
     def get(self, options):
-        filePath = getPath(self.basePath, options['directoryName'], options['fileName'])
+        filePath = getPath(self.basePath, options['path'])
         if not (os.path.exists(filePath)):
             return None
         f = open(filePath, 'r')
@@ -40,17 +39,18 @@ class FSAdapter:
         return recursive_files_in_dir
 
     def delete(self, options):
-        pass
+        filePath = getPath(self.basePath, options['path'])
+        os.remove(filePath)
 
     def getStream(self, options):
-        filePath = getPath(self.basePath, options['directoryName'], options['fileName'])
+        filePath = getPath(self.basePath, options['path'])
         if not (os.path.exists(filePath)):
             return None
         f = open(filePath, 'rb')
         return f
 
     def getOutputStream(self, options):
-        filePath = self.basePath + os.path.sep + options['directoryName'] + os.path.sep + options['fileName']
+        filePath = self.basePath + os.path.sep + options['path']
         f = open(filePath, 'wb')
         return f
 
@@ -68,3 +68,15 @@ class FSAdapter:
         if not os.path.exists(d):
             os.makedirs(d)
         return os.path.exists(f)
+
+    def listPrefix(self, options):
+        filePath = self.basePath + os.path.sep + options['path']
+        if not (os.path.exists(filePath)):
+            return None
+        for r, d, f in os.walk(filePath):
+            files_in_dir = []
+            relativePath = r.replace(self.basePath, '')
+            for fname in f:
+                files_in_dir.append(relativePath + os.path.sep + fname)
+            break
+        return files_in_dir
