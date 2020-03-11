@@ -5,6 +5,7 @@ import os
 class TaskOutputManager(StorageManager):
     storagePrefix = 'hkube'
 
+
     def __init__(self, adpater, config):
         super(TaskOutputManager,self).__init__(adpater)
         self.clusterName = config['clusterName']

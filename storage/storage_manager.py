@@ -1,6 +1,6 @@
 from .fsAdapter import FSAdapter
 
-class StorageManager:
+class StorageManager(object):
     def __init__(self,adpter):
         self.adapter = adpter
     def put(self, options):

@@ -99,7 +99,7 @@ def test_get_putStream():
     assert aa == content
 
 
-def test_taks_output_put_get():
+def test_task_output_put_get():
     sm = TaskOutputManager(FSAdapter(config), {'clusterName': 'cName'})
     sm.put('myJobId', 'myTaksId', content)
     a = sm.get('myJobId', 'myTaksId')
