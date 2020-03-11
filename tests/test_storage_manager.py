@@ -13,7 +13,7 @@ def ensure_dir(f):
     return os.path.exists(f)
 
 
-content = 'all_my_data'
+content = {"data": 'all_my_data'}
 dirName = 'myDir'
 config = {'baseDirectory': 'baseDirectory'}
 ensure_dir('./' + config['baseDirectory'])
@@ -40,7 +40,8 @@ def test_list():
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
     sm.put(options)
-    options = {'path': dirName + os.path.sep + 'inner'+ os.path.sep + 'c.txt', 'data': content}
+    options = {'path': dirName + os.path.sep +
+               'inner' + os.path.sep + 'c.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName}
     resultArr = sm.list(options)
@@ -56,7 +57,8 @@ def test_prefixlist():
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
     sm.put(options)
-    options = {'path': dirName + os.path.sep + 'inner' + os.path.sep + 'c.txt', 'data': content}
+    options = {'path': dirName + os.path.sep +
+               'inner' + os.path.sep + 'c.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName}
     resultArr = sm.listPrefix(options)
@@ -92,9 +94,9 @@ def test_get_putStream():
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     stream = sm.getStream(options)
-    options = { 'path': dirName+ os.path.sep + 'aa.txt', 'data': stream}
+    options = {'path': dirName + os.path.sep + 'aa.txt', 'data': stream}
     sm.putStream(options)
-    options = { 'path': dirName+ os.path.sep + 'aa.txt'}
+    options = {'path': dirName + os.path.sep + 'aa.txt'}
     aa = sm.get(options)
     assert aa == content
 
@@ -109,6 +111,7 @@ def test_task_output_put_get():
 @pytest.fixture(scope="function", autouse=True)
 def pytest_runtest_teardown(request):
     def remove_test_dir():
-        shutil.rmtree(config['baseDirectory'] + os.path.sep + dirName, ignore_errors=True)
+        shutil.rmtree(config['baseDirectory'] +
+                      os.path.sep + dirName, ignore_errors=True)
 
     request.addfinalizer(remove_test_dir)

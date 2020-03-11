@@ -17,9 +17,17 @@ config = {
     },
     "algorithmDiscovery": {
         "host": os.environ.get('POD_NAME', '127.0.0.1'),
-        "port": os.environ.get('DISCOVERY_PORT', 9020)
+        "port": os.environ.get('DISCOVERY_PORT', 9020),
+        "encoding": os.environ.get('DISCOVERY_ENCODING', 'bson'),
     },
-    "clusterName": os.environ.get('CLUSTER_NAME', 'local')
+    "storage": {
+        "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
+        "clusterName": os.environ.get('CLUSTER_NAME', 'local'),
+        "storageType": os.environ.get('STORAGE_TYPE', 'fs'),
+        "fs": {
+            "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', '/var/tmp/fs/storage')
+        }
+    }
 }
 
 

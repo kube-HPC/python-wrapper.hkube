@@ -187,7 +187,7 @@ class Algorunner:
 
             self._dataServer.setSendingState(taskId, data)
             self._sendCommand(messages.outgoing["storing"], {
-                              "discovery": "self._algorithmDiscovery", **storageInfo})
+                              "discovery": self._algorithmDiscovery, **storageInfo})
             sleep(5000)
             # self._dataAdapter.setData({jobId, taskId, data})
             # self._dataServer.endSendingState()
