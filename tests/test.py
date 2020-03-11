@@ -14,7 +14,12 @@ config = {
         "protocol": os.environ.get('WORKER_SOCKET_PROTOCOL', "ws"),
         "url": os.environ.get('WORKER_SOCKET_URL', None),
         "encoding": os.environ.get('WORKER_ENCODING', 'bson')
-    }
+    },
+    "algorithmDiscovery": {
+        "host": os.environ.get('POD_NAME', '127.0.0.1'),
+        "port": os.environ.get('DISCOVERY_PORT', 9020)
+    },
+    "clusterName": os.environ.get('CLUSTER_NAME', 'local')
 }
 
 
@@ -36,6 +41,7 @@ def start(args, hkubeApi=None):
 def main_callbacks():
     alg = Algorunner()
     alg.loadAlgorithmCallbacks(start)
+    alg.initStorage(config)
     job = alg.connectToWorker(config)
     job.join()
 

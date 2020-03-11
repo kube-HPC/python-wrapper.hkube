@@ -125,7 +125,7 @@ class Algorunner:
         self._dataServer = DataServer({"port": port, "encoding": encoding})
 
     def initStorage(self, options):
-        dataAdapter.init(options)
+        self._dataAdapter.init(options)
 
     def close(self):
         self._wsc.stopWS()

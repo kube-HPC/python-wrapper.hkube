@@ -1,18 +1,14 @@
 from __future__ import print_function, division, absolute_import
-import gevent
-import os
-import sys
-import importlib
-from .wc import WebsocketClient
-from .hkube_api import HKubeApi
+from storage.storage_manager import StorageManager
 import copy
-from events import Events
 import collections
 import six
 import dpath.util
 
 
 class DataAdapter:
+    def init(self, options):
+        self._storageManager = StorageManager(options)
 
     def getData(self, options):
 
