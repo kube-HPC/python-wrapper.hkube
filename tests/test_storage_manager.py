@@ -92,7 +92,8 @@ def test_delete():
 
 def test_task_output_put_get():
     sm = TaskOutputManager(FSAdapter(config), {'clusterName': 'cName'})
-    sm.put('myJobId', 'myTaksId', content)
+    obj_path = sm.put('myJobId', 'myTaksId', content)
+    assert obj_path == {'path': 'cName-hkube/myJobId/myTaksId'}
     a = sm.get('myJobId', 'myTaksId')
     assert a == content
 

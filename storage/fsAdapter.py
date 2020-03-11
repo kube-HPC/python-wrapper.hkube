@@ -19,7 +19,7 @@ class FSAdapter:
         f = open(filePath, 'wb')
         f.write(self.encoding.encode(options['data']))
         f.close()
-        pass
+        return  {'path': options['path']}
 
     def get(self, options):
         filePath = getPath(self.basePath, options['path'])
