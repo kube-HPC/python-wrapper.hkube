@@ -10,13 +10,13 @@ adapterTypes = {
 
 
 class StorageManager():
-    def __init__(self, config,encoding):
+    def __init__(self, config):
         storageType = config["storageType"]
         specificConfig = config[storageType]
         adapterType = adapterTypes.get(storageType)
         adaptersConfig = dict()
         adaptersConfig.update(specificConfig)
         adaptersConfig.update(config)
-        adapter = adapterType(adaptersConfig,encoding)
+        adapter = adapterType(adaptersConfig)
         self.hkube = TaskOutputManager(adapter, config)
         self.storage = BaseStorageManager(adapter)

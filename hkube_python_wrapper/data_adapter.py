@@ -3,12 +3,12 @@ from storage.storage_manager import StorageManager
 import copy
 import collections
 import six
-import dpath.util
+# import dpath.util
 
 
 class DataAdapter:
     def init(self, options):
-        self._storageManager = StorageManager(options["storage"])
+        self._storageManager = StorageManager(options["storage"],'bson')
 
     def getData(self, options):
 
