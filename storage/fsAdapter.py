@@ -1,18 +1,22 @@
 import os
 
+from util.encoding import Encoding
+
 
 def getPath(base, dir):
     return base + os.path.sep + dir
 
+
 class FSAdapter:
-    def __init__(self, config):
+    def __init__(self, config, encoding):
+        self.encoding = Encoding(encoding)
         self.basePath = config['baseDirectory']
 
     def put(self, options):
         filePath = getPath(self.basePath, options['path'])
         self.ensure_dir(filePath)
-        f = open(filePath, 'w')
-        f.write(options['data'])
+        f = open(filePath, 'wb')
+        f.write(self.encoding.encode(options['data']))
         f.close()
         pass
 
@@ -20,10 +24,10 @@ class FSAdapter:
         filePath = getPath(self.basePath, options['path'])
         if not (os.path.exists(filePath)):
             return None
-        f = open(filePath, 'r')
+        f = open(filePath, 'rb')
         result = f.read()
         f.close()
-        return result
+        return self.encoding.decode(result)
 
     def list(self, options):
         filePath = self.basePath + os.path.sep + options['path']
@@ -41,27 +45,6 @@ class FSAdapter:
     def delete(self, options):
         filePath = getPath(self.basePath, options['path'])
         os.remove(filePath)
-
-    def getStream(self, options):
-        filePath = getPath(self.basePath, options['path'])
-        if not (os.path.exists(filePath)):
-            return None
-        f = open(filePath, 'rb')
-        return f
-
-    def getOutputStream(self, options):
-        filePath = self.basePath + os.path.sep + options['path']
-        f = open(filePath, 'wb')
-        return f
-
-    def putStream(self, options):
-        intStream = options['data']
-        outStream = self.getOutputStream(options)
-        readBytes = intStream.read(1000)
-        while (len(readBytes) > 0):
-            outStream.write(readBytes)
-            readBytes = intStream.read(1000)
-        outStream.close()
 
     def ensure_dir(self, f):
         d = os.path.dirname(f)

@@ -20,7 +20,7 @@ ensure_dir('./' + config['baseDirectory'])
 
 
 def test_put_get():
-    sm = BaseStorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config,'bson'))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     a = sm.get(options)
@@ -29,13 +29,13 @@ def test_put_get():
 
 def test_fail_to_get():
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
-    sm = BaseStorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config,'bson'))
     a = sm.get(options)
     assert a == None
 
 
 def test_list():
-    sm = BaseStorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config,'bson'))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
@@ -52,7 +52,7 @@ def test_list():
 
 
 def test_prefixlist():
-    sm = BaseStorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config,'bson'))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
@@ -69,14 +69,14 @@ def test_prefixlist():
 
 
 def test_list_noneExsistingPath():
-    sm = BaseStorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config,'bson'))
     options = {'path': 'noneExisting'}
     result = sm.list(options)
     assert result == None
 
 
 def test_delete():
-    sm = BaseStorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config,'bson'))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
@@ -89,20 +89,9 @@ def test_delete():
     assert '/myDir/b.txt' not in resultArr
 
 
-def test_get_putStream():
-    sm = BaseStorageManager(FSAdapter(config))
-    options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
-    sm.put(options)
-    stream = sm.getStream(options)
-    options = {'path': dirName + os.path.sep + 'aa.txt', 'data': stream}
-    sm.putStream(options)
-    options = {'path': dirName + os.path.sep + 'aa.txt'}
-    aa = sm.get(options)
-    assert aa == content
-
 
 def test_task_output_put_get():
-    sm = TaskOutputManager(FSAdapter(config), {'clusterName': 'cName'})
+    sm = TaskOutputManager(FSAdapter(config,'bson'), {'clusterName': 'cName'})
     sm.put('myJobId', 'myTaksId', content)
     a = sm.get('myJobId', 'myTaksId')
     assert a == content

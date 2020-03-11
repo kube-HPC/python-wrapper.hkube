@@ -11,9 +11,5 @@ class BaseStorageManager(object):
         return self.adapter.listPrefix(options)
     def delete(self,options):
         self.adapter.delete(options)
-    def getStream(self,options):
-        return self.adapter.getStream(options)
-    def putStream(self,options):
-        return self.adapter.putStream(options)
 
 
