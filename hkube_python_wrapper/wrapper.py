@@ -113,7 +113,7 @@ class Algorunner:
         return job
 
     def initDataServer(self, options):
-        disc = options.algorithmDiscovery
+        disc = options["algorithmDiscovery"]
         host = disc.get("host")
         port = disc.get("port")
         encoding = disc.get("encoding")
@@ -122,7 +122,7 @@ class Algorunner:
             "port": port,
             "encoding": encoding
         }
-        self._dataServer = DataServer({"port": port, "encoding": encoding})
+        # self._dataServer = DataServer({"port": port, "encoding": encoding})
 
     def initStorage(self, options):
         self._dataAdapter.init(options)
@@ -185,9 +185,10 @@ class Algorunner:
             }
             storageInfo = self._dataAdapter.createStorageInfo(data)
 
+            storingData = {"discovery": self._algorithmDiscovery}
+            storingData.update(storageInfo)
             self._dataServer.setSendingState(taskId, data)
-            self._sendCommand(messages.outgoing["storing"], {
-                              "discovery": self._algorithmDiscovery, **storageInfo})
+            self._sendCommand(messages.outgoing["storing"], storingData)
             sleep(5000)
             # self._dataAdapter.setData({jobId, taskId, data})
             # self._dataServer.endSendingState()

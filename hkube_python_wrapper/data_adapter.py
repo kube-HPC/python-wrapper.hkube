@@ -8,7 +8,8 @@ import dpath.util
 
 class DataAdapter:
     def init(self, options):
-        self._storageManager = StorageManager(options["storage"])
+        self._storageManager = StorageManager(
+            options["storage"], options["storage"]["encoding"])
 
     def getData(self, options):
 
@@ -43,7 +44,7 @@ class DataAdapter:
         jobId = options.get("jobId")
         taskId = options.get("taskId")
         data = options.get("data")
-        result = storageManager.hkube.put(
+        result = self._storageManager.hkube.put(
             {"jobId": jobId, "taskId": taskId, "data": data})
         return result
 
@@ -109,8 +110,7 @@ class DataAdapter:
     #     return response.data
 
     def _getFromStorage(self, options):
-        return options
-        data = storageManager.get(options)
+        data = self._storageManager.storage.get(options)
         return data
 
     def createStorageInfo(self, options):
