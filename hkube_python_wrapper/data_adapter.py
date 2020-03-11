@@ -8,8 +8,7 @@ import dpath.util
 
 class DataAdapter:
     def init(self, options):
-        self._storageManager = StorageManager(
-            options["storage"], options["storage"]["encoding"])
+        self._storageManager = StorageManager(options["storage"])
 
     def getData(self, options):
 
@@ -44,8 +43,7 @@ class DataAdapter:
         jobId = options.get("jobId")
         taskId = options.get("taskId")
         data = options.get("data")
-        result = self._storageManager.hkube.put(
-            {"jobId": jobId, "taskId": taskId, "data": data})
+        result = self._storageManager.hkube.put(jobId, taskId, data)
         return result
 
     def _flatten(self, d, sep="_"):
@@ -117,7 +115,7 @@ class DataAdapter:
         jobId = options.get("jobId")
         taskId = options.get("taskId")
 
-        path = 'jobId/taskId'
+        path = self._storageManager.hkube.createPath(jobId, taskId)
         metadata = self.createMetadata(options)
         storageInfo = {
             "storageInfo": {
@@ -137,9 +135,11 @@ class DataAdapter:
         paths = savePaths or []
         metadata = dict()
         for p in paths:
-            value = dpath.util.get(object, p, separator='.', default='DEFAULT')
-            if (value != 'DEFAULT'):
+            try:
+                value = dpath.util.get(object, p, separator='.')
                 self._setMetadata(value, p, metadata)
+            except Exception as e:
+                pass
 
         return metadata
 

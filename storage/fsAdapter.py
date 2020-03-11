@@ -8,7 +8,8 @@ def getPath(base, dir):
 
 
 class FSAdapter:
-    def __init__(self, config, encoding):
+    def __init__(self, config):
+        encoding = config['encoding']
         self.encoding = Encoding(encoding)
         self.basePath = config['baseDirectory']
 
@@ -18,7 +19,7 @@ class FSAdapter:
         f = open(filePath, 'wb')
         f.write(self.encoding.encode(options['data']))
         f.close()
-        pass
+        return  {'path': options['path']}
 
     def get(self, options):
         filePath = getPath(self.basePath, options['path'])

@@ -15,12 +15,12 @@ def ensure_dir(f):
 
 content = {"data": 'all_my_data'}
 dirName = 'myDir'
-config = {'baseDirectory': 'baseDirectory'}
+config = {'baseDirectory': 'baseDirectory','encoding':'bson'}
 ensure_dir('./' + config['baseDirectory'])
 
 
 def test_put_get():
-    sm = BaseStorageManager(FSAdapter(config, 'bson'))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     a = sm.get(options)
@@ -29,13 +29,13 @@ def test_put_get():
 
 def test_fail_to_get():
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
-    sm = BaseStorageManager(FSAdapter(config, 'bson'))
+    sm = BaseStorageManager(FSAdapter(config))
     a = sm.get(options)
     assert a == None
 
 
 def test_list():
-    sm = BaseStorageManager(FSAdapter(config, 'bson'))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
@@ -52,7 +52,7 @@ def test_list():
 
 
 def test_prefixlist():
-    sm = BaseStorageManager(FSAdapter(config, 'bson'))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
@@ -69,14 +69,14 @@ def test_prefixlist():
 
 
 def test_list_noneExsistingPath():
-    sm = BaseStorageManager(FSAdapter(config, 'bson'))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': 'noneExisting'}
     result = sm.list(options)
     assert result == None
 
 
 def test_delete():
-    sm = BaseStorageManager(FSAdapter(config, 'bson'))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
@@ -90,8 +90,9 @@ def test_delete():
 
 
 def test_task_output_put_get():
-    sm = TaskOutputManager(FSAdapter(config, 'bson'), {'clusterName': 'cName'})
-    sm.put('myJobId', 'myTaksId', content)
+    sm = TaskOutputManager(FSAdapter(config), {'clusterName': 'cName'})
+    obj_path = sm.put('myJobId', 'myTaksId', content)
+    assert obj_path == {'path': 'cName-hkube/myJobId/myTaksId'}
     a = sm.get('myJobId', 'myTaksId')
     assert a == content
 

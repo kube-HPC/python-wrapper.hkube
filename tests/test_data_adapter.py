@@ -16,8 +16,7 @@ config = {
     }
 }
 
-storageManager = StorageManager(
-    config["storage"], config["storage"]["encoding"])
+storageManager = StorageManager(config["storage"])
 
 jobId = 'jobId-328901800'
 taskId1 = 'taskId-328901801'
@@ -73,4 +72,27 @@ def test_get_data():
     assert result[10] == input[10]
 
 
+def test_set_data():
+
+    result = dataAdapter.setData(
+        {'jobId': jobId, 'taskId': taskId1, 'data': obj1})
+    assert result['path']
+
+
+def test_createStorageInfo():
+
+    result = dataAdapter.createStorageInfo(
+        {
+            'jobId': jobId,
+            'taskId': taskId1,
+            'nodeName': 'green',
+            'data': obj2,
+            'savePaths': ['green.data.array']
+        })
+    assert result['storageInfo']
+    assert result['metadata']
+
+
 test_get_data()
+test_set_data()
+test_createStorageInfo()
