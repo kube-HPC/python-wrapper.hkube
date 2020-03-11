@@ -1,5 +1,5 @@
 from __future__ import print_function, division, absolute_import
-from storage.storage_manager import StorageManager
+from storage.base_storage_manager import BaseStorageManager
 import copy
 import collections
 import six
@@ -8,7 +8,7 @@ import dpath.util
 
 class DataAdapter:
     def init(self, options):
-        self._storageManager = StorageManager(options)
+        self._storageManager = BaseStorageManager(options)
 
     def getData(self, options):
 

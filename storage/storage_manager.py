@@ -1,29 +1,8 @@
-from .fsAdapter import FSAdapter
-
-class StorageManager(object):
-    def __init__(self,adpter):
-        self.adapter = adpter
-    def put(self, options):
-        return self.adapter.put(options)
-    def get(self, options):
-        return self.adapter.get(options)
-    def list(self, options):
-        return self.adapter.list(options)
-    def listPrefix(self, options):
-        return self.adapter.listPrefix(options)
-    def delete(self,options):
-        self.adapter.delete(options)
-    def getStream(self,options):
-        return self.adapter.getStream(options)
-    def putStream(self,options):
-        return self.adapter.putStream(options)
-
-if __name__ == '__main__':
-    config = {'baseDirectory': '/home/golanha/'}
-    sm = StorageManager(config)
-    options  = {}
-    options['fileName'] = 'a.txt'
-    options['directoryName'] = 'c'
-    options['data'] = 'ssfff'
-    sm.put(options)
-
+from storage.task_output_manager import TaskOutputManager
+from storage.base_storage_manager import BaseStorageManager
+from storage.fsAdapter import FSAdapter
+class StorageManager():
+    def __init__(self, config):
+        adpater = FSAdapter()
+        self.hkube = TaskOutputManager(adpater,config)
+        self.storage = BaseStorageManager(adpater,config)

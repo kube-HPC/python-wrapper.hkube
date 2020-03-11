@@ -1,8 +1,8 @@
-from storage.storage_manager import StorageManager
+from storage.base_storage_manager import BaseStorageManager
 import os
 
 
-class TaskOutputManager(StorageManager):
+class TaskOutputManager(BaseStorageManager):
     storagePrefix = 'hkube'
 
 

@@ -1,4 +1,4 @@
-from storage.storage_manager import StorageManager
+from storage.base_storage_manager import BaseStorageManager
 from storage.task_output_manager import TaskOutputManager
 from storage.fsAdapter import FSAdapter
 import pytest
@@ -20,7 +20,7 @@ ensure_dir('./' + config['baseDirectory'])
 
 
 def test_put_get():
-    sm = StorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     a = sm.get(options)
@@ -29,13 +29,13 @@ def test_put_get():
 
 def test_fail_to_get():
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
-    sm = StorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config))
     a = sm.get(options)
     assert a == None
 
 
 def test_list():
-    sm = StorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
@@ -51,7 +51,7 @@ def test_list():
 
 
 def test_prefixlist():
-    sm = StorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
@@ -67,14 +67,14 @@ def test_prefixlist():
 
 
 def test_list_noneExsistingPath():
-    sm = StorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': 'noneExisting'}
     result = sm.list(options)
     assert result == None
 
 
 def test_delete():
-    sm = StorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     options = {'path': dirName + os.path.sep + 'b.txt', 'data': content}
@@ -88,7 +88,7 @@ def test_delete():
 
 
 def test_get_putStream():
-    sm = StorageManager(FSAdapter(config))
+    sm = BaseStorageManager(FSAdapter(config))
     options = {'path': dirName + os.path.sep + 'a.txt', 'data': content}
     sm.put(options)
     stream = sm.getStream(options)
