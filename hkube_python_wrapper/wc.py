@@ -1,24 +1,12 @@
 from __future__ import print_function, division, absolute_import
 import time
 from events import Events
-from bson.codec_options import CodecOptions, TypeRegistry
-import bson
-import simplejson as json
 from websocket import ABNF
 import websocket
 import gevent
 from gevent import monkey
+from .encoding import Encoding
 monkey.patch_all()
-
-
-def fallback_encoder(value):
-    if isinstance(value, bytearray):
-        return bson.binary.Binary(value)
-    return value
-
-
-type_registry = TypeRegistry(fallback_encoder=fallback_encoder)
-codec_options = CodecOptions(type_registry=type_registry)
 
 
 class WebsocketClient:
@@ -41,18 +29,10 @@ class WebsocketClient:
             "subPipelineStopped": self.subPipelineStopped
         }
         self._firstConnect = False
-        self._encode = self._bsonEncode if self._binary else json.dumps
-        self._decode = self._bsonDecode if self._binary else json.loads
+        self._encoding = Encoding(encoding)
         self._ws_opcode = ABNF.OPCODE_BINARY if self._binary else ABNF.OPCODE_TEXT
         print('Initialized socket with {encoding} encoding'.format(
             encoding=encoding))
-
-    def _bsonEncode(self, data):
-        return bson.encode({"data": data}, codec_options=codec_options)
-
-    def _bsonDecode(self, data):
-        res = bson.decode(data)
-        return res["data"]
 
     def init(self, data):
         self.events.on_init(data)
@@ -85,7 +65,7 @@ class WebsocketClient:
         self.events.on_subPipelineStopped(data)
 
     def on_message(self, message):
-        decoded = self._decode(message)
+        decoded = self._encoding.decode(message)
         command = decoded["command"]
         data = decoded.get("data", None)
         print('got message from worker: {command}'.format(command=command))
@@ -105,7 +85,7 @@ class WebsocketClient:
 
     def send(self, message):
         print('sending message to worker: {command}'.format(**message))
-        self._ws.send(self._encode(message), opcode=self._ws_opcode)
+        self._ws.send(self._encoding.encode(message), opcode=self._ws_opcode)
 
     def startWS(self, url):
         self._ws = websocket.WebSocketApp(

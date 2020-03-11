@@ -12,6 +12,10 @@ const storageInfo1 = { data: { array } };
 const storageInfo2 = { myValue: 'bla' };
 const storageInfo3 = array;
 
+const jobId = 'jobId-328901802';
+const taskId = 'taskId-328901802';
+const nodeName = 'green';
+
 const input = [
     { data: '$$guid-1' },
     { prop: ['$$guid-2'] },
@@ -19,6 +23,7 @@ const input = [
     ['$$guid-4'],
     '$$guid-5',
     '$$guid-6',
+    '$$guid-7',
     'test-param',
     true,
     null,
@@ -30,8 +35,20 @@ const storage = {
     'guid-3': { storageInfo: storageInfo1, path: 'data.array', index: 3 },
     'guid-4': { storageInfo: storageInfo1, path: 'data.array', index: 0 },
     'guid-5': { storageInfo: storageInfo3, index: 2 },
-    'guid-6': { storageInfo: storageInfo1 }
+    'guid-6': { storageInfo: storageInfo1 },
+    'guid-7': [{ storageInfo: storageInfo1 }, { storageInfo: storageInfo2 }, { storageInfo: storageInfo3 }]
 };
+
+const data = {
+    jobId,
+    taskId,
+    input,
+    nodeName,
+    storage,
+    info: {
+        savePaths: [nodeName]
+    }
+}
 
 const main = async () => {
     const server = http.createServer();
@@ -67,7 +84,7 @@ const main = async () => {
                     break;
             }
         })
-        send({ command: 'initialize', data: { input, storage } })
+        send({ command: 'initialize', data })
 
         socket.on('close', code => {
             console.log(`closed with code ${code}`)

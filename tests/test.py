@@ -14,8 +14,14 @@ config = {
         "protocol": os.environ.get('WORKER_SOCKET_PROTOCOL', "ws"),
         "url": os.environ.get('WORKER_SOCKET_URL', None),
         "encoding": os.environ.get('WORKER_ENCODING', 'bson')
-    }
+    },
+    "algorithmDiscovery": {
+        "host": os.environ.get('POD_NAME', '127.0.0.1'),
+        "port": os.environ.get('DISCOVERY_PORT', 9020)
+    },
+    "clusterName": os.environ.get('CLUSTER_NAME', 'local')
 }
+
 
 def start(args, hkubeApi=None):
     print('start called')
@@ -25,27 +31,30 @@ def start(args, hkubeApi=None):
     waiter2 = hkubeApi.start_stored_subpipeline('simple', {'d': [6, 'stam']})
     res = [waiter1.get(), waiter2.get()]
     print('got all results')
-    ret = list(map(lambda x: {'error': x.get('error')} if x.get(
-        'error') != None else {'response': x.get('response')}, res))
-    # ret='OK!!!'
+    # ret = list(map(lambda x: {'error': x.get('error')} if x.get(
+    #     'error') != None else {'response': x.get('response')}, res))
+    # # ret='OK!!!'
+    ret = {"foo": "bar"}
     return (ret)
-
 
 
 def main_callbacks():
     alg = Algorunner()
     alg.loadAlgorithmCallbacks(start)
+    alg.initStorage(config)
     job = alg.connectToWorker(config)
     job.join()
+
 
 def main_file():
     alg = Algorunner()
     alg.loadAlgorithm({
-        "path":"test_alg",
-        "entryPoint":"test_alg1.py"
+        "path": "test_alg",
+        "entryPoint": "test_alg1.py"
     })
     job = alg.connectToWorker(config)
     job.join()
+
 
 if __name__ == '__main__':
     main_callbacks()

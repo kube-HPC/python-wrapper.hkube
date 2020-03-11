@@ -112,6 +112,21 @@ class Algorunner:
         job = gevent.spawn(self._wsc.startWS, self._url)
         return job
 
+    def initDataServer(self, options):
+        disc = options.algorithmDiscovery
+        host = disc.get("host")
+        port = disc.get("port")
+        encoding = disc.get("encoding")
+        self._algorithmDiscovery = {
+            "host": host,
+            "port": port,
+            "encoding": encoding
+        }
+        self._dataServer = DataServer({"port": port, "encoding": encoding})
+
+    def initStorage(self, options):
+        self._dataAdapter.init(options)
+
     def close(self):
         self._wsc.stopWS()
 
@@ -153,11 +168,30 @@ class Algorunner:
     def _start(self, options):
         try:
             self._sendCommand(messages.outgoing["started"], None)
-
+            storage = self._input.get("storage")
+            jobId = self._input.get("jobId")
+            taskId = self._input.get("taskId")
+            nodeName = self._input.get("nodeName")
+            info = self._input.get("info")
+            savePaths = info.get("savePaths")
             input = self._dataAdapter.getData(self._input)
 
             method = self._getMethod(methods.start)
             output = method(self._input, self.hkubeApi)
+
+            data = {
+                "jobId": jobId, "taskId": taskId, "nodeName": nodeName,
+                "data": output, "savePaths": savePaths
+            }
+            storageInfo = self._dataAdapter.createStorageInfo(data)
+
+            self._dataServer.setSendingState(taskId, data)
+            self._sendCommand(messages.outgoing["storing"], {
+                              "discovery": "self._algorithmDiscovery", **storageInfo})
+            sleep(5000)
+            # self._dataAdapter.setData({jobId, taskId, data})
+            # self._dataServer.endSendingState()
+
             self._sendCommand(messages.outgoing["done"], output)
 
         except Exception as e:
