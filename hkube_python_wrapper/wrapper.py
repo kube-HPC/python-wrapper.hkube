@@ -91,18 +91,18 @@ class Algorunner:
             print(e)
 
     def connectToWorker(self, options):
-        socket = options["socket"]
-        encoding = socket["encoding"]
-        storage = options["storageMode"]
+        socket = options.get("socket")
+        encoding = socket.get("encoding")
+        storage = options.get("storageMode")
         binary = encoding in ['bson', 'protoc']
+        url = socket.get("url")
 
-        if (socket["url"] is not None):
-            self._url = socket["url"]
+        if (url is not None):
+            self._url = url
         else:
             self._url = '{protocol}://{host}:{port}'.format(**socket)
 
-        self._url += '?storage={storage}&encoding={encoding}'.format(
-            storage=storage, encoding=encoding)
+        self._url += '?storage={storage}&encoding={encoding}'.format(storage=storage, encoding=encoding)
 
         self._wsc = WebsocketClient(encoding, binary=binary)
         self.hkubeApi = HKubeApi(self._wsc)
@@ -113,7 +113,7 @@ class Algorunner:
         return job
 
     def initDataServer(self, options):
-        disc = options["algorithmDiscovery"]
+        disc = options.get("algorithmDiscovery")
         host = disc.get("host")
         port = disc.get("port")
         encoding = disc.get("encoding")
@@ -168,20 +168,25 @@ class Algorunner:
     def _start(self, options):
         try:
             self._sendCommand(messages.outgoing["started"], None)
+            input = self._input.get("input")
             storage = self._input.get("storage")
             jobId = self._input.get("jobId")
             taskId = self._input.get("taskId")
             nodeName = self._input.get("nodeName")
             info = self._input.get("info")
             savePaths = info.get("savePaths")
-            input = self._dataAdapter.getData(self._input)
+
+            input = self._dataAdapter.getData({'input': input, 'storage': storage})
 
             method = self._getMethod(methods.start)
             output = method(self._input, self.hkubeApi)
 
             data = {
-                "jobId": jobId, "taskId": taskId, "nodeName": nodeName,
-                "data": output, "savePaths": savePaths
+                "jobId": jobId,
+                "taskId": taskId,
+                "nodeName": nodeName,
+                "data": output,
+                "savePaths": savePaths
             }
             storageInfo = self._dataAdapter.createStorageInfo(data)
 

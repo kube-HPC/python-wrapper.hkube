@@ -31,8 +31,7 @@ class WebsocketClient:
         self._firstConnect = False
         self._encoding = Encoding(encoding)
         self._ws_opcode = ABNF.OPCODE_BINARY if self._binary else ABNF.OPCODE_TEXT
-        print('Initialized socket with {encoding} encoding'.format(
-            encoding=encoding))
+        print('Initialized socket with {encoding} encoding'.format(encoding=encoding))
 
     def init(self, data):
         self.events.on_init(data)

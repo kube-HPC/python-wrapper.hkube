@@ -7,4 +7,5 @@ wsaccel
 dpath==1.5.0
 six
 pytest
+pytest-cov
 pyzmq

@@ -25,4 +25,4 @@ class Encoding:
 
     def _bsonDecode(self, data):
         res = bson.decode(data)
-        return res["data"]
+        return res.get("data")

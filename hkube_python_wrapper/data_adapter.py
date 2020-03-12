@@ -8,14 +8,17 @@ import dpath.util
 
 class DataAdapter:
     def init(self, options):
-        self._storageManager = StorageManager(options["storage"])
+        self._storageManager = StorageManager(options.get("storage"))
 
     def getData(self, options):
 
-        input = options["input"]
-        storage = options["storage"]
+        input = options.get("input")
+        storage = options.get("storage")
 
-        if (len(storage) == 0):
+        if (input is None or len(input) == 0):
+            return input
+
+        if (storage is None or len(storage) == 0):
             return input
 
         result = copy.deepcopy(input)
@@ -128,24 +131,24 @@ class DataAdapter:
     def createMetadata(self, options):
         nodeName = options.get("nodeName")
         data = options.get("data")
-        savePaths = options.get("savePaths")
+        savePaths = options.get("savePaths", [])
 
-        object = {}
-        object[nodeName] = data
-        paths = savePaths or []
         metadata = dict()
-        for p in paths:
+        objData = dict()
+        objData[nodeName] = data
+        for p in savePaths:
             try:
-                value = dpath.util.get(object, p, separator='.')
-                self._setMetadata(value, p, metadata)
+                value = dpath.util.get(objData, p, separator='.')
+                meta = self._getMetadata(value)
+                metadata[p] = meta
             except Exception as e:
                 pass
 
         return metadata
 
-    def _setMetadata(self, value, path, metadata):
+    def _getMetadata(self, value):
         if(isinstance(value, collections.Sequence)):
             meta = {"type": "array", "size": len(value)}
         else:
             meta = {"type": str(type(value).__name__)}
-        metadata[path] = meta
+        return meta
