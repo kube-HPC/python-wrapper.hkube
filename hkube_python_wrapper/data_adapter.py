@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from storage.storage_manager import StorageManager
+from communication.DataRequest import DataRequest
 import copy
 import collections
 import six
@@ -102,13 +103,28 @@ class DataAdapter:
 
         return dataPath
 
-    # def _getFromPeer(self, options):
-    #     {taskId, dataPath} = options
-    #     {port, host, encoding} = options.discovery
-    #     dataRequest = new DataRequest({address: {port, host}, taskId, dataPath, encoding})
-    #     response = dataRequest.invoke()
-    #     self.emit(Events.DiscoveryGet, response)
-    #     return response.data
+    def _getFromPeer(self, options):
+        taskId = options.get('taskId')
+        dataPath = options.get('dataPath')
+        discovery = options.get('discovery')
+        port = discovery.get('port')
+        host = discovery.get('host')
+        encoding = discovery.get('encoding')
+
+        request = {
+            'address': {
+                'port': port,
+                'host': host
+            },
+            'taskId': taskId,
+            'dataPath': dataPath,
+            'encoding': encoding
+        }
+
+        dataRequest = DataRequest(request)
+        response = dataRequest.invoke()
+        self.emit(Events.DiscoveryGet, response)
+        return response.data
 
     def _getFromStorage(self, options):
         data = self._storageManager.storage.get(options)

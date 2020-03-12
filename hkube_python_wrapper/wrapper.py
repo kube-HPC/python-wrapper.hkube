@@ -6,7 +6,7 @@ import importlib
 from .wc import WebsocketClient
 from .hkube_api import HKubeApi
 from .data_adapter import DataAdapter
-
+from communication.DataServer import DataServer
 import hkube_python_wrapper.messages as messages
 import hkube_python_wrapper.methods as methods
 from events import Events
@@ -122,7 +122,7 @@ class Algorunner:
             "port": port,
             "encoding": encoding
         }
-        # self._dataServer = DataServer({"port": port, "encoding": encoding})
+        self._dataServer = DataServer({"port": port, "encoding": encoding})
 
     def initStorage(self, options):
         self._dataAdapter.init(options)
