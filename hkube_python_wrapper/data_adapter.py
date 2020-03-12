@@ -3,12 +3,12 @@ from storage.storage_manager import StorageManager
 import copy
 import collections
 import six
-# import dpath.util
+import dpath.util
 
 
 class DataAdapter:
     def init(self, options):
-        self._storageManager = StorageManager(options["storage"],'bson')
+        self._storageManager = StorageManager(options["storage"])
 
     def getData(self, options):
 
@@ -43,8 +43,7 @@ class DataAdapter:
         jobId = options.get("jobId")
         taskId = options.get("taskId")
         data = options.get("data")
-        result = storageManager.hkube.put(
-            {"jobId": jobId, "taskId": taskId, "data": data})
+        result = self._storageManager.hkube.put(jobId, taskId, data)
         return result
 
     def _flatten(self, d, sep="_"):
@@ -109,15 +108,14 @@ class DataAdapter:
     #     return response.data
 
     def _getFromStorage(self, options):
-        return options
-        data = storageManager.get(options)
+        data = self._storageManager.storage.get(options)
         return data
 
     def createStorageInfo(self, options):
         jobId = options.get("jobId")
         taskId = options.get("taskId")
 
-        path = 'jobId/taskId'
+        path = self._storageManager.hkube.createPath(jobId, taskId)
         metadata = self.createMetadata(options)
         storageInfo = {
             "storageInfo": {
@@ -137,9 +135,11 @@ class DataAdapter:
         paths = savePaths or []
         metadata = dict()
         for p in paths:
-            value = dpath.util.get(object, p, separator='.', default='DEFAULT')
-            if (value != 'DEFAULT'):
+            try:
+                value = dpath.util.get(object, p, separator='.')
                 self._setMetadata(value, p, metadata)
+            except Exception as e:
+                pass
 
         return metadata
 

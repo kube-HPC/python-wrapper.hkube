@@ -6,7 +6,6 @@ import websocket
 import gevent
 from gevent import monkey
 from util.encoding import Encoding
-
 monkey.patch_all()
 
 

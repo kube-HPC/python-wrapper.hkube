@@ -89,7 +89,6 @@ def test_delete():
     assert '/myDir/b.txt' not in resultArr
 
 
-
 def test_task_output_put_get():
     sm = TaskOutputManager(FSAdapter(config), {'clusterName': 'cName'})
     obj_path = sm.put('myJobId', 'myTaksId', content)
