@@ -49,7 +49,6 @@ def start(args, hkubeApi=None):
 def main_callbacks():
     alg = Algorunner()
     alg.loadAlgorithmCallbacks(start)
-    alg.initDataServer(config)
     alg.initStorage(config)
     job = alg.connectToWorker(config)
     job.join()

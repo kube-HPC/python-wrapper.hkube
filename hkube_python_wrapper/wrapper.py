@@ -112,7 +112,11 @@ class Algorunner:
         job = gevent.spawn(self._wsc.startWS, self._url)
         return job
 
-    def initDataServer(self, options):
+    def initStorage(self, options):
+        self._initDataServer(options)
+        self._initDataAdapter(options)
+
+    def _initDataServer(self, options):
         disc = options.get("algorithmDiscovery")
         host = disc.get("host")
         port = disc.get("port")
@@ -123,8 +127,8 @@ class Algorunner:
             "encoding": encoding
         }
         self._dataServer = DataServer({"port": port, "encoding": encoding})
-
-    def initStorage(self, options):
+    
+    def _initDataAdapter(self, options):
         self._dataAdapter.init(options)
 
     def close(self):
@@ -176,8 +180,8 @@ class Algorunner:
             info = self._input.get("info")
             savePaths = info.get("savePaths")
 
-            input = self._dataAdapter.getData({'input': input, 'storage': storage})
-
+            newInput = self._dataAdapter.getData({'input': input, 'storage': storage})
+            self._input.update({'input': newInput})
             method = self._getMethod(methods.start)
             output = method(self._input, self.hkubeApi)
 
@@ -189,16 +193,16 @@ class Algorunner:
                 "savePaths": savePaths
             }
             storageInfo = self._dataAdapter.createStorageInfo(data)
-
-            storingData = {"discovery": self._algorithmDiscovery}
+            # storingData = {"discovery": self._algorithmDiscovery}
+            storingData = {}
             storingData.update(storageInfo)
-            self._dataServer.setSendingState(taskId, data)
+            self._dataServer.setSendingState(taskId, output)
             self._sendCommand(messages.outgoing["storing"], storingData)
-            sleep(5000)
+            # sleep(5000)
             # self._dataAdapter.setData({jobId, taskId, data})
             # self._dataServer.endSendingState()
 
-            self._sendCommand(messages.outgoing["done"], output)
+            self._sendCommand(messages.outgoing["done"], None)
 
         except Exception as e:
             self._sendError(e)

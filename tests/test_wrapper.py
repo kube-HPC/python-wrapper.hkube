@@ -16,7 +16,7 @@ config = {
     },
     "algorithmDiscovery": {
         "host": os.environ.get('POD_NAME', '127.0.0.1'),
-        "port": os.environ.get('DISCOVERY_PORT', 9021),
+        "port": os.environ.get('DISCOVERY_PORT', 9020),
         "encoding": os.environ.get('DISCOVERY_ENCODING', 'bson'),
     },
     "storage": {
@@ -35,11 +35,12 @@ jobId = 'jobId-328901800'
 taskId1 = 'taskId-328901801'
 taskId2 = 'taskId-328901802'
 
-obj1 = [42, 37, 89, 95, 12, 126, 147]
-obj2 = {'data': {'array': obj1}}
+array = [42, 37, 89, 95, 12, 126, 147]
+nested = {'data': {'array': array}}
 
-storageInfo1 = storageManager.hkube.put(jobId, taskId1, obj1)
-storageInfo2 = storageManager.hkube.put(jobId, taskId2, obj2)
+storageInfo1 = storageManager.hkube.put(jobId, taskId1, array)
+storageInfo2 = storageManager.hkube.put(jobId, taskId2, nested)
+discovery = config["algorithmDiscovery"]
 
 input = [
     {'data': '$$guid-1'},
@@ -51,28 +52,32 @@ input = [
     12345
 ]
 
+
 storage = {
-    'guid-1': {'storageInfo': storageInfo2, 'path': 'data'},
-    'guid-2': {'storageInfo': storageInfo2, 'path': 'data.array', 'index': 4},
-    'guid-3': [{'storageInfo': storageInfo1}, {'storageInfo': storageInfo2}]
+    'guid-1': {'storageInfo': storageInfo2, 'discovery': discovery, 'path': 'data'},
+    'guid-2': {'storageInfo': storageInfo2,'discovery': discovery, 'path': 'data.array', 'index': 4},
+    'guid-3': [{'storageInfo': storageInfo1, 'discovery': discovery}, {'storageInfo': storageInfo2, 'discovery': discovery}]
 }
 
 def start(args):
-    ret = {"foo": "bar"}
-    return (ret)
-
+    ret = {
+        "data": {
+            "array": args["input"][1]["prop"]
+        }
+    }
+    return ret
 
 
 algorunner = Algorunner()
 algorunner.loadAlgorithmCallbacks(start)
 algorunner.connectToWorker(config)
-algorunner.initDataServer(config)
 algorunner.initStorage(config)
 
-def test_get_data_no_storage():
+
+def test_get_data():
     savePaths = ['green.data.array']
     job = {
-        'jobId':jobId,
+        'jobId': jobId,
         'taskId': taskId1,
         'input': input,
         'storage': storage,
@@ -82,4 +87,3 @@ def test_get_data_no_storage():
     algorunner._init(job)
     algorunner._start(job)
     assert '4' == '4'
-

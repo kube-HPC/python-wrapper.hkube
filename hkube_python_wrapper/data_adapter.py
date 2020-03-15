@@ -38,8 +38,7 @@ class DataAdapter:
                 else:
                     data = self._tryGetDataFromPeerOrStorage(link)
 
-                path = k.replace("_", "/")
-                dpath.util.set(result, path, data)
+                dpath.util.set(result, k, data)
 
         return result
 
@@ -50,7 +49,7 @@ class DataAdapter:
         result = self._storageManager.hkube.put(jobId, taskId, data)
         return result
 
-    def _flatten(self, d, sep="_"):
+    def _flatten(self, d, sep="/"):
 
         obj = collections.OrderedDict()
 
@@ -103,9 +102,8 @@ class DataAdapter:
 
         return dataPath
 
-    def _getFromPeer(self, options):
+    def _getFromPeer(self, options, dataPath):
         taskId = options.get('taskId')
-        dataPath = options.get('dataPath')
         discovery = options.get('discovery')
         port = discovery.get('port')
         host = discovery.get('host')
@@ -123,7 +121,7 @@ class DataAdapter:
 
         dataRequest = DataRequest(request)
         response = dataRequest.invoke()
-        self.emit(Events.DiscoveryGet, response)
+        # self.emit(Events.DiscoveryGet, response)
         return response.data
 
     def _getFromStorage(self, options):
