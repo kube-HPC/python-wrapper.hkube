@@ -13,9 +13,6 @@ matrix:
     # - python: 3.8
     # - python: pypy
     # - python: pypy3
-branches:
-  only:
-    - master
 install:
   - pip install -U -r tests/requirements.txt
 script:
@@ -38,4 +35,4 @@ deploy:
   user: ${PYPI_USER}
   password: ${PYPI_PASSWORD}
   on:
-    tags: true
+    branch: master
