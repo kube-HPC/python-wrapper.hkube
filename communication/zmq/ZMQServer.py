@@ -1,6 +1,6 @@
-import time
-import zmq
-import thread
+import zmq.green as zmq
+from gevent import spawn
+
 
 
 class ZMQServer(object):
@@ -13,6 +13,14 @@ class ZMQServer(object):
         def listen(server):
             while True:
                 # Wait for next request from client
-                message = server.socket.recv()
-                server.socket.send(getReplyFunc(message))
-        thread.start_new_thread(listen, ({self}))
+                try:
+                    message = server.socket.recv()
+                    server.socket.send(getReplyFunc(message))
+                except Exception as e:
+                    print (str(e))
+                    server.socket.close()
+                    context = zmq.Context()
+                    server.socket = context.socket(zmq.REP)
+                    server.socket.bind("tcp://*:" + str(config['port']))
+
+        spawn(listen, (self))
