@@ -1,0 +1,41 @@
+sudo: required
+language: python
+matrix:
+  fast_finish: true
+  include:
+    # - python: 2.6
+    # - python: 2.7
+    # - python: 3.3
+    # - python: 3.4
+    # - python: 3.5
+    # - python: 3.6
+    - python: 3.7
+    # - python: 3.8
+    # - python: pypy
+    # - python: pypy3
+branches:
+  only:
+    - master
+install:
+  - pip install -U -r tests/requirements.txt
+script:
+  - pytest --cov-report html --cov=. tests/
+after_success:
+  - |
+    if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+      git config --global user.email "travis@travis-ci.org"
+      git config --global user.name "Travis CI"
+      git remote set-url --push origin "https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git"
+      git remote -v
+      git checkout -f -b version-branch
+      npm version patch -m "$(git log -1 --pretty=%B) .... bump version [skip ci]"
+      git push origin version-branch:master --follow-tags
+    else
+      echo "version skiped!"
+    fi
+deploy:
+  provider: pypi
+  user: ${PYPI_USER}
+  password: ${PYPI_PASSWORD}
+  on:
+    tags: true
