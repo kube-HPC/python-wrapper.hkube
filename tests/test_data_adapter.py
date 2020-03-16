@@ -1,6 +1,4 @@
-import os
-import sys
-import pytest
+
 from hkube_python_wrapper.data_adapter import DataAdapter
 from storage.storage_manager import StorageManager
 import tests.configs.config as conf
@@ -8,7 +6,7 @@ import tests.configs.config as conf
 config = conf.Config
 
 storageManager = StorageManager(config.storage)
-dataAdapter = DataAdapter(config)
+dataAdapter = DataAdapter(config.storage)
 
 jobId = 'jobId-328901800'
 taskId1 = 'taskId-328901801'
@@ -74,7 +72,7 @@ def test_get_data():
 def test_set_data():
 
     result = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': obj1})
-    assert result['path']
+    assert result['path'].find(jobId) != -1
 
 
 def test_createStorageInfo():

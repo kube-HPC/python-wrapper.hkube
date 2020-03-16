@@ -1,14 +1,15 @@
-from configs import config
-import os
-import simplejson as json
-import sys
-from hkube_python_wrapper import Algorunner, HKubeApi
+
+import time
+from hkube_python_wrapper import Algorunner
 import tests.configs.config as conf
 from gevent import monkey
+from .mock_ws_server import startWebSocketServer, initData
 monkey.patch_all()
 
 
 config = conf.Config
+
+startWebSocketServer(config.socket)
 
 
 def start(args, hkubeApi=None):
@@ -26,22 +27,11 @@ def start(args, hkubeApi=None):
     return (ret)
 
 
-def main_callbacks():
+def test_callback():
     alg = Algorunner()
     alg.loadAlgorithmCallbacks(start)
     job = alg.connectToWorker(config)
+    time.sleep(1)
+    alg._init(initData)
+    alg._start({})
     job.join()
-
-
-def main_file():
-    alg = Algorunner()
-    alg.loadAlgorithm({
-        "path": "test_alg",
-        "entryPoint": "test_alg1.py"
-    })
-    job = alg.connectToWorker(config)
-    job.join()
-
-
-if __name__ == '__main__':
-    main_callbacks()

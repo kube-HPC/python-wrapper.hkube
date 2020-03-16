@@ -1,6 +1,4 @@
-import os
-import sys
-import pytest
+
 from hkube_python_wrapper import Algorunner
 from storage.storage_manager import StorageManager
 import tests.configs.config as conf
@@ -18,7 +16,7 @@ nested = {'data': {'array': array}}
 
 storageInfo1 = storageManager.hkube.put(jobId, taskId1, array)
 storageInfo2 = storageManager.hkube.put(jobId, taskId2, nested)
-discovery = config.algorithmDiscovery
+discovery = config.discovery
 
 input = [
     {'data': '$$guid-1'},

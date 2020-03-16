@@ -1,9 +1,7 @@
-sudo: required
 language: python
-matrix:
+jobs:
   fast_finish: true
   include:
-    - python: 2.6
     - python: 2.7
     - python: 3.3
     - python: 3.4
@@ -16,7 +14,7 @@ matrix:
 install:
   - pip install -U -r tests/requirements.txt
 script:
-  - pytest --cov-report html --cov=. tests/
+  - pytest --cov-report html --cov=. tests/test_wrapper
 after_success:
   - |
     if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
@@ -32,7 +30,7 @@ after_success:
     fi
 deploy:
   provider: pypi
-  user: ${PYPI_USER}
+  username: ${PYPI_USER}
   password: ${PYPI_PASSWORD}
   on:
     branch: master

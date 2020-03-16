@@ -119,7 +119,7 @@ class Algorunner:
         self._initDataAdapter(options)
 
     def _initDataServer(self, options):
-        disc = options.algorithmDiscovery
+        disc = options.discovery
         host = disc.get("host")
         port = disc.get("port")
         encoding = disc.get("encoding")

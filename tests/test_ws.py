@@ -1,7 +1,4 @@
-import os
-import sys
-import gevent
-import pytest
+
 import time
 from hkube_python_wrapper import Algorunner
 from storage.storage_manager import StorageManager
@@ -17,7 +14,7 @@ def start(args):
     return returnValue
 
 
-server = startWebSocketServer(config.socket)
+startWebSocketServer(config.socket)
 
 algorunner = Algorunner()
 algorunner.loadAlgorithmCallbacks(start)

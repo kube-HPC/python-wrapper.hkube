@@ -17,8 +17,8 @@ class WebSocketServer(WebSocket):
         self._encoding = Encoding(encoding)
         self._switcher = {
             "initialized": lambda data: self.sendMsgToClient({'command': 'start'}),
-            "startAlgorithmExecution": lambda data: self.sendMsgToClient({'command': 'algorithmExecutionDone', 'data': initData}),
-            "startStoredSubPipeline": lambda data: self.sendMsgToClient({'command': 'subPipelineDone', 'data': initData})
+            "startAlgorithmExecution": lambda data: self.sendMsgToClient({'command': 'algorithmExecutionDone', 'data': data}),
+            "startStoredSubPipeline": lambda data: self.sendMsgToClient({'command': 'subPipelineDone', 'data': data})
         }
 
     def handleMessage(self):
@@ -45,5 +45,5 @@ def startWebSocketServer(options):
     port = options["port"]
     encoding = options["encoding"]
     server = SimpleWebSocketServer('', port, WebSocketServer)
-    gevent.spawn(server.serveforever)
-    return server
+    job = gevent.spawn(server.serveforever)
+    return job
