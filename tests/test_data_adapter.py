@@ -3,22 +3,12 @@ import sys
 import pytest
 from hkube_python_wrapper.data_adapter import DataAdapter
 from storage.storage_manager import StorageManager
+import tests.configs.config as conf
 
+config = conf.Config
 
-config = {
-    "storage": {
-        "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
-        "clusterName": os.environ.get('CLUSTER_NAME', 'local'),
-        "storageType": os.environ.get('STORAGE_TYPE', 'fs'),
-        "fs": {
-            "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', '/var/tmp/fs/storage')
-        }
-    }
-}
-
-storageManager = StorageManager(config["storage"])
-dataAdapter = DataAdapter()
-dataAdapter.init(config)
+storageManager = StorageManager(config.storage)
+dataAdapter = DataAdapter(config)
 
 jobId = 'jobId-328901800'
 taskId1 = 'taskId-328901801'

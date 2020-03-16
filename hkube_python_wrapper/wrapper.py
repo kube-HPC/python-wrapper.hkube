@@ -21,7 +21,7 @@ class Algorunner:
         self._loadAlgorithmError = None
         self._connected = False
         self.hkubeApi = None
-        self._dataAdapter = DataAdapter()
+        self._dataAdapter = None
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None):
         try:
@@ -91,9 +91,10 @@ class Algorunner:
             print(e)
 
     def connectToWorker(self, options):
-        socket = options.get("socket")
+        socket = options.socket
+        storage = options.storage
         encoding = socket.get("encoding")
-        storage = options.get("storageMode")
+        storage = storage.get("mode")
         binary = encoding in ['bson', 'protoc']
         url = socket.get("url")
 
@@ -106,30 +107,31 @@ class Algorunner:
 
         self._wsc = WebsocketClient(encoding, binary=binary)
         self.hkubeApi = HKubeApi(self._wsc)
+        self._initStorage(options)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
         job = gevent.spawn(self._wsc.startWS, self._url)
         return job
 
-    def initStorage(self, options):
+    def _initStorage(self, options):
         self._initDataServer(options)
         self._initDataAdapter(options)
 
     def _initDataServer(self, options):
-        disc = options.get("algorithmDiscovery")
+        disc = options.algorithmDiscovery
         host = disc.get("host")
         port = disc.get("port")
         encoding = disc.get("encoding")
         self._algorithmDiscovery = {
-            "host": host,
-            "port": port,
-            "encoding": encoding
+            'host': host,
+            'port': port,
+            'encoding': encoding
         }
-        self._dataServer = DataServer({"port": port, "encoding": encoding})
-    
+        self._dataServer = DataServer({'port': port, 'encoding': encoding})
+
     def _initDataAdapter(self, options):
-        self._dataAdapter.init(options)
+        self._dataAdapter = DataAdapter(options.storage)
 
     def close(self):
         self._wsc.stopWS()
@@ -177,8 +179,8 @@ class Algorunner:
             jobId = self._input.get("jobId")
             taskId = self._input.get("taskId")
             nodeName = self._input.get("nodeName")
-            info = self._input.get("info")
-            savePaths = info.get("savePaths")
+            info = self._input.get("info", {})
+            savePaths = info.get("savePaths", [])
 
             newInput = self._dataAdapter.getData({'input': input, 'storage': storage})
             self._input.update({'input': newInput})
@@ -186,20 +188,20 @@ class Algorunner:
             output = method(self._input, self.hkubeApi)
 
             data = {
-                "jobId": jobId,
-                "taskId": taskId,
-                "nodeName": nodeName,
-                "data": output,
-                "savePaths": savePaths
+                'jobId': jobId,
+                'taskId': taskId,
+                'nodeName': nodeName,
+                'data': output,
+                'savePaths': savePaths
             }
             storageInfo = self._dataAdapter.createStorageInfo(data)
-            # storingData = {"discovery": self._algorithmDiscovery}
+            # storingData = {'discovery': self._algorithmDiscovery}
             storingData = {}
             storingData.update(storageInfo)
             self._dataServer.setSendingState(taskId, output)
             self._sendCommand(messages.outgoing["storing"], storingData)
             # sleep(5000)
-            # self._dataAdapter.setData({jobId, taskId, data})
+            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': output})
             # self._dataServer.endSendingState()
 
             self._sendCommand(messages.outgoing["done"], None)
@@ -235,7 +237,7 @@ class Algorunner:
 
     def _sendCommand(self, command, data):
         try:
-            self._wsc.send({"command": command, "data": data})
+            self._wsc.send({'command': command, 'data': data})
         except Exception as e:
             self._sendError(e)
 
@@ -243,10 +245,10 @@ class Algorunner:
         try:
             print(error)
             self._wsc.send({
-                "command": messages.outgoing["error"],
-                "error": {
-                    "code": "Failed",
-                    "message": repr(error)
+                'command': messages.outgoing["error"],
+                'error': {
+                    'code': 'Failed',
+                    'message': repr(error)
                 }
             })
         except Exception as e:

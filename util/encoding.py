@@ -21,7 +21,7 @@ class Encoding:
         self.decode = self._bsonDecode if encoding == 'bson' else json.loads
 
     def _bsonEncode(self, data):
-        return bson.encode({"data": data}, codec_options=codec_options)
+        return bson.encode({'data': data}, codec_options=codec_options)
 
     def _bsonDecode(self, data):
         res = bson.decode(data)

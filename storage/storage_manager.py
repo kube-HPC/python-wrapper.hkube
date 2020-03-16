@@ -11,7 +11,7 @@ adapterTypes = {
 
 class StorageManager():
     def __init__(self, config):
-        storageType = config["storageType"]
+        storageType = config["type"]
         specificConfig = config[storageType]
         adapterType = adapterTypes.get(storageType)
         adaptersConfig = dict()

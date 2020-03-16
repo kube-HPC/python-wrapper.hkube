@@ -8,8 +8,8 @@ import dpath.util
 
 
 class DataAdapter:
-    def init(self, options):
-        self._storageManager = StorageManager(options.get("storage"))
+    def __init__(self, options):
+        self._storageManager = StorageManager(options)
 
     def getData(self, options):
 
@@ -135,10 +135,10 @@ class DataAdapter:
         path = self._storageManager.hkube.createPath(jobId, taskId)
         metadata = self.createMetadata(options)
         storageInfo = {
-            "storageInfo": {
-                "path": path
+            'storageInfo': {
+                'path': path
             },
-            "metadata": metadata
+            'metadata': metadata
         }
         return storageInfo
 
@@ -162,7 +162,7 @@ class DataAdapter:
 
     def _getMetadata(self, value):
         if(isinstance(value, collections.Sequence)):
-            meta = {"type": "array", "size": len(value)}
+            meta = {'type': 'array', 'size': len(value)}
         else:
-            meta = {"type": str(type(value).__name__)}
+            meta = {'type': str(type(value).__name__)}
         return meta

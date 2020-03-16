@@ -1,34 +1,14 @@
+from configs import config
 import os
 import simplejson as json
 import sys
 from hkube_python_wrapper import Algorunner, HKubeApi
+import tests.configs.config as conf
 from gevent import monkey
 monkey.patch_all()
 
 
-config = {
-    "storageMode": os.environ.get('STORAGE_MODE', 'byRef'),
-    "socket": {
-        "port": os.environ.get('WORKER_SOCKET_PORT', "3000"),
-        "host": os.environ.get('WORKER_SOCKET_HOST', "127.0.0.1"),
-        "protocol": os.environ.get('WORKER_SOCKET_PROTOCOL', "ws"),
-        "url": os.environ.get('WORKER_SOCKET_URL', None),
-        "encoding": os.environ.get('WORKER_ENCODING', 'bson')
-    },
-    "algorithmDiscovery": {
-        "host": os.environ.get('POD_NAME', '127.0.0.1'),
-        "port": os.environ.get('DISCOVERY_PORT', 9020),
-        "encoding": os.environ.get('DISCOVERY_ENCODING', 'bson'),
-    },
-    "storage": {
-        "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
-        "clusterName": os.environ.get('CLUSTER_NAME', 'local'),
-        "storageType": os.environ.get('STORAGE_TYPE', 'fs'),
-        "fs": {
-            "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', '/var/tmp/fs/storage')
-        }
-    }
-}
+config = conf.Config
 
 
 def start(args, hkubeApi=None):
@@ -49,7 +29,6 @@ def start(args, hkubeApi=None):
 def main_callbacks():
     alg = Algorunner()
     alg.loadAlgorithmCallbacks(start)
-    alg.initStorage(config)
     job = alg.connectToWorker(config)
     job.join()
 

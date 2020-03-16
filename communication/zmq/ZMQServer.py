@@ -1,6 +1,6 @@
 import time
 import zmq
-import thread
+# import thread
 
 
 class ZMQServer(object):
@@ -10,9 +10,9 @@ class ZMQServer(object):
         self.socket.bind("tcp://*:" + str(config['port']))
         self.getReplyFunc = getReplyFunc
 
-        def listen(server):
-            while True:
-            # Wait for next request from client
-                message = server.socket.recv()
-                server.socket.send(getReplyFunc(message))
-        thread.start_new_thread(listen,({self}))
+        # def listen(server):
+        #     while True:
+        #     # Wait for next request from client
+        #         message = server.socket.recv()
+        #         server.socket.send(getReplyFunc(message))
+        # thread.start_new_thread(listen,({self}))
