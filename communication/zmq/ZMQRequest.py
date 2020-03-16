@@ -1,7 +1,7 @@
 
-import zmq
+import zmq.green as zmq
 
-
+import gevent
 
 context = zmq.Context()
 
@@ -17,5 +17,6 @@ class ZMQRequest(object):
 
     def invoke(self):
         self.socket.send(self.content)
+        # gevent.sleep(1)
         message = self.socket.recv()
         return message

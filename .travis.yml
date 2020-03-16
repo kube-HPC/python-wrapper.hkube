@@ -14,7 +14,7 @@ jobs:
 install:
   - pip install -U -r tests/requirements.txt
 script:
-  - pytest --cov-report html --cov=. tests/test_wrapper
+  - pytest --cov-report html --cov=. tests/test_data_adapter.py
 after_success:
   - |
     if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
