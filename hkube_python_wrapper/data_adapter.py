@@ -1,10 +1,10 @@
 from __future__ import print_function, division, absolute_import
-from storage.storage_manager import StorageManager
-from communication.DataRequest import DataRequest
-import copy
 import collections
+import copy
 import six
 import dpath.util
+from storage.storage_manager import StorageManager
+from communication.DataRequest import DataRequest
 
 
 class DataAdapter:
@@ -49,7 +49,8 @@ class DataAdapter:
         result = self._storageManager.hkube.put(jobId, taskId, data)
         return result
 
-    def _flatten(self, d, sep="/"):
+    @classmethod
+    def _flatten(cls, inp, sep="/"):
 
         obj = collections.OrderedDict()
 
@@ -65,13 +66,9 @@ class DataAdapter:
             else:
                 obj[parent_key] = t
 
-        recurse(d)
+        recurse(inp)
 
         return obj
-
-    def _getPath(self, data, path):
-        path = path.replace(".", "/")
-        return dpath.util.get(data, path)
 
     def _tryGetDataFromPeerOrStorage(self, options):
         path = options.get("path")
@@ -85,14 +82,15 @@ class DataAdapter:
         if (discovery):
             data = self._getFromPeer(options, dataPath)
 
-        if (data == None and storageInfo):
+        if (data is None and storageInfo):
             data = self._getFromStorage(storageInfo)
-            if (dataPath):
-                data = self._getPath(data, dataPath)
+            if (dataPath is not None):
+                data = dpath.util.get(data, dataPath)
 
         return data
 
-    def _createDataPath(self, path, index):
+    @classmethod
+    def _createDataPath(cls, path, index):
         dataPath = path
         if isinstance(index, six.integer_types):
             if (path is not None):
@@ -100,7 +98,7 @@ class DataAdapter:
             else:
                 dataPath = str(index)
 
-        return dataPath
+        return dataPath.replace(".", "/") if dataPath else None
 
     def _getFromPeer(self, options, dataPath):
         taskId = options.get('taskId')
@@ -160,7 +158,10 @@ class DataAdapter:
 
         return metadata
 
-    def _getMetadata(self, value):
+    @staticmethod
+    def _getMetadata(value):
+        if(isinstance(value, dict)):
+            meta = {'type': 'object'}
         if(isinstance(value, collections.Sequence)):
             meta = {'type': 'array', 'size': len(value)}
         else:

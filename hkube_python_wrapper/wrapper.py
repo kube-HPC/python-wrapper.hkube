@@ -3,6 +3,7 @@ import gevent
 import os
 import sys
 import importlib
+import time
 from .wc import WebsocketClient
 from .hkube_api import HKubeApi
 from .data_adapter import DataAdapter
@@ -123,7 +124,7 @@ class Algorunner:
         host = disc.get("host")
         port = disc.get("port")
         encoding = disc.get("encoding")
-        self._algorithmDiscovery = {
+        self._discovery = {
             'host': host,
             'port': port,
             'encoding': encoding
@@ -195,12 +196,11 @@ class Algorunner:
                 'savePaths': savePaths
             }
             storageInfo = self._dataAdapter.createStorageInfo(data)
-            # storingData = {'discovery': self._algorithmDiscovery}
-            storingData = {}
+            storingData = {'discovery': self._discovery}
             storingData.update(storageInfo)
             self._dataServer.setSendingState(taskId, output)
             self._sendCommand(messages.outgoing["storing"], storingData)
-            # sleep(5000)
+            time.sleep(5)
             self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': output})
             # self._dataServer.endSendingState()
 

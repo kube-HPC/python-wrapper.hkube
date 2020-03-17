@@ -2,13 +2,6 @@ from __future__ import print_function, division, absolute_import
 from .execution import AlgorithmExecution
 from .waitFor import WaitForData
 import hkube_python_wrapper.messages as messages
-import threading
-from events import Events
-import sys
-import os
-import gevent
-from gevent import monkey
-monkey.patch_all()
 
 
 class HKubeApi:

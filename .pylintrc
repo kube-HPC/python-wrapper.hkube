@@ -1,0 +1,169 @@
+[MASTER]
+ignore=CVS
+ignore-patterns=
+persistent=yes
+load-plugins=
+jobs=1
+unsafe-load-any-extension=no
+extension-pkg-whitelist=numpy
+optimize-ast=no
+
+[MESSAGES CONTROL]
+confidence=
+#enable=
+disable=invalid-name,superfluous-parens,missing-docstring,W0511,long-suffix,standarderror-builtin,indexing-exception,delslice-method,unichr-builtin,dict-view-method,parameter-unpacking,unicode-builtin,cmp-builtin,intern-builtin,round-builtin,backtick,nonzero-method,xrange-builtin,coerce-method,raw_input-builtin,old-division,filter-builtin-not-iterating,old-octal-literal,input-builtin,map-builtin-not-iterating,buffer-builtin,basestring-builtin,zip-builtin-not-iterating,using-cmp-argument,unpacking-in-except,old-raise-syntax,coerce-builtin,dict-iter-method,hex-method,range-builtin-not-iterating,useless-suppression,cmp-method,print-statement,reduce-builtin,file-builtin,long-builtin,getslice-method,execfile-builtin,no-absolute-import,metaclass-assignment,oct-method,reload-builtin,import-star-module-level,suppressed-message,apply-builtin,raising-string,next-method-called,setslice-method,old-ne-operator,arguments-differ,wildcard-import,locally-disabled
+
+[REPORTS]
+output-format=text
+files-output=no
+reports=yes
+evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
+#msg-template=
+
+
+[BASIC]
+
+# Good variable names which should always be accepted, separated by a comma
+good-names=i,j,k,ex,Run,_
+
+# Bad variable names which should always be refused, separated by a comma
+bad-names=foo,bar,baz,toto,tutu,tata
+
+name-group=
+
+# Include a hint for the correct naming format with invalid-name
+include-naming-hint=no
+
+property-classes=abc.abstractproperty
+module-naming-style=snake_case
+const-naming-style=camelCase
+class-naming-style=PascalCase
+function-naming-style=camelCase
+method-naming-style=camelCase
+attr-naming-style=camelCase
+argument-naming-style=camelCase
+variable-naming-style=camelCase
+class-attribute-naming-style=camelCase
+inlinevar-naming-style=camelCase
+
+
+docstring-min-length=-1
+
+
+[ELIF]
+# Maximum number of nested blocks for function / method body
+max-nested-blocks=5
+
+
+[FORMAT]
+
+# Maximum number of characters on a single line.
+max-line-length=80
+
+# Regexp for a line that is allowed to be longer than the limit.
+ignore-long-lines=^\s*(# )?<?https?://\S+>?$
+
+single-line-if-stmt=y
+no-space-check=trailing-comma,dict-separator
+
+# Maximum number of lines in a module
+max-module-lines=1000
+
+indent-string='    '
+
+# Number of spaces of indent required inside a hanging  or continued line.
+indent-after-paren=4
+
+# Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
+expected-line-ending-format=
+
+
+[LOGGING]
+logging-modules=logging
+
+[MISCELLANEOUS]
+
+notes=FIXME,XXX,TODO
+
+[SIMILARITIES]
+
+min-similarity-lines=10
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=no
+
+
+[SPELLING]
+spelling-dict=
+spelling-ignore-words=
+spelling-private-dict-file=
+spelling-store-unknown-words=no
+
+
+[TYPECHECK]
+ignore-mixin-members=yes
+ignored-modules=
+ignored-classes=optparse.Values,thread._local,_thread._local,matplotlib.cm,tensorflow.python,tensorflow,tensorflow.train.Example,RunOptions
+generated-members=set_shape,np.float32
+contextmanager-decorators=contextlib.contextmanager
+
+
+[VARIABLES]
+
+# Tells whether we should check for unused import in __init__ files.
+init-import=no
+
+dummy-variables-rgx=(_+[a-zA-Z0-9_]*?$)|dummy
+additional-builtins=
+callbacks=cb_,_cb
+
+redefining-builtins-modules=six.moves,future.builtins
+
+
+[CLASSES]
+
+# List of method names used to declare (i.e. assign) instance attributes.
+defining-attr-methods=__init__,__new__,setUp
+
+# List of valid names for the first argument in a class method.
+valid-classmethod-first-arg=cls
+
+# List of valid names for the first argument in a metaclass class method.
+valid-metaclass-classmethod-first-arg=mcs
+
+# List of member names, which should be excluded from the protected access
+# warning.
+exclude-protected=_asdict,_fields,_replace,_source,_make
+
+
+[DESIGN]
+
+# Maximum number of arguments for function / method
+max-args=10
+ignored-argument-names=_.*
+max-locals=30
+max-returns=6
+max-branches=12
+max-statements=100
+max-parents=7
+max-attributes=10
+min-public-methods=0
+max-public-methods=20
+max-bool-expr=5
+
+
+[IMPORTS]
+
+# Deprecated modules which should not be used, separated by a comma
+deprecated-modules=optparse
+import-graph=
+ext-import-graph=
+int-import-graph=
+known-standard-library=
+known-third-party=enchant
+analyse-fallback-blocks=no
+
+
+[EXCEPTIONS]
+
+overgeneral-exceptions=Exception
