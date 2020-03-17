@@ -11,9 +11,12 @@ jobs:
     - python: 3.8
     - python: pypy
     - python: pypy3
+
+before_install: python --version
 install:
   - pip install -U -r tests/requirements.txt
 script:
+  - pylint communication hkube_python_wrapper storage util
   - pytest --cov-report html --cov=. tests/test_data_adapter.py
 after_success:
   - |

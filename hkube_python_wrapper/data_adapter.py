@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 import collections
 import copy
 import six
-import dpath.util
+import util.object_path as objectPath
 from storage.storage_manager import StorageManager
 from communication.DataRequest import DataRequest
 
@@ -38,7 +38,7 @@ class DataAdapter:
                 else:
                     data = self._tryGetDataFromPeerOrStorage(link)
 
-                dpath.util.set(result, k, data)
+                objectPath.setPath(result, k, data)
 
         return result
 
@@ -58,8 +58,7 @@ class DataAdapter:
 
             if isinstance(t, list):
                 for i in range(len(t)):
-                    recurse(t[i], parent_key + sep + str(i)
-                            if parent_key else str(i))
+                    recurse(t[i], parent_key + sep + str(i) if parent_key else str(i))
             elif isinstance(t, dict):
                 for k, v in t.items():
                     recurse(v, parent_key + sep + k if parent_key else k)
@@ -84,8 +83,7 @@ class DataAdapter:
 
         if (data is None and storageInfo):
             data = self._getFromStorage(storageInfo)
-            if (dataPath is not None):
-                data = dpath.util.get(data, dataPath)
+            data = objectPath.getPath(data, dataPath)
 
         return data
 
@@ -120,7 +118,7 @@ class DataAdapter:
         dataRequest = DataRequest(request)
         response = dataRequest.invoke()
         # self.emit(Events.DiscoveryGet, response)
-        return response.data
+        return response.get('data')
 
     def _getFromStorage(self, options):
         data = self._storageManager.storage.get(options)
@@ -148,11 +146,11 @@ class DataAdapter:
         metadata = dict()
         objData = dict()
         objData[nodeName] = data
-        for p in savePaths:
+        for path in savePaths:
             try:
-                value = dpath.util.get(objData, p, separator='.')
+                value = objectPath.getPath(objData, path, separator='.')
                 meta = self._getMetadata(value)
-                metadata[p] = meta
+                metadata[path] = meta
             except Exception as e:
                 pass
 

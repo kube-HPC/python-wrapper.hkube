@@ -8,7 +8,7 @@ class DataRequest:
         encoding = reqDetails['encoding']
         self.encoding = Encoding(encoding)
         flattenEncodedReqDetails = reqDetails['address']
-        flattenEncodedReqDetails['content'] = self.encoding.encode({'taskId':reqDetails['taskId'],'dataPath':reqDetails['dataPath']})
+        flattenEncodedReqDetails['content'] = self.encoding.encode({'taskId': reqDetails['taskId'], 'dataPath': reqDetails['dataPath']})
         self.adapter = ZMQRequest(flattenEncodedReqDetails)
 
     def invoke(self):

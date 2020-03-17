@@ -1,16 +1,16 @@
 from __future__ import print_function, division, absolute_import
-import gevent
 import os
 import sys
 import importlib
 import time
-from .wc import WebsocketClient
-from .hkube_api import HKubeApi
-from .data_adapter import DataAdapter
+import gevent
+from events import Events
 from communication.DataServer import DataServer
 import hkube_python_wrapper.messages as messages
 import hkube_python_wrapper.methods as methods
-from events import Events
+from .data_adapter import DataAdapter
+from .hkube_api import HKubeApi
+from .wc import WebsocketClient
 
 
 class Algorunner:
