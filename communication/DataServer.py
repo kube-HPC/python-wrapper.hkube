@@ -37,3 +37,6 @@ class DataServer:
 
     def isServing(self):
         return self.adpater.isServing()
+
+    def close(self):
+        self.adpater.close()

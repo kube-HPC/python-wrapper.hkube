@@ -30,3 +30,5 @@ class ZMQServer(object):
 
     def isServing(self):
         return self.serving
+    def close(self):
+        self.socket.close()
