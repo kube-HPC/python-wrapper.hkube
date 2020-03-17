@@ -16,24 +16,24 @@ before_install: python --version
 install:
   - pip install -U -r tests/requirements.txt
 script:
-  - pylint communication hkube_python_wrapper storage util
+  # - pylint communication hkube_python_wrapper storage util
   - pytest --cov-report html --cov=. tests/test_data_adapter.py
-after_success:
-  - |
-    if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-      git config --global user.email "travis@travis-ci.org"
-      git config --global user.name "Travis CI"
-      git remote set-url --push origin "https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git"
-      git remote -v
-      git checkout -f -b version-branch
-      npm version patch -m "$(git log -1 --pretty=%B) .... bump version [skip ci]"
-      git push origin version-branch:master --follow-tags
-    else
-      echo "version skiped!"
-    fi
-deploy:
-  provider: pypi
-  username: ${PYPI_USER}
-  password: ${PYPI_PASSWORD}
-  on:
-    branch: master
+# after_success:
+#   - |
+#     if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+#       git config --global user.email "travis@travis-ci.org"
+#       git config --global user.name "Travis CI"
+#       git remote set-url --push origin "https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git"
+#       git remote -v
+#       git checkout -f -b version-branch
+#       npm version patch -m "$(git log -1 --pretty=%B) .... bump version [skip ci]"
+#       git push origin version-branch:master --follow-tags
+#     else
+#       echo "version skiped!"
+#     fi
+# deploy:
+#   provider: pypi
+#   username: ${PYPI_USER}
+#   password: ${PYPI_PASSWORD}
+#   on:
+#     branch: master
