@@ -35,3 +35,5 @@ class DataServer:
         self.data = None
     def createError(self,code,message):
         return {'error': {'code':code,'message':message}}
+    def isServing(self):
+        return self.adpater.isServing()

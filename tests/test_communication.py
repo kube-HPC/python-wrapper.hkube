@@ -130,3 +130,20 @@ def test_failing_to_get_sending_ended():
          'encoding': 'bson'})
     reply = dr.invoke()
     assert reply == {u'error': {u'message': u'Current taskId is None', u'code': u'notAvailable'}}
+
+def test_isServing():
+    ds = DataServer({'port': config['port'], 'encoding': 'bson'})
+    def sleepNow(message):
+        gevent.sleep(3)
+        return ds.createReply(message)
+    ds.adpater.getReplyFunc = sleepNow
+    ds.setSendingState(task1, data1)
+
+    dr = DataRequest(
+        {'address': {'port': config['port'], 'host': config['host']}, 'taskId': task1, 'dataPath': 'level1',
+         'encoding': 'bson'})
+    gevent.spawn(dr.invoke)
+    gevent.sleep(1)
+    assert ds.isServing() == True
+    gevent.sleep(2)
+    assert ds.isServing() == False

@@ -8,13 +8,16 @@ class ZMQServer(object):
         self.socket = context.socket(zmq.REP)
         self.socket.bind("tcp://*:" + str(config['port']))
         self.getReplyFunc = getReplyFunc
-
+        self.serving=False
+        self.getReplyFunc = getReplyFunc
         def listen(server):
             while True:
                 # Wait for next request from client
                 try:
                     message = server.socket.recv()
-                    server.socket.send(getReplyFunc(message))
+                    self.serving = True
+                    server.socket.send(self.getReplyFunc(message))
+                    self.serving = False
                 except Exception as e:
                     print(str(e))
                     server.socket.close()
@@ -23,3 +26,5 @@ class ZMQServer(object):
                     server.socket.bind("tcp://*:" + str(config['port']))
 
         spawn(listen, (self))
+    def isServing(self):
+        return self.serving
