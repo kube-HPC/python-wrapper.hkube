@@ -28,3 +28,5 @@ class ZMQServer(object):
         spawn(listen, (self))
     def isServing(self):
         return self.serving
+    def close(self):
+        self.socket.close()

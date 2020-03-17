@@ -37,3 +37,5 @@ class DataServer:
         return {'error': {'code':code,'message':message}}
     def isServing(self):
         return self.adpater.isServing()
+    def close(self):
+        self.adpater.close()
