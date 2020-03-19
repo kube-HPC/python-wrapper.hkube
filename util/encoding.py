@@ -2,10 +2,11 @@ from __future__ import print_function, division, absolute_import
 from bson.codec_options import CodecOptions, TypeRegistry
 import bson
 import simplejson as json
+import util.type_check as typeCheck
 
 
 def fallback_encoder(value):
-    if isinstance(value, bytearray):
+    if typeCheck.isBytearray(value):
         return bson.binary.Binary(value)
     return value
 

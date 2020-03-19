@@ -31,7 +31,7 @@ input = [
 
 storage = {
     'guid-1': {'storageInfo': storageInfo2, 'discovery': discovery, 'path': 'data'},
-    'guid-2': {'storageInfo': storageInfo2, 'discovery': discovery, 'path': 'data.array', 'index': 4},
+    'guid-2': {'storageInfo': storageInfo2, 'discovery': discovery, 'path': 'data.array.4'},
     'guid-3': [{'storageInfo': storageInfo1, 'discovery': discovery}, {'storageInfo': storageInfo2, 'discovery': discovery}]
 }
 

@@ -2,6 +2,7 @@
 from hkube_python_wrapper.data_adapter import DataAdapter
 from storage.storage_manager import StorageManager
 import tests.configs.config as conf
+import util.type_check as typeCheck
 
 config = conf.Config
 
@@ -36,10 +37,8 @@ storage = {
     'guid-1': {'storageInfo': storageInfo2, 'path': 'data'},
     'guid-2': {'storageInfo': storageInfo2, 'path': 'data.array'},
     'guid-3': {'storageInfo': storageInfo2, 'path': 'data.array.4'},
-    'guid-4': {'storageInfo': storageInfo2, 'path': 'data.array', 'index': 4},
-    'guid-5': {'storageInfo': storageInfo1, 'index': 2},
-    'guid-6': {'storageInfo': storageInfo1},
-    'guid-7': [{'storageInfo': storageInfo1}, {'storageInfo': storageInfo2}]
+    'guid-5': {'storageInfo': storageInfo1},
+    'guid-6': [{'storageInfo': storageInfo1}, {'storageInfo': storageInfo2}]
 }
 
 
@@ -84,7 +83,7 @@ def test_createMetadata_no_path():
         'data': {"prop": array},
         'savePaths': savePaths
     })
-    assert isinstance(result, dict)
+    assert typeCheck.isDict(result)
 
 
 def test_createMetadata_array():

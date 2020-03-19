@@ -1,6 +1,7 @@
 
 import collections
 from util.object_path import getPath, setPath
+import util.type_check as typeCheck
 
 
 def test_getPath_no_path():
@@ -14,21 +15,21 @@ def test_getPath_array():
     obj = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     path = '5'
     result = getPath(obj, path)
-    assert isinstance(result, int)
+    assert typeCheck.isInt(result)
 
 
 def test_getPath_nested_array():
     obj = {"green": {"prop": [1, 2, 3, 4, 5, 6, 7, 8, 9]}}
     path = 'green.prop'
     result = getPath(obj, path)
-    assert isinstance(result, collections.Sequence)
+    assert typeCheck.isList(result)
 
 
 def test_getPath_nested_array_index():
     obj = {"green": {"prop": [1, 2, 3, 4, 5, 6, 7, 8, 9]}}
     path = 'green.prop.5'
     result = getPath(obj, path)
-    assert isinstance(result, int)
+    assert typeCheck.isInt(result)
 
 
 def test_getPath_bytes():
@@ -44,4 +45,4 @@ def test_setPath_bytes():
     obj = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     path = '2/prop'
     setPath(result, path, obj)
-    assert isinstance(result[2]["prop"], collections.Sequence)
+    assert typeCheck.isList(result[2]["prop"])

@@ -1,8 +1,8 @@
 from __future__ import print_function, division, absolute_import
 import collections
 import copy
-import six
-from util.object_path import flatten, getPath, setPath, createDataPath
+from util.object_path import flatten, getPath, setPath
+import util.type_check as typeCheck
 from storage.storage_manager import StorageManager
 from communication.DataRequest import DataRequest
 
@@ -26,14 +26,14 @@ class DataAdapter:
         flatObj = flatten(input)
 
         for k, v in flatObj.items():
-            if isinstance(v, six.string_types) and v.startswith('$$'):
+            if self._isStorage(v):
                 key = v[2:]
                 link = storage.get(key, None)
                 if (link is None):
                     raise Exception('unable to find storage key')
 
                 data = None
-                if(isinstance(link, collections.Sequence)):
+                if(typeCheck.isList(link)):
                     data = list(map(self._tryGetDataFromPeerOrStorage, link))
                 else:
                     data = self._tryGetDataFromPeerOrStorage(link)
@@ -41,6 +41,9 @@ class DataAdapter:
                 setPath(result, k, data)
 
         return result
+
+    def _isStorage(value):
+        return typeCheck.isString(value) and value.startswith('$$')
 
     def setData(self, options):
         jobId = options.get("jobId")
@@ -51,19 +54,17 @@ class DataAdapter:
 
     def _tryGetDataFromPeerOrStorage(self, options):
         path = options.get("path")
-        index = options.get("index")
         discovery = options.get("discovery")
         storageInfo = options.get("storageInfo")
-
-        dataPath = createDataPath(path, index)
         data = None
 
         if (discovery):
-            data = self._getFromPeer(options, dataPath)
+            data = self._getFromPeer(options, path)
 
         if (data is None and storageInfo):
             data = self._getFromStorage(storageInfo)
-            data = getPath(data, dataPath)
+            if(path):
+                data = getPath(data, path)
 
         return data
 
@@ -128,9 +129,9 @@ class DataAdapter:
 
     @staticmethod
     def _getMetadata(value):
-        if(isinstance(value, dict)):
+        if(typeCheck.isDict(value)):
             meta = {'type': 'object'}
-        elif(isinstance(value, collections.Sequence)):
+        elif(typeCheck.isList(value)):
             meta = {'type': 'array', 'size': len(value)}
         else:
             meta = {'type': str(type(value).__name__)}

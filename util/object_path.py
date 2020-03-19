@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 import dpath.util
 import collections
+import util.type_check as typeCheck
 
 
 def getPath(obj, path, defaultValue="DEFAULT"):
@@ -35,7 +36,7 @@ def getKey(key):
 
 
 def hasShallowProperty(obj, prop):
-    return (isinstance(prop, int) and isinstance(obj, collections.Sequence)) or prop in obj
+    return (typeCheck.isInt(prop) and typeCheck.isList(obj)) or prop in obj
 
 
 def getShallowProperty(obj, prop):
@@ -47,16 +48,16 @@ def setPath(source, path, value):
     dpath.util.set(source, path, value)
 
 
-def flatten(cls, inp, sep="/"):
+def flatten(inp, sep="/"):
 
     obj = collections.OrderedDict()
 
     def recurse(t, parent_key=""):
 
-        if isinstance(t, list):
+        if typeCheck.isList(t):
             for i in range(len(t)):
                 recurse(t[i], parent_key + sep + str(i) if parent_key else str(i))
-        elif isinstance(t, dict):
+        elif typeCheck.isDict(t):
             for k, v in t.items():
                 recurse(v, parent_key + sep + k if parent_key else k)
         else:
@@ -65,14 +66,3 @@ def flatten(cls, inp, sep="/"):
     recurse(inp)
 
     return obj
-
-
-def createDataPath(path, index):
-    dataPath = path
-    if isinstance(index, six.integer_types):
-        if (path is not None):
-            dataPath = '{path}.{index}'.format(path=path, index=index)
-        else:
-            dataPath = str(index)
-
-    return dataPath.replace(".", "/") if dataPath else None
