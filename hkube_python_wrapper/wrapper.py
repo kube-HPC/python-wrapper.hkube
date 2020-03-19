@@ -129,7 +129,7 @@ class Algorunner:
             'port': port,
             'encoding': encoding
         }
-        self._dataServer = DataServer({'port': port, 'encoding': encoding})
+        #self._dataServer = DataServer({'port': port, 'encoding': encoding})
 
     def _initDataAdapter(self, options):
         self._dataAdapter = DataAdapter(options.storage)

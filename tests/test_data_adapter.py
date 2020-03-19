@@ -75,6 +75,45 @@ def test_set_data():
     assert result['path'].find(jobId) != -1
 
 
+def test_createMetadata_no_path():
+    array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    nodeName = 'green'
+    savePaths = [nodeName + '.no.such']
+    result = dataAdapter.createMetadata({
+        'nodeName': nodeName,
+        'data': {"prop": array},
+        'savePaths': savePaths
+    })
+    assert isinstance(result, dict)
+
+
+def test_createMetadata_array():
+    array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    nodeName = 'green'
+    savePaths = [nodeName + '.prop.5']
+    result = dataAdapter.createMetadata({
+        'nodeName': nodeName,
+        'data': {"prop": array},
+        'savePaths': savePaths
+    })
+
+    return result
+
+
+def test_createMetadata_bytes():
+    sizeBytes = 100 * 1000000
+    bytesData = bytearray(sizeBytes)
+    nodeName = 'green'
+    savePaths = [nodeName + '.prop']
+    result = dataAdapter.createMetadata({
+        'nodeName': nodeName,
+        'data': {"prop": bytesData},
+        'savePaths': savePaths
+    })
+
+    return result
+
+
 def test_createStorageInfo():
     savePaths = ['green.data.array']
     result = dataAdapter.createStorageInfo({

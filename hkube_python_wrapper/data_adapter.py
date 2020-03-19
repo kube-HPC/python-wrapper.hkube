@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 import collections
 import copy
 import six
-import util.object_path as objectPath
+from util.object_path import flatten, getPath, setPath, createDataPath
 from storage.storage_manager import StorageManager
 from communication.DataRequest import DataRequest
 
@@ -23,7 +23,7 @@ class DataAdapter:
             return input
 
         result = copy.deepcopy(input)
-        flatObj = self._flatten(input)
+        flatObj = flatten(input)
 
         for k, v in flatObj.items():
             if isinstance(v, six.string_types) and v.startswith('$$'):
@@ -38,7 +38,7 @@ class DataAdapter:
                 else:
                     data = self._tryGetDataFromPeerOrStorage(link)
 
-                objectPath.setPath(result, k, data)
+                setPath(result, k, data)
 
         return result
 
@@ -49,33 +49,13 @@ class DataAdapter:
         result = self._storageManager.hkube.put(jobId, taskId, data)
         return result
 
-    @classmethod
-    def _flatten(cls, inp, sep="/"):
-
-        obj = collections.OrderedDict()
-
-        def recurse(t, parent_key=""):
-
-            if isinstance(t, list):
-                for i in range(len(t)):
-                    recurse(t[i], parent_key + sep + str(i) if parent_key else str(i))
-            elif isinstance(t, dict):
-                for k, v in t.items():
-                    recurse(v, parent_key + sep + k if parent_key else k)
-            else:
-                obj[parent_key] = t
-
-        recurse(inp)
-
-        return obj
-
     def _tryGetDataFromPeerOrStorage(self, options):
         path = options.get("path")
         index = options.get("index")
         discovery = options.get("discovery")
         storageInfo = options.get("storageInfo")
 
-        dataPath = self._createDataPath(path, index)
+        dataPath = createDataPath(path, index)
         data = None
 
         if (discovery):
@@ -83,20 +63,9 @@ class DataAdapter:
 
         if (data is None and storageInfo):
             data = self._getFromStorage(storageInfo)
-            data = objectPath.getPath(data, dataPath)
+            data = getPath(data, dataPath)
 
         return data
-
-    @classmethod
-    def _createDataPath(cls, path, index):
-        dataPath = path
-        if isinstance(index, six.integer_types):
-            if (path is not None):
-                dataPath = '{path}.{index}'.format(path=path, index=index)
-            else:
-                dataPath = str(index)
-
-        return dataPath.replace(".", "/") if dataPath else None
 
     def _getFromPeer(self, options, dataPath):
         taskId = options.get('taskId')
@@ -148,9 +117,10 @@ class DataAdapter:
         objData[nodeName] = data
         for path in savePaths:
             try:
-                value = objectPath.getPath(objData, path, separator='.')
-                meta = self._getMetadata(value)
-                metadata[path] = meta
+                value = getPath(objData, path)
+                if (value != 'DEFAULT'):
+                    meta = self._getMetadata(value)
+                    metadata[path] = meta
             except Exception as e:
                 pass
 
@@ -160,7 +130,7 @@ class DataAdapter:
     def _getMetadata(value):
         if(isinstance(value, dict)):
             meta = {'type': 'object'}
-        if(isinstance(value, collections.Sequence)):
+        elif(isinstance(value, collections.Sequence)):
             meta = {'type': 'array', 'size': len(value)}
         else:
             meta = {'type': str(type(value).__name__)}
