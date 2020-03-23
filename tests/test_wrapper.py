@@ -1,11 +1,13 @@
 
 from hkube_python_wrapper import Algorunner
+from hkube_python_wrapper.data_adapter import DataAdapter
 from storage.storage_manager import StorageManager
 import tests.configs.config as conf
 
 config = conf.Config
 
 storageManager = StorageManager(config.storage)
+dataAdapter = DataAdapter(config.storage)
 
 jobId = 'jobId-328901800'
 taskId1 = 'taskId-328901801'
@@ -14,8 +16,8 @@ taskId2 = 'taskId-328901802'
 array = [42, 37, 89, 95, 12, 126, 147]
 nested = {'data': {'array': array}}
 
-storageInfo1 = storageManager.hkube.put(jobId, taskId1, array)
-storageInfo2 = storageManager.hkube.put(jobId, taskId2, nested)
+storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': array})
+storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'data': nested})
 discovery = config.discovery
 
 input = [

@@ -1,10 +1,12 @@
 
+import dpath.util
 from hkube_python_wrapper.data_adapter import DataAdapter
 from storage.storage_manager import StorageManager
 import tests.configs.config as conf
 import util.type_check as typeCheck
-
+import collections
 config = conf.Config
+
 
 storageManager = StorageManager(config.storage)
 dataAdapter = DataAdapter(config.storage)
@@ -16,8 +18,8 @@ taskId2 = 'taskId-328901802'
 obj1 = [42, 37, 89, 95, 12, 126, 147]
 obj2 = {'data': {'array': obj1}}
 
-storageInfo1 = storageManager.hkube.put(jobId, taskId1, obj1)
-storageInfo2 = storageManager.hkube.put(jobId, taskId2, obj2)
+storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': obj1})
+storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'data': obj2})
 
 input = [
     {'data': '$$guid-1'},
@@ -25,20 +27,30 @@ input = [
     [{'prop': '$$guid-3'}],
     ['$$guid-4'],
     '$$guid-5',
-    '$$guid-6',
-    '$$guid-7',
     'test-param',
     True,
     None,
     12345
 ]
 
+flatInput = {
+    '0.data': '$$guid-1',
+    '1.prop.0': '$$guid-2',
+    '2.0.prop': '$$guid-3',
+    '3.0': '$$guid-4',
+    '4': '$$guid-5',
+    '5': 'test-param',
+    '6': True,
+    '7': None,
+    '8': 12345
+}
+
 storage = {
     'guid-1': {'storageInfo': storageInfo2, 'path': 'data'},
     'guid-2': {'storageInfo': storageInfo2, 'path': 'data.array'},
     'guid-3': {'storageInfo': storageInfo2, 'path': 'data.array.4'},
-    'guid-5': {'storageInfo': storageInfo1},
-    'guid-6': [{'storageInfo': storageInfo1}, {'storageInfo': storageInfo2}]
+    'guid-4': {'storageInfo': storageInfo1},
+    'guid-5': [{'storageInfo': storageInfo1}, {'storageInfo': storageInfo2}]
 }
 
 
@@ -54,18 +66,16 @@ def test_get_data_no_input():
 
 def test_get_data():
 
-    result = dataAdapter.getData({'input': input, 'storage': storage})
+    result = dataAdapter.getData({'input': input, 'flatInput': flatInput, 'storage': storage})
     assert result[0]['data']['array'] == obj1
     assert result[1]['prop'][0] == obj1
     assert result[2][0]['prop'] == obj1[4]
-    assert result[3][0] == obj1[4]
-    assert result[4] == obj1[2]
-    assert result[5] == obj1
-    assert result[6] == [obj1, obj2]
+    assert result[3][0] == obj1
+    assert result[4] == [obj1, obj2]
+    assert result[5] == input[5]
+    assert result[6] == input[6]
     assert result[7] == input[7]
     assert result[8] == input[8]
-    assert result[9] == input[9]
-    assert result[10] == input[10]
 
 
 def test_set_data():

@@ -1,6 +1,5 @@
 from __future__ import print_function, division, absolute_import
 import dpath.util
-import collections
 import util.type_check as typeCheck
 
 
@@ -45,24 +44,4 @@ def getShallowProperty(obj, prop):
 
 
 def setPath(source, path, value):
-    dpath.util.set(source, path, value)
-
-
-def flatten(inp, sep="/"):
-
-    obj = collections.OrderedDict()
-
-    def recurse(t, parent_key=""):
-
-        if typeCheck.isList(t):
-            for i in range(len(t)):
-                recurse(t[i], parent_key + sep + str(i) if parent_key else str(i))
-        elif typeCheck.isDict(t):
-            for k, v in t.items():
-                recurse(v, parent_key + sep + k if parent_key else k)
-        else:
-            obj[parent_key] = t
-
-    recurse(inp)
-
-    return obj
+    dpath.util.set(source, path, value, separator=".")

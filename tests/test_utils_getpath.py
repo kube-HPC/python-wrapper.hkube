@@ -41,6 +41,15 @@ def test_getPath_bytes():
 
 
 def test_setPath_bytes():
+    sizeBytes = 10 * 1000000
+    obj = bytearray(sizeBytes)
+    path = '0.prop'
+    input = [{"prop": "$$guid-122-2121-434"}]
+    setPath(input, path, obj)
+    assert result != 'DEFAULT'
+
+
+def test_setPath_array():
     result = [1, False, {"prop": "bla"}]
     obj = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     path = '2/prop'

@@ -1,31 +1,42 @@
 from __future__ import print_function, division, absolute_import
-import collections
-import copy
-from util.object_path import flatten, getPath, setPath
+import json
+import traceback
 import util.type_check as typeCheck
+from util.decorators import timing
+from util.object_path import getPath, setPath
+from util.encoding import Encoding
 from storage.storage_manager import StorageManager
 from communication.DataRequest import DataRequest
 
 
 class DataAdapter:
     def __init__(self, options):
+        self.storageCache = dict()
+        self._encoding = Encoding(options['encoding'])
         self._storageManager = StorageManager(options)
 
+    def encode(self, value):
+        return self._encoding.encode(value)
+
+    def decode(self, value):
+        return self._encoding.decode(value)
+
     def getData(self, options):
-
         input = options.get("input")
+        flatInput = options.get("flatInput")
         storage = options.get("storage")
+        useCache = options.get("useCache")
 
-        if (input is None or len(input) == 0):
+        if (flatInput is None or len(flatInput) == 0):
             return input
 
-        if (storage is None or len(storage) == 0):
-            return input
+        if (useCache == False):
+            self.storageCache = dict()
+            print('cleaning cache')
+        else:
+            print('using cache')
 
-        result = copy.deepcopy(input)
-        flatObj = flatten(input)
-
-        for k, v in flatObj.items():
+        for k, v in flatInput.items():
             if self._isStorage(v):
                 key = v[2:]
                 link = storage.get(key, None)
@@ -38,17 +49,19 @@ class DataAdapter:
                 else:
                     data = self._tryGetDataFromPeerOrStorage(link)
 
-                setPath(result, k, data)
+                setPath(input, k, data)
 
-        return result
+        return input
 
-    def _isStorage(value):
+    def _isStorage(self, value):
         return typeCheck.isString(value) and value.startswith('$$')
 
-    def setData(self, options):
+    def setData(self, options, encode=True):
         jobId = options.get("jobId")
         taskId = options.get("taskId")
         data = options.get("data")
+        if(encode):
+            data = self.encode(data)
         result = self._storageManager.hkube.put(jobId, taskId, data)
         return result
 
@@ -62,12 +75,13 @@ class DataAdapter:
             data = self._getFromPeer(options, path)
 
         if (data is None and storageInfo):
-            data = self._getFromStorage(storageInfo)
+            data = self._getFromCacheOrStorage(storageInfo)
             if(path):
                 data = getPath(data, path)
 
         return data
 
+    @timing
     def _getFromPeer(self, options, dataPath):
         taskId = options.get('taskId')
         discovery = options.get('discovery')
@@ -87,13 +101,36 @@ class DataAdapter:
 
         dataRequest = DataRequest(request)
         response = dataRequest.invoke()
-        # self.emit(Events.DiscoveryGet, response)
-        return response.get('data')
 
-    def _getFromStorage(self, options):
-        data = self._storageManager.storage.get(options)
+        error = response.get('error')
+        if(error is not None):
+            json.dumps(error, indent=2)
+
+        data = response.get('data')
+        return self.decode(data)
+
+    def _getFromCacheOrStorage(self, options):
+        path = options.get('path')
+        data = self._getFromCache(path)
+        if (data is None):
+            data = self._getFromStorage(options)
+            self._setToCache(path, data)
+
         return data
 
+    @timing
+    def _getFromCache(self, path):
+        return self.storageCache.get(path)
+
+    def _setToCache(self, path, data):
+        self.storageCache[path] = data
+
+    @timing
+    def _getFromStorage(self, options):
+        data = self._storageManager.storage.get(options)
+        return self.decode(data)
+
+    @timing
     def createStorageInfo(self, options):
         jobId = options.get("jobId")
         taskId = options.get("taskId")

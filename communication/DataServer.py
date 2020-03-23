@@ -18,11 +18,18 @@ class DataServer:
                 result = self.createError('notAvailable', 'Current taskId is ' + str(self.task))
             else:
                 datapath = decodedMessage['dataPath']
-                result = {'data': objectPath.getPath(self.data, datapath)}
+                if(datapath):
+                    decoded = self.encoding.decode(self.data)
+                    data = decoded['data']
+                    result = {'data': objectPath.getPath(data, datapath)}
+                    result = self.encoding.encode(result)
+                else:
+                    result = self.data
+
         except Exception as e:
             result = self.createError('unknown', str(e))
         finally:
-            return self.encoding.encode(result)
+            return result
 
     def setSendingState(self, task, data):
         self.task = task
@@ -33,7 +40,8 @@ class DataServer:
         self.data = None
 
     def createError(self, code, message):
-        return {'error': {'code': code, 'message': message}}
+        error = {'error': {'code': code, 'message': message}}
+        return self.encoding.encode(error)
 
     def isServing(self):
         return self.adpater.isServing()

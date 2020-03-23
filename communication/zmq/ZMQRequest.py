@@ -1,8 +1,7 @@
 
 import zmq.green as zmq
-
 import gevent
-
+from util.decorators import timing
 context = zmq.Context()
 
 
@@ -13,6 +12,7 @@ class ZMQRequest(object):
         self.connected = False
         self.content = reqDetails['content']
 
+    @timing
     def invoke(self):
         self.socket.send(self.content)
         # gevent.sleep(1)

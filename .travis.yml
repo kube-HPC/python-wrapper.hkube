@@ -17,7 +17,7 @@ install:
   - pip install -U -r tests/requirements.txt
 script:
   # - pylint communication hkube_python_wrapper storage util
-  - pytest --cov-report html --cov=. tests/test_data_adapter.py
+  - pytest
 # after_success:
 #   - |
 #     if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
