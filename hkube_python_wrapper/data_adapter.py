@@ -32,9 +32,9 @@ class DataAdapter:
 
         if (useCache == False):
             self.storageCache = dict()
-            print('cleaning cache')
+            print('using clean cache')
         else:
-            print('using cache')
+            print('using old cache')
 
         for k, v in flatInput.items():
             if self._isStorage(v):
@@ -56,12 +56,10 @@ class DataAdapter:
     def _isStorage(self, value):
         return typeCheck.isString(value) and value.startswith('$$')
 
-    def setData(self, options, encode=True):
+    def setData(self, options):
         jobId = options.get("jobId")
         taskId = options.get("taskId")
         data = options.get("data")
-        if(encode):
-            data = self.encode(data)
         result = self._storageManager.hkube.put(jobId, taskId, data)
         return result
 
@@ -102,12 +100,13 @@ class DataAdapter:
         dataRequest = DataRequest(request)
         response = dataRequest.invoke()
 
+        result = None
         error = response.get('error')
         if(error is not None):
-            json.dumps(error, indent=2)
-
-        data = response.get('data')
-        return self.decode(data)
+            print(json.dumps(error, indent=2))
+        else:
+            result = response.get('data')
+        return result
 
     def _getFromCacheOrStorage(self, options):
         path = options.get('path')
@@ -118,7 +117,6 @@ class DataAdapter:
 
         return data
 
-    @timing
     def _getFromCache(self, path):
         return self.storageCache.get(path)
 
@@ -127,10 +125,8 @@ class DataAdapter:
 
     @timing
     def _getFromStorage(self, options):
-        data = self._storageManager.storage.get(options)
-        return self.decode(data)
+        return self._storageManager.storage.get(options)
 
-    @timing
     def createStorageInfo(self, options):
         jobId = options.get("jobId")
         taskId = options.get("taskId")

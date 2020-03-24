@@ -4,7 +4,9 @@ import sys
 import importlib
 import time
 import gevent
+import traceback
 from events import Events
+from util.decorators import timing
 from communication.DataServer import DataServer
 import hkube_python_wrapper.messages as messages
 import hkube_python_wrapper.methods as methods
@@ -172,6 +174,7 @@ class Algorunner:
         except Exception as e:
             self._sendError(e)
 
+    @timing
     def _start(self, options):
         try:
             self._sendCommand(messages.outgoing["started"], None)
@@ -186,8 +189,6 @@ class Algorunner:
             method = self._getMethod(methods.start)
             output = method(self._input, self.hkubeApi)
 
-            result = self._dataAdapter.encode({"data": output})
-
             data = {
                 'jobId': jobId,
                 'taskId': taskId,
@@ -198,15 +199,16 @@ class Algorunner:
             storageInfo = self._dataAdapter.createStorageInfo(data)
             storingData = {'discovery': self._discovery}
             storingData.update(storageInfo)
-            self._dataServer.setSendingState(taskId, result)
-            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': result}, encode=False)
-            self._sendCommand(messages.outgoing["storing"], storingData)
 
-            time.sleep(5)
+            self._dataServer.setSendingState(taskId, output)
+            self._sendCommand(messages.outgoing["storing"], storingData)
+            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': output})
+
             # self._dataServer.endSendingState()
             self._sendCommand(messages.outgoing["done"], None)
 
         except Exception as e:
+            traceback.print_exc()
             self._sendError(e)
 
     def _stop(self, options):

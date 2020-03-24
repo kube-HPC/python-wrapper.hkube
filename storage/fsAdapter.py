@@ -1,4 +1,5 @@
 import os
+from util.encoding import Encoding
 
 
 def getPath(base, dir):
@@ -7,13 +8,15 @@ def getPath(base, dir):
 
 class FSAdapter:
     def __init__(self, config):
+        encoding = config['encoding']
+        self.encoding = Encoding(encoding)
         self.basePath = config['baseDirectory']
 
     def put(self, options):
         filePath = getPath(self.basePath, options['path'])
         self.ensure_dir(filePath)
         f = open(filePath, 'wb')
-        f.write(options['data'])
+        f.write(self.encoding.encode(options['data']))
         f.close()
         return {'path': options['path']}
 
@@ -24,7 +27,7 @@ class FSAdapter:
         f = open(filePath, 'rb')
         result = f.read()
         f.close()
-        return result
+        return self.encoding.decode(result)
 
     def list(self, options):
         filePath = self.basePath + os.path.sep + options['path']

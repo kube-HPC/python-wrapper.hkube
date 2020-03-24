@@ -22,11 +22,9 @@ class Encoding:
         self.encode = self._bsonEncode if encoding == 'bson' else json.dumps
         self.decode = self._bsonDecode if encoding == 'bson' else json.loads
 
-    @timing
     def _bsonEncode(self, data):
         return bson.encode({'data': data}, codec_options=codec_options)
 
-    @timing
     def _bsonDecode(self, data):
         res = bson.decode(data)
         return res.get("data")

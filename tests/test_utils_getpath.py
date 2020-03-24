@@ -41,17 +41,16 @@ def test_getPath_bytes():
 
 
 def test_setPath_bytes():
-    sizeBytes = 10 * 1000000
-    obj = bytearray(sizeBytes)
-    path = '0.prop'
-    input = [{"prop": "$$guid-122-2121-434"}]
-    setPath(input, path, obj)
-    assert result != 'DEFAULT'
+    input = [1, False, {"prop": "$$guid-1234"}]
+    value = bytearray(10 * 1000000)
+    path = '2.prop'
+    setPath(input, path, value)
+    assert typeCheck.isBytearray(input[2]["prop"])
 
 
 def test_setPath_array():
-    result = [1, False, {"prop": "bla"}]
-    obj = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    path = '2/prop'
-    setPath(result, path, obj)
-    assert typeCheck.isList(result[2]["prop"])
+    input = [1, False, {"prop": "$$guid-1234"}]
+    value = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    path = '2.prop'
+    setPath(input, path, value)
+    assert typeCheck.isList(input[2]["prop"])

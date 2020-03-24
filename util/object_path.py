@@ -1,8 +1,9 @@
 from __future__ import print_function, division, absolute_import
-import dpath.util
 import util.type_check as typeCheck
+from util.decorators import timing
 
 
+@timing
 def getPath(obj, path, defaultValue="DEFAULT"):
 
     if (path is None or len(path) == 0):
@@ -11,7 +12,7 @@ def getPath(obj, path, defaultValue="DEFAULT"):
     if (obj is None):
         return defaultValue
 
-    if (str(type(path).__name__) == 'str'):
+    if (typeCheck.isString(path)):
         return getPath(obj, path.split('.'), defaultValue)
 
     currentPath = getKey(path[0])
@@ -43,5 +44,28 @@ def getShallowProperty(obj, prop):
         return obj[prop]
 
 
-def setPath(source, path, value):
-    dpath.util.set(source, path, value, separator=".")
+@timing
+def setPath(obj, path, value, doNotReplace=False):
+    if (typeCheck.isInt(path)):
+        path = [path]
+
+    if (path is None or len(path) == 0):
+        return obj
+
+    if (typeCheck.isString(path)):
+        return setPath(obj, list(map(getKey, path.split('.'))), value, doNotReplace)
+
+    currentPath = path[0]
+    currentValue = getShallowProperty(obj, currentPath)
+    if (len(path) == 1):
+        if (currentValue is None or doNotReplace == False):
+            obj[currentPath] = value
+        return currentValue
+
+    if (currentValue is None):
+        if(typeCheck.isInt(path[1])):
+            obj[currentPath] = []
+        else:
+            obj[currentPath] = {}
+
+    return setPath(obj[currentPath], path[1:], value, doNotReplace)

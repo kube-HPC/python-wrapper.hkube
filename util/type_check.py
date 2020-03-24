@@ -1,5 +1,4 @@
 from __future__ import print_function, division, absolute_import
-import dpath.util
 import collections
 import six
 

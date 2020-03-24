@@ -1,12 +1,9 @@
 
 from hkube_python_wrapper import Algorunner
 from hkube_python_wrapper.data_adapter import DataAdapter
-from storage.storage_manager import StorageManager
 import tests.configs.config as conf
 
 config = conf.Config
-
-storageManager = StorageManager(config.storage)
 dataAdapter = DataAdapter(config.storage)
 
 jobId = 'jobId-328901800'

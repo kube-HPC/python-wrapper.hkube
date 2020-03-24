@@ -1,14 +1,10 @@
 
-import dpath.util
 from hkube_python_wrapper.data_adapter import DataAdapter
-from storage.storage_manager import StorageManager
 import tests.configs.config as conf
 import util.type_check as typeCheck
 import collections
 config = conf.Config
 
-
-storageManager = StorageManager(config.storage)
 dataAdapter = DataAdapter(config.storage)
 
 jobId = 'jobId-328901800'

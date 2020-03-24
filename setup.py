@@ -15,7 +15,6 @@ requires = [
     'gevent>=1.3.7',
     'pymongo>=3.10.1',
     "wsaccel",
-    "dpath==1.5.0",
     "six"
 ]
 
