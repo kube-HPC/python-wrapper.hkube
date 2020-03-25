@@ -1,6 +1,5 @@
 from communication.zmq.ZMQRequest import ZMQRequest
 from util.encoding import Encoding
-from util.decorators import timing
 
 
 class DataRequest:
@@ -12,6 +11,5 @@ class DataRequest:
         flattenEncodedReqDetails['content'] = self.encoding.encode({'taskId': reqDetails['taskId'], 'dataPath': reqDetails['dataPath']})
         self.adapter = ZMQRequest(flattenEncodedReqDetails)
 
-    @timing
     def invoke(self):
         return self.encoding.decode(self.adapter.invokeAdapter())

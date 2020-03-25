@@ -1,9 +1,7 @@
 from __future__ import print_function, division, absolute_import
 import util.type_check as typeCheck
-from util.decorators import timing
 
 
-@timing
 def getPath(obj, path, defaultValue="DEFAULT"):
 
     if (path is None or len(path) == 0):
@@ -44,7 +42,6 @@ def getShallowProperty(obj, prop):
         return obj[prop]
 
 
-@timing
 def setPath(obj, path, value, doNotReplace=False):
     if (typeCheck.isInt(path)):
         path = [path]

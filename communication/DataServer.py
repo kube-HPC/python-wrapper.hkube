@@ -1,6 +1,5 @@
 from communication.zmq.ZMQServer import ZMQServer
 from util.encoding import Encoding
-from util.decorators import timing
 import util.object_path as objectPath
 import traceback
 
@@ -12,7 +11,6 @@ class DataServer:
         encoding = config['encoding']
         self.encoding = Encoding(encoding)
 
-    @timing
     def createReply(self, message):
         try:
             decodedMessage = self.encoding.decode(message)
