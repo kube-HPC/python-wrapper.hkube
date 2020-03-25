@@ -8,29 +8,33 @@ class DataServer:
 
     def __init__(self, config):
         self.adpater = ZMQServer(config, self.createReply)
+        self.host = config['host']
+        self.port = config['port']
         encoding = config['encoding']
         self.encoding = Encoding(encoding)
 
     def createReply(self, message):
         try:
             decodedMessage = self.encoding.decode(message)
-            taskId = decodedMessage['taskId']
-            if(taskId != self.task):
-                result = self.createError('notAvailable', 'Current taskId is ' + str(self.task))
-            else:
-                datapath = decodedMessage['dataPath']
-                data = self.data
-                if(datapath):
-                    data = objectPath.getPath(self.data, datapath)
-
-                result = {'data': data}
-
+            result = createData(decodedMessage)
         except Exception as e:
             traceback.print_exc()
             result = self.createError('unknown', str(e))
-
         finally:
             return self.encoding.encode(result)
+
+    def createData(message):
+        taskId = message['taskId']
+        if(taskId != self.task):
+            result = self.createError('notAvailable', 'Current taskId is ' + str(self.task))
+        else:
+            datapath = message['dataPath']
+            data = self.data
+            if(datapath):
+                data = objectPath.getPath(self.data, datapath)
+
+            result = {'data': data}
+        return result
 
     def setSendingState(self, task, data):
         self.task = task

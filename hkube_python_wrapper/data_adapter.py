@@ -10,7 +10,8 @@ from communication.DataRequest import DataRequest
 
 
 class DataAdapter:
-    def __init__(self, options):
+    def __init__(self, options, dataServer=None):
+        self._dataServer = dataServer
         self.storageCache = dict()
         self._encoding = Encoding(options['encoding'])
         self._storageManager = StorageManager(options)
@@ -87,18 +88,22 @@ class DataAdapter:
         host = discovery.get('host')
         encoding = discovery.get('encoding')
 
-        request = {
-            'address': {
-                'port': port,
-                'host': host
-            },
-            'taskId': taskId,
-            'dataPath': dataPath,
-            'encoding': encoding
-        }
+        response = None
+        if(self._dataServer and host == self._dataServer.host and port == self._dataServer.port):
+            response = self._dataServer.createData({'taskId': taskId, 'dataPath': dataPath})
 
-        dataRequest = DataRequest(request)
-        response = dataRequest.invoke()
+        if (response is None):
+            request = {
+                'address': {
+                    'port': port,
+                    'host': host
+                },
+                'taskId': taskId,
+                'dataPath': dataPath,
+                'encoding': encoding
+            }
+            dataRequest = DataRequest(request)
+            response = dataRequest.invoke()
 
         result = None
         error = response.get('error')
