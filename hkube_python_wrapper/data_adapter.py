@@ -92,7 +92,7 @@ class DataAdapter:
         if(self._dataServer and host == self._dataServer.host and port == self._dataServer.port):
             response = self._dataServer.createData({'taskId': taskId, 'dataPath': dataPath})
 
-        if (response is None):
+        else:
             request = {
                 'address': {
                     'port': port,
