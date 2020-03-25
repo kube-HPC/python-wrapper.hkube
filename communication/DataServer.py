@@ -23,7 +23,7 @@ class DataServer:
         finally:
             return self.encoding.encode(result)
 
-    def createData(message):
+    def createData(self, message):
         taskId = message['taskId']
         if(taskId != self.task):
             result = self.createError('notAvailable', 'Current taskId is ' + str(self.task))
