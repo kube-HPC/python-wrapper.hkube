@@ -23,13 +23,13 @@ class DataAdapter:
         return self._encoding.decode(value)
 
     def getData(self, options):
-        input = options.get("input")
+        inputArgs = options.get("input")
         flatInput = options.get("flatInput")
         storage = options.get("storage")
         useCache = options.get("useCache")
 
         if (flatInput is None or len(flatInput) == 0):
-            return input
+            return inputArgs
 
         if (useCache == False):
             self.storageCache = dict()
@@ -50,9 +50,9 @@ class DataAdapter:
                 else:
                     data = self._tryGetDataFromPeerOrStorage(link)
 
-                setPath(input, k, data)
+                setPath(inputArgs, k, data)
 
-        return input
+        return inputArgs
 
     def _isStorage(self, value):
         return typeCheck.isString(value) and value.startswith('$$')
@@ -89,7 +89,7 @@ class DataAdapter:
         encoding = discovery.get('encoding')
 
         response = None
-        if(self._dataServer and host == self._dataServer.host and port == self._dataServer.port):
+        if(self._dataServer and host == self._dataServer._host and port == self._dataServer._port):
             response = self._dataServer.createData({'taskId': taskId, 'dataPath': dataPath})
 
         else:

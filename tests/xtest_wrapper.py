@@ -17,7 +17,7 @@ storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': a
 storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'data': nested})
 discovery = config.discovery
 
-input = [
+inputArgs = [
     {'data': '$$guid-1'},
     {'prop': ['$$guid-2']},
     [{'prop': '$$guid-3'}],
@@ -54,7 +54,7 @@ def test_get_data():
     job = {
         'jobId': jobId,
         'taskId': taskId1,
-        'input': input,
+        'input': inputArgs,
         'storage': storage,
         'nodeName': 'green',
         'info': {'savePaths': savePaths}

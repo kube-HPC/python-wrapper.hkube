@@ -26,5 +26,10 @@ class Config:
         "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
         "fs": {
             "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', '/var/tmp/fs/storage')
+        },
+        "s3": {
+            "accessKeyId": os.environ.get('AWS_ACCESS_KEY_ID', 'AKIAIOSFODNN7EXAMPLE'),
+            "secretAccessKey": os.environ.get('AWS_SECRET_ACCESS_KEY', 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'),
+            "endpoint": os.environ.get('AWS_ENDPOINT', 'http://127.0.0.1:9000')
         }
     }

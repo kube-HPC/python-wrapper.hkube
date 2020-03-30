@@ -3,13 +3,11 @@ import time
 from hkube_python_wrapper import Algorunner
 import tests.configs.config as conf
 from gevent import monkey
-from .mock_ws_server import startWebSocketServer, initData
+from .mock_ws_server import initData
 monkey.patch_all()
 
 
 config = conf.Config
-
-startWebSocketServer(config.socket)
 
 
 def start(args, hkubeApi=None):

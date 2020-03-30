@@ -17,7 +17,7 @@ obj2 = {'data': {'array': obj1}}
 storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': obj1})
 storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'data': obj2})
 
-input = [
+inputArgs = [
     {'data': '$$guid-1'},
     {'prop': ['$$guid-2']},
     [{'prop': '$$guid-3'}],
@@ -51,8 +51,8 @@ storage = {
 
 
 def test_get_data_no_storage():
-    result = dataAdapter.getData({'input': input})
-    assert result == input
+    result = dataAdapter.getData({'input': inputArgs})
+    assert result == inputArgs
 
 
 def test_get_data_no_input():
@@ -62,16 +62,16 @@ def test_get_data_no_input():
 
 def test_get_data():
 
-    result = dataAdapter.getData({'input': input, 'flatInput': flatInput, 'storage': storage})
+    result = dataAdapter.getData({'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
     assert result[0]['data']['array'] == obj1
     assert result[1]['prop'][0] == obj1
     assert result[2][0]['prop'] == obj1[4]
     assert result[3][0] == obj1
     assert result[4] == [obj1, obj2]
-    assert result[5] == input[5]
-    assert result[6] == input[6]
-    assert result[7] == input[7]
-    assert result[8] == input[8]
+    assert result[5] == inputArgs[5]
+    assert result[6] == inputArgs[6]
+    assert result[7] == inputArgs[7]
+    assert result[8] == inputArgs[8]
 
 
 def test_set_data():

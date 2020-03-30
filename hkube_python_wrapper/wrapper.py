@@ -113,8 +113,9 @@ class Algorunner:
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
-        job = gevent.spawn(self._wsc.startWS, self._url)
-        return job
+        job1 = gevent.spawn(self._wsc.startWS, self._url)
+        job2 = gevent.spawn(self._dataServer.listen)
+        return job1
 
     def _initStorage(self, options):
         self._initDataServer(options)

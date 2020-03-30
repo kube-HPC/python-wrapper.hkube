@@ -1,12 +1,12 @@
-from storage.base_storage_manager import BaseStorageManager
 import os
+from storage.base_storage_manager import BaseStorageManager
 
 
 class TaskOutputManager(BaseStorageManager):
     storagePrefix = 'hkube'
 
-    def __init__(self, adapter, config):
-        super(TaskOutputManager, self).__init__(adapter)
+    def __init__(self, adapter, config, encoding):
+        super(TaskOutputManager, self).__init__(adapter, encoding)
         self.clusterName = config['clusterName']
 
     def put(self, jobId, taskId, data):
