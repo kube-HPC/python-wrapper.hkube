@@ -4,13 +4,24 @@ from communication.DataRequest import DataRequest
 import pytest
 import gevent
 from gevent import monkey
-from tests.mock_data.mocks import data, taskId
+
 monkey.patch_all()
 config = conf.Config
 config = config.discovery
 reources = {}
 
 data3 = bytearray(1024 * 1024 * 100)
+taskId = 'task_1'
+data = {
+    'level1': {
+        'level2': {
+            'value1': 'd2_l1_l2_value_1',
+            'value2': 'd2_l1_l2_value_2',
+        },
+        'value1': 'd2_l1_value_1'
+    },
+    'value1': 'd2_value_1'
+}
 
 
 def test_get_data_by_path():

@@ -1,7 +1,6 @@
 
 import gevent
 import subprocess
-from communication.DataServer import DataServer
 from .mock_ws_server import startWebSocketServer
 import tests.configs.config as conf
 from gevent import monkey
