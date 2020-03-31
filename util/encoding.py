@@ -22,19 +22,24 @@ class Encoding:
         encoders = {
             "bson": {
                 "encode": self._bsonEncode,
-                "decode": self._bsonDecode
+                "decode": self._bsonDecode,
+                "isBinary": True
             },
             "json": {
                 "encode": self._jsonEncode,
-                "decode": self._jsonDecode
+                "decode": self._jsonDecode,
+                "isBinary": False
             },
             "msgpack": {
                 "encode": self._msgpackEncode,
-                "decode": self._msgpackDecode
+                "decode": self._msgpackDecode,
+                "isBinary": True
             }
         }
-        self.encode = encoders[encoding]["encode"]
-        self.decode = encoders[encoding]["decode"]
+        encoder = encoders[encoding]
+        self.encode = encoder["encode"]
+        self.decode = encoder["decode"]
+        self.isBinary = encoder["isBinary"]
 
     @timing
     def _bsonDecode(self, data):

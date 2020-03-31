@@ -1,4 +1,6 @@
 
+import gevent
+import subprocess
 from communication.DataServer import DataServer
 from .mock_ws_server import startWebSocketServer
 import tests.configs.config as conf
@@ -23,21 +25,9 @@ def pytest_sessionstart(session):
     before performing collection and entering the run test loop.
     """
     print('pytest_sessionstart')
-    startWebSocketServer(config.socket)
-    # ds = DataServer(config.discovery)
 
-    # taskId = 'task_1'
-    # data = {
-    #     'level1': {
-    #         'level2': {
-    #             'value1': 'l1_l2_value_1',
-    #             'value2': 'l1_l2_value_2',
-    #         },
-    #         'value1': 'l1_value_1'
-    #     },
-    #     'value1': 'value_1'
-    # }
-    # ds.setSendingState(taskId, data)
+    subprocess.call(['python', 'tests/data_server.py'])
+    gevent.spawn(startWebSocketServer, config.socket)
 
 
 def pytest_sessionfinish(session, exitstatus):

@@ -7,16 +7,18 @@ import traceback
 class DataServer:
 
     def __init__(self, config):
-        self._adpater = ZMQServer()
-        self._host = config['host']
-        self._port = config['port']
-        encoding = config['encoding']
-        self._encoding = Encoding(encoding)
+        self._adapter = ZMQServer()
         self._task = None
         self._data = None
+        self._host = config['host']
+        self._port = config['port']
+        self._encodingType = config['encoding']
+        self._encoding = Encoding(self._encodingType)
 
     def listen(self):
-        return self._adpater.listen(self._port, self._createReply)
+        print('discovery serving on {host}:{port} with {encoding} encoding'.format(
+            host=self._host, port=self._port, encoding=self._encodingType))
+        self._adapter.listen(self._port, self._createReply)
 
     def _createReply(self, message):
         try:
@@ -31,14 +33,18 @@ class DataServer:
     def createData(self, message):
         taskId = message['taskId']
         if(taskId != self._task):
-            result = self._createError('notAvailable', 'Current taskId is ' + str(self._task))
+            result = self._createError('notAvailableXX', 'Current taskId is ' + str(self._task))
         else:
             datapath = message['dataPath']
             data = self._data
             if(datapath):
                 data = objectPath.getPath(self._data, datapath)
-
-            result = {'data': data}
+                if(data == 'DEFAULT'):
+                    result = self._createError('noSuchDataPath', '{datapath} does not exist in data'.format(datapath=datapath))
+                else:
+                    result = {'data': data}
+            else:
+                result = {'data': data}
         return result
 
     def setSendingState(self, task, data):
@@ -53,7 +59,7 @@ class DataServer:
         return {'error': {'code': code, 'message': message}}
 
     def isServing(self):
-        return self._adpater.isServing()
+        return self._adapter.isServing()
 
     def close(self):
-        self._adpater.close()
+        self._adapter.close()

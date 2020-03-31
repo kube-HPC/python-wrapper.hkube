@@ -2,6 +2,7 @@ import pytest
 import os
 from storage.storage_manager import StorageManager
 import tests.configs.config as conf
+import time
 config = conf.Config
 config = config.storage
 config['type'] = 's3'

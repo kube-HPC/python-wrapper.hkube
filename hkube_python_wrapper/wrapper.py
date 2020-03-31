@@ -97,7 +97,6 @@ class Algorunner:
         storage = options.storage
         encoding = socket.get("encoding")
         storage = storage.get("mode")
-        binary = encoding in ['bson', 'protoc']
         url = socket.get("url")
 
         if (url is not None):
@@ -107,7 +106,7 @@ class Algorunner:
 
         self._url += '?storage={storage}&encoding={encoding}'.format(storage=storage, encoding=encoding)
 
-        self._wsc = WebsocketClient(encoding, binary=binary)
+        self._wsc = WebsocketClient(encoding)
         self.hkubeApi = HKubeApi(self._wsc)
         self._initStorage(options)
         self._registerToWorkerEvents()
@@ -115,7 +114,7 @@ class Algorunner:
         print('connecting to {url}'.format(url=self._url))
         job1 = gevent.spawn(self._wsc.startWS, self._url)
         job2 = gevent.spawn(self._dataServer.listen)
-        return job1
+        return [job1, job2]
 
     def _initStorage(self, options):
         self._initDataServer(options)

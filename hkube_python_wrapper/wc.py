@@ -10,12 +10,11 @@ monkey.patch_all()
 
 
 class WebsocketClient:
-    def __init__(self, encoding, binary=False):
+    def __init__(self, encoding):
         self.events = Events()
         self._ws = None
         self._reconnectInterval = 0.1
         self._active = True
-        self._binary = binary
         self._switcher = {
             "initialize": self.init,
             "start": self.start,
@@ -30,7 +29,7 @@ class WebsocketClient:
         }
         self._firstConnect = False
         self._encoding = Encoding(encoding)
-        self._ws_opcode = ABNF.OPCODE_BINARY if self._binary else ABNF.OPCODE_TEXT
+        self._ws_opcode = ABNF.OPCODE_BINARY if self._encoding.isBinary else ABNF.OPCODE_TEXT
         print('Initialized socket with {encoding} encoding'.format(encoding=encoding))
 
     def init(self, data):
