@@ -1,12 +1,5 @@
 
-import gevent
 import subprocess
-from .mock_ws_server import startWebSocketServer
-import tests.configs.config as conf
-from gevent import monkey
-monkey.patch_all()
-
-config = conf.Config
 
 
 def pytest_configure(config):
@@ -26,7 +19,7 @@ def pytest_sessionstart(session):
     print('pytest_sessionstart')
 
     subprocess.call(['python', 'tests/data_server.py'])
-    gevent.spawn(startWebSocketServer, config.socket)
+    subprocess.call(['python', 'tests/mock_ws_server.py'])
 
 
 def pytest_sessionfinish(session, exitstatus):

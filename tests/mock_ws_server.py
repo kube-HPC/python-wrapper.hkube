@@ -2,7 +2,10 @@ from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 import gevent
 from gevent import monkey
 from util.encoding import Encoding
+import tests.configs.config as conf
 monkey.patch_all()
+
+config = conf.Config
 
 initData = {
     'jobId': 'jobId',
@@ -47,3 +50,6 @@ def startWebSocketServer(options):
     server = SimpleWebSocketServer('', port, WebSocketServer)
     job = gevent.spawn(server.serveforever)
     return job
+
+
+startWebSocketServer(config.socket)

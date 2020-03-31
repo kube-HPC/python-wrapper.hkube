@@ -40,7 +40,7 @@ def test_get_data_by_path():
         'encoding': config['encoding']
     })
     reply = dr.invoke()
-    assert reply['data'] == data['value_1']
+    assert reply['data'] == data['value1']
 
 
 def test_path_not_exist():
@@ -72,7 +72,7 @@ def test_get_complete_data():
         'encoding': config['encoding']
     })
     reply = dr.invoke()
-    assert reply['data'] == data['value_1']
+    assert reply['data'] == data['value1']
 
 
 def test_data_after_taskid_changed():
@@ -95,44 +95,44 @@ def test_data_after_taskid_changed():
     assert reply['data'] == data
 
 
-def test_failing_to_get_data_old_task_id():
+# def test_failing_to_get_data_old_task_id():
 
-    dr = DataRequest({
-        'address': {'port': config['port'], 'host': config['host']},
-        'taskId': taskId,
-        'dataPath': '',
-        'encoding': config['encoding']
-    })
-    reply = dr.invoke()
-    assert reply['data'] == data
-    dr = DataRequest({
-        'address': {'port': config['port'], 'host': config['host']},
-        'taskId': taskId,
-        'dataPath': '',
-        'encoding': config['encoding']
-    })
-    reply = dr.invoke()
-    assert reply == {'error': {'message': 'Current taskId is task_2', 'code': 'notAvailable'}}
+#     dr = DataRequest({
+#         'address': {'port': config['port'], 'host': config['host']},
+#         'taskId': taskId,
+#         'dataPath': '',
+#         'encoding': config['encoding']
+#     })
+#     reply = dr.invoke()
+#     assert reply['data'] == data
+#     dr = DataRequest({
+#         'address': {'port': config['port'], 'host': config['host']},
+#         'taskId': taskId,
+#         'dataPath': '',
+#         'encoding': config['encoding']
+#     })
+#     reply = dr.invoke()
+#     assert reply == {'error': {'message': 'Current taskId is task_2', 'code': 'notAvailable'}}
 
 
-def test_failing_to_get_sending_ended():
+# def test_failing_to_get_sending_ended():
 
-    dr = DataRequest({
-        'address': {'port': config['port'], 'host': config['host']},
-        'taskId': taskId,
-        'dataPath': '',
-        'encoding': config['encoding']
-    })
-    reply = dr.invoke()
-    assert reply['data'] == data
-    dr = DataRequest({
-        'address': {'port': config['port'], 'host': config['host']},
-        'taskId': taskId,
-        'dataPath': '',
-        'encoding': config['encoding']
-    })
-    reply = dr.invoke()
-    assert reply == {'error': {'message': 'Current taskId is None', 'code': 'notAvailable'}}
+#     dr = DataRequest({
+#         'address': {'port': config['port'], 'host': config['host']},
+#         'taskId': taskId,
+#         'dataPath': '',
+#         'encoding': config['encoding']
+#     })
+#     reply = dr.invoke()
+#     assert reply['data'] == data
+#     dr = DataRequest({
+#         'address': {'port': config['port'], 'host': config['host']},
+#         'taskId': taskId,
+#         'dataPath': '',
+#         'encoding': config['encoding']
+#     })
+#     reply = dr.invoke()
+#     assert reply == {'error': {'message': 'Current taskId is None', 'code': 'notAvailable'}}
 
 
 # def test_isServing():
