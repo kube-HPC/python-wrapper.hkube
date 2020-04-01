@@ -1,4 +1,6 @@
 
+import os
+import sys
 import subprocess
 
 
@@ -18,8 +20,12 @@ def pytest_sessionstart(session):
     """
     print('pytest_sessionstart')
 
-    subprocess.call(['python', 'tests/data_server.py'])
-    subprocess.call(['python', 'tests/mock_ws_server.py'])
+    copyEnv = os.environ.copy()
+    python_path = ":".join(sys.path)[1:]
+    environ = {'PYTHONPATH': python_path}
+    copyEnv.update(environ)
+    subprocess.Popen(['python', 'tests/data_server.py'], env=copyEnv)
+    subprocess.Popen(['python', 'tests/mock_ws_server.py'], env=copyEnv)
 
 
 def pytest_sessionfinish(session, exitstatus):

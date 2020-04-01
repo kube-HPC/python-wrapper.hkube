@@ -1,13 +1,10 @@
 
 import time
 from hkube_python_wrapper import Algorunner
-import tests.configs.config as conf
+from tests.configs import config
 from gevent import monkey
 from .mock_ws_server import initData
 monkey.patch_all()
-
-
-config = conf.Config
 
 
 def start(args, hkubeApi=None):

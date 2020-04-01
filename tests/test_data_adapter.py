@@ -1,9 +1,8 @@
 
 from hkube_python_wrapper.data_adapter import DataAdapter
-import tests.configs.config as conf
+from tests.configs import config
 import util.type_check as typeCheck
 import collections
-config = conf.Config
 
 dataAdapter = DataAdapter(config.storage)
 

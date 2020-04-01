@@ -1,55 +1,52 @@
-from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
-import gevent
-from gevent import monkey
+
+from websocket_server import WebsocketServer
 from util.encoding import Encoding
-import tests.configs.config as conf
-monkey.patch_all()
-
-config = conf.Config
-
-initData = {
-    'jobId': 'jobId',
-    'taskId': 'taskId1',
-    'input': [1, False, None],
-    'nodeName': 'green'
-}
+from tests.mocks import mockdata
+from tests.configs import config
 
 
-class WebSocketServer(WebSocket):
-    def init(self):
+class WebSocketServerClass:
+    def __init__(self, encoding, server):
+        self._server = server
+        self._server.set_fn_new_client(self.handleConnected)
+        self._server.set_fn_client_left(self.handleDisconnected)
+        self._server.set_fn_message_received(self.handleMessage)
         self._encoding = Encoding(encoding)
-        self._switcher = {
-            "initialized": lambda data: self.sendMsgToClient({'command': 'start'}),
-            "startAlgorithmExecution": lambda data: self.sendMsgToClient({'command': 'algorithmExecutionDone', 'data': data}),
-            "startStoredSubPipeline": lambda data: self.sendMsgToClient({'command': 'subPipelineDone', 'data': data})
+        self._commands = {
+            "initialized":  "start",
+            "startAlgorithmExecution": "algorithmExecutionDone",
+            "startStoredSubPipeline": "subPipelineDone"
         }
 
-    def handleMessage(self):
-        decoded = self._encoding.decode(self.data)
+    def handleMessage(self, client, server, message):
+        decoded = self._encoding.decode(message)
         command = decoded["command"]
         data = decoded.get("data", None)
-        func = self._switcher.get(command)
-        gevent.spawn(func, data)
+        commandBack = self._commands.get(command)
+        if(commandBack):
+            msgBack = {
+                "command": commandBack,
+                "data": data
+            }
+            self.sendMsgToClient(client, msgBack)
 
-    def handleConnected(self):
-        print(self.address, 'connected')
-        self.init()
-        self.sendMsgToClient({'command': 'initialize', 'data': initData})
+    def handleConnected(self, client, server):
+        print('connected')
+        self.sendMsgToClient(client, {'command': 'initialize', 'data': mockdata.initData})
 
-    def handleClose(self):
-        print(self.address, 'closed')
+    def handleDisconnected(self, client, server):
+        print('closed')
 
-    def sendMsgToClient(self, data):
-        self.sendMessage(self._encoding.encode(data))
+    def sendMsgToClient(self, client, data):
+        self._server.send_message(client, self._encoding.encode(data))
 
 
 def startWebSocketServer(options):
-    global encoding
     port = options["port"]
     encoding = options["encoding"]
-    server = SimpleWebSocketServer('', port, WebSocketServer)
-    job = gevent.spawn(server.serveforever)
-    return job
+    server = WebsocketServer(int(port))
+    wss = WebSocketServerClass(encoding, server)
+    server.run_forever()
 
 
 startWebSocketServer(config.socket)

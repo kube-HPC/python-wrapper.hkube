@@ -2,13 +2,12 @@ from __future__ import print_function, division, absolute_import
 import os
 import sys
 import importlib
-import time
 import gevent
 import traceback
 from events import Events
 from communication.DataServer import DataServer
 import hkube_python_wrapper.messages as messages
-import hkube_python_wrapper.methods as methods
+from hkube_python_wrapper.methods import methods
 from .data_adapter import DataAdapter
 from .hkube_api import HKubeApi
 from .wc import WebsocketClient
@@ -22,7 +21,7 @@ class Algorunner:
         self._events = Events()
         self._loadAlgorithmError = None
         self._connected = False
-        self.hkubeApi = None
+        self._hkubeApi = None
         self._dataAdapter = None
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None):
@@ -33,20 +32,18 @@ class Algorunner:
             self._algorithm['init'] = init
             self._algorithm['stop'] = stop
             self._algorithm['exit'] = exit
-            for m in dir(methods):
-                if not m.startswith("__"):
-                    method = getattr(methods, m)
-                    methodName = method["name"]
-                    if self._algorithm[methodName] != None:
-                        print('found method {methodName}'.format(
-                            methodName=methodName))
-                    else:
-                        mandatory = "mandatory" if method["mandatory"] else "optional"
-                        error = 'unable to find {mandatory} method {methodName}'.format(
-                            mandatory=mandatory, methodName=methodName)
-                        if (method["mandatory"]):
-                            raise Exception(error)
-                        print(error)
+            for k, v in methods.items():
+                methodName = k
+                method = v
+                isMandatory = method["mandatory"]
+                if self._algorithm[methodName] != None:
+                    print('found method {methodName}'.format(methodName=methodName))
+                else:
+                    mandatory = "mandatory" if isMandatory else "optional"
+                    error = 'unable to find {mandatory} method {methodName}'.format(mandatory=mandatory, methodName=methodName)
+                    if (isMandatory):
+                        raise Exception(error)
+                    print(error)
             # fix start if it has only one argument
             if start.__code__.co_argcount == 1:
                 self._algorithm['start'] = lambda args, api: start(args)
@@ -68,26 +65,23 @@ class Algorunner:
                 entryPoint=entryPoint), package=package)
             print('algorithm code loaded')
 
-            for m in dir(methods):
-                if not m.startswith("__"):
-                    method = getattr(methods, m)
-                    methodName = method["name"]
-                    try:
-                        self._algorithm[methodName] = getattr(mod, methodName)
-                        # fix start if it has only one argument
-                        if methodName == 'start' and self._algorithm['start'].__code__.co_argcount == 1:
-                            self._algorithm['startOrig'] = self._algorithm['start']
-                            self._algorithm['start'] = lambda args, api: self._algorithm['startOrig'](
-                                args)
-                        print('found method {methodName}'.format(
-                            methodName=methodName))
-                    except Exception as e:
-                        mandatory = "mandatory" if method["mandatory"] else "optional"
-                        error = 'unable to find {mandatory} method {methodName}'.format(
-                            mandatory=mandatory, methodName=methodName)
-                        if (method["mandatory"]):
-                            raise Exception(error)
-                        print(error)
+            for k, v in methods.items():
+                methodName = k
+                method = v
+                isMandatory = method["mandatory"]
+                try:
+                    self._algorithm[methodName] = getattr(mod, methodName)
+                    # fix start if it has only one argument
+                    if methodName == 'start' and self._algorithm['start'].__code__.co_argcount == 1:
+                        self._algorithm['startOrig'] = self._algorithm['start']
+                        self._algorithm['start'] = lambda args, api: self._algorithm['startOrig'](args)
+                    print('found method {methodName}'.format(methodName=methodName))
+                except Exception as e:
+                    mandatory = "mandatory" if isMandatory else "optional"
+                    error = 'unable to find {mandatory} method {methodName}'.format(mandatory=mandatory, methodName=methodName)
+                    if (isMandatory):
+                        raise Exception(error)
+                    print(error)
         except Exception as e:
             self._loadAlgorithmError = e
             print(e)
@@ -107,14 +101,14 @@ class Algorunner:
         self._url += '?storage={storage}&encoding={encoding}'.format(storage=storage, encoding=encoding)
 
         self._wsc = WebsocketClient(encoding)
-        self.hkubeApi = HKubeApi(self._wsc)
+        self._hkubeApi = HKubeApi(self._wsc)
         self._initStorage(options)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
         job1 = gevent.spawn(self._wsc.startWS, self._url)
         job2 = gevent.spawn(self._dataServer.listen)
-        return [job1, job2]
+        return [job1]
 
     def _initStorage(self, options):
         self._initDataServer(options)
@@ -155,8 +149,8 @@ class Algorunner:
             print('disconnected from ' + self._url)
         self._connected = False
 
-    def _getMethod(self, method):
-        return self._algorithm.get(method["name"])
+    def _getMethod(self, name):
+        return self._algorithm.get(name)
 
     def _init(self, options):
         try:
@@ -164,7 +158,7 @@ class Algorunner:
                 self._sendError(self._loadAlgorithmError)
             else:
                 self._input = options
-                method = self._getMethod(methods.init)
+                method = self._getMethod('init')
                 if (method is not None):
                     method(options)
 
@@ -184,8 +178,8 @@ class Algorunner:
 
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
-            method = self._getMethod(methods.start)
-            output = method(self._input, self.hkubeApi)
+            method = self._getMethod('start')
+            output = method(self._input, self._hkubeApi)
 
             data = {
                 'jobId': jobId,
@@ -211,7 +205,7 @@ class Algorunner:
 
     def _stop(self, options):
         try:
-            method = self._getMethod(methods.stop)
+            method = self._getMethod('stop')
             if (method is not None):
                 method(options)
 
@@ -223,7 +217,7 @@ class Algorunner:
     def _exit(self, options):
         try:
             self._wsc.stopWS()
-            method = self._getMethod(methods.exit)
+            method = self._getMethod('exit')
             if (method is not None):
                 method(options)
 
