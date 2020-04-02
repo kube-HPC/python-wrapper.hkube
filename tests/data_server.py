@@ -6,5 +6,5 @@ from tests.configs import config
 
 
 ds = DataServer(config.discovery)
-ds.setSendingState(mockdata.taskId, mockdata.data)
+ds.setSendingState(mockdata.taskId1, mockdata.data)
 ds.listen()

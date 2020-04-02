@@ -2,8 +2,9 @@ import pytest
 import os
 from storage.storage_manager import StorageManager
 from tests.configs import config
-import time
-config = config.storage
+
+
+config = config.storage.copy()
 config['type'] = 's3'
 content = {"data": 'all_my_data'}
 

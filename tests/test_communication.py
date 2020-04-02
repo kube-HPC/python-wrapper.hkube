@@ -8,13 +8,12 @@ from gevent import monkey
 
 monkey.patch_all()
 config = config.discovery
-reources = {}
 
 data3 = bytearray(1024 * 1024 * 100)
 
 
 data = mockdata.data
-taskId = mockdata.taskId
+taskId = mockdata.taskId1
 
 
 def test_get_data_by_path():

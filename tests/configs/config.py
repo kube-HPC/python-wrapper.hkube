@@ -4,7 +4,7 @@ socket = {
     "host": os.environ.get('WORKER_SOCKET_HOST', "127.0.0.1"),
     "protocol": os.environ.get('WORKER_SOCKET_PROTOCOL', "ws"),
     "url": os.environ.get('WORKER_SOCKET_URL', None),
-    "encoding": os.environ.get('WORKER_ENCODING', 'json')
+    "encoding": os.environ.get('WORKER_ALGORITHM_ENCODING', 'json')
 }
 discovery = {
     "host": os.environ.get('POD_NAME', '127.0.0.1'),

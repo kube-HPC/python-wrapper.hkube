@@ -48,7 +48,7 @@ class Algorunner:
             if start.__code__.co_argcount == 1:
                 self._algorithm['start'] = lambda args, api: start(args)
         except Exception as e:
-            self._loadAlgorithmError = e
+            self._loadAlgorithmError = self._errorMsg(e)
             print(e)
 
     def loadAlgorithm(self, options):
@@ -61,8 +61,7 @@ class Algorunner:
             __import__(package)
             os.chdir('{cwd}/{package}'.format(cwd=cwd, package=package))
             print('loading {entry}'.format(entry=entry))
-            mod = importlib.import_module('.{entryPoint}'.format(
-                entryPoint=entryPoint), package=package)
+            mod = importlib.import_module('.{entryPoint}'.format(entryPoint=entryPoint), package=package)
             print('algorithm code loaded')
 
             for k, v in methods.items():
@@ -83,7 +82,8 @@ class Algorunner:
                         raise Exception(error)
                     print(error)
         except Exception as e:
-            self._loadAlgorithmError = e
+            self._loadAlgorithmError = self._errorMsg(e)
+            traceback.print_exc()
             print(e)
 
     def connectToWorker(self, options):
@@ -242,8 +242,11 @@ class Algorunner:
                 'command': messages.outgoing["error"],
                 'error': {
                     'code': 'Failed',
-                    'message': repr(error)
+                    'message': self._errorMsg(error)
                 }
             })
         except Exception as e:
             print(e)
+
+    def _errorMsg(self, error):
+        return str(error)

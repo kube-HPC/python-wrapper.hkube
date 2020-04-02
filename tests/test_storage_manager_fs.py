@@ -1,4 +1,5 @@
 from storage.storage_manager import StorageManager
+from tests.configs import config
 import pytest
 import shutil
 import os
@@ -15,15 +16,7 @@ dir1 = 'dir1'
 dir2 = 'dir2'
 
 content = {"data": 'all_my_data'}
-config = {
-    "clusterName": os.environ.get('CLUSTER_NAME', 'local'),
-    "type": os.environ.get('STORAGE_TYPE', 'fs'),
-    "mode": os.environ.get('STORAGE_MODE', 'byRef'),
-    "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
-    "fs": {
-        "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', 'baseDirectory')
-    }
-}
+config = config.storage
 
 baseDirectory = config["fs"]['baseDirectory']
 

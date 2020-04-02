@@ -2,7 +2,9 @@
 
 
 
-taskId = 'task_1'
+taskId1 = 'task_1'
+taskId2 = 'task_2'
+
 data = {
     'level1': {
         'level2': {
@@ -17,7 +19,7 @@ data = {
 
 initData = {
     'jobId': 'jobId',
-    'taskId': 'taskId1',
+    'taskId': 'taskId',
     'input': [1, False, None],
     'nodeName': 'green'
 }
