@@ -108,7 +108,7 @@ class Algorunner:
         print('connecting to {url}'.format(url=self._url))
         job1 = gevent.spawn(self._wsc.startWS, self._url)
         job2 = gevent.spawn(self._dataServer.listen)
-        return [job1]
+        return [job1, job2]
 
     def _initStorage(self, options):
         self._initDataServer(options)

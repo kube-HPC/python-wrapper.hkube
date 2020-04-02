@@ -27,7 +27,8 @@ def test_failed_load_algorithm():
     }
     algorunner = Algorunner()
     algorunner.loadAlgorithm(options)
-    assert algorunner._loadAlgorithmError == "No module named 'no_such_path'"
+    assert "No module named" in algorunner._loadAlgorithmError
+    assert "no_such_path" in algorunner._loadAlgorithmError
 
 
 def xtest_load_algorithm():
