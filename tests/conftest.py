@@ -20,10 +20,12 @@ def pytest_sessionstart(session):
     """
     print('pytest_sessionstart')
 
-    copyEnv = os.environ.copy()
     python_path = ":".join(sys.path)[1:]
     environ = {'PYTHONPATH': python_path}
+    copyEnv = os.environ.copy()
     copyEnv.update(environ)
+
+    print('python_path: ' + python_path)
     subprocess.Popen(['python', 'tests/data_server.py'], env=copyEnv)
     subprocess.Popen(['python', 'tests/mock_ws_server.py'], env=copyEnv)
 
