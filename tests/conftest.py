@@ -24,8 +24,10 @@ def pytest_sessionstart(session):
     environ = {'PYTHONPATH': python_path}
     copyEnv = os.environ.copy()
     copyEnv.update(environ)
-
     print('python_path: ' + python_path)
+    for key, value in copyEnv.items():
+        print('\t' * 4 + str(key) + ': ' + str(value))
+
     subprocess.Popen(['python', 'tests/data_server.py'], env=copyEnv)
     subprocess.Popen(['python', 'tests/mock_ws_server.py'], env=copyEnv)
 
