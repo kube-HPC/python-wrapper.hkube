@@ -1,6 +1,5 @@
 from __future__ import print_function, division, absolute_import
 import json
-import traceback
 import util.type_check as typeCheck
 from util.decorators import timing
 from util.object_path import getPath, setPath
@@ -31,7 +30,7 @@ class DataAdapter:
         if (flatInput is None or len(flatInput) == 0):
             return inputArgs
 
-        if (useCache == False):
+        if (useCache is False):
             self.storageCache = dict()
             print('using clean cache')
         else:

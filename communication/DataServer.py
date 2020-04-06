@@ -1,7 +1,7 @@
+import traceback
 from communication.zmq.ZMQServer import ZMQServer
 from util.encoding import Encoding
 import util.object_path as objectPath
-import traceback
 
 
 class DataServer:

@@ -6,6 +6,8 @@ class ZMQServer(object):
     def __init__(self):
         self._active = True
         self._serving = False
+        self._getReplyFunc = None
+        self._socket = None
 
     def listen(self, port, getReplyFunc):
         self._getReplyFunc = getReplyFunc

@@ -2,8 +2,6 @@
 from tests.configs import config
 from communication.DataRequest import DataRequest
 from tests.mocks import mockdata
-import pytest
-import gevent
 from gevent import monkey
 
 monkey.patch_all()

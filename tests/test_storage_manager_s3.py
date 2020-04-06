@@ -1,5 +1,5 @@
-import pytest
 import os
+import pytest
 from storage.storage_manager import StorageManager
 from tests.configs import config
 
@@ -12,7 +12,7 @@ bucket = 'local-hkube'
 
 
 @pytest.fixture(scope="session", autouse=True)
-def beforeall(request):
+def beforeall():
     sm = StorageManager(config)
     sm.storage.adapter.init({'bucket': bucket})
 

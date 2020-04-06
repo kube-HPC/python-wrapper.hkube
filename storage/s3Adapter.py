@@ -25,7 +25,7 @@ class S3Adapter:
 
     def isBucketExist(self, bucket):
         try:
-            headBucket = self.client.head_bucket(Bucket=bucket)
+            self.client.head_bucket(Bucket=bucket)
             return True
         except Exception as e:
             if (hasattr(e, 'response') and e.response['Error']['Code'] == '404'):
@@ -54,14 +54,9 @@ class S3Adapter:
         path = options["path"]
         parsedPath = self._parsePath(path)
         bucket = parsedPath["bucket"]
-        key = parsedPath["key"]
         response = self.client.list_objects_v2(Bucket=bucket)
         data = list(map(lambda x: {"path": bucket + os.path.sep + x['Key']}, response['Contents']))
         return data
-
-    def delete(self, options):
-        filePath = getPath(self.basePath, options['path'])
-        os.remove(filePath)
 
     def _parsePath(self, fullPath):
         seperatedPath = fullPath.split(os.path.sep)

@@ -3,7 +3,6 @@
 import os
 import time
 from hkube_python_wrapper import Algorunner
-from hkube_python_wrapper.data_adapter import DataAdapter
 from tests.configs import config
 from tests.mocks import mockdata
 

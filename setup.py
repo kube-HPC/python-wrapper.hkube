@@ -17,7 +17,8 @@ requires = [
     'msgpack',
     'boto3',
     "wsaccel",
-    "six"
+    "six",
+    "pyzmq"
 ]
 
 with open("README.md", "r") as f:
