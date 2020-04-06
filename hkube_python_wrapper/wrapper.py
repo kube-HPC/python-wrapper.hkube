@@ -2,8 +2,8 @@ from __future__ import print_function, division, absolute_import
 import os
 import sys
 import importlib
-import gevent
 import traceback
+import gevent
 from events import Events
 from communication.DataServer import DataServer
 import hkube_python_wrapper.messages as messages

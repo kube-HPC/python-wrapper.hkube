@@ -55,7 +55,7 @@ def setPath(obj, path, value, doNotReplace=False):
     currentPath = path[0]
     currentValue = getShallowProperty(obj, currentPath)
     if (len(path) == 1):
-        if (currentValue is None or doNotReplace == False):
+        if (currentValue is None or doNotReplace is False):
             obj[currentPath] = value
         return currentValue
 

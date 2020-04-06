@@ -33,7 +33,7 @@ class DataServer:
     def createData(self, message):
         taskId = message['taskId']
         if(taskId != self._task):
-            result = self._createError('notAvailableXX', 'Current taskId is ' + str(self._task))
+            result = self._createError('notAvailable', 'Current taskId is ' + str(self._task))
         else:
             datapath = message['dataPath']
             data = self._data

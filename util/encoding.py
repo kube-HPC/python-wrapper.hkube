@@ -61,8 +61,10 @@ class Encoding:
     def _jsonDecode(self, *args):
         return json.loads(*args)
 
+    @timing
     def _msgpackEncode(self, *args):
         return msgpack.packb(*args, use_bin_type=True if PY3 else False)
 
+    @timing
     def _msgpackDecode(self, *args):
         return msgpack.unpackb(*args, raw=False if PY3 else True)

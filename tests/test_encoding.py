@@ -83,16 +83,14 @@ def createObject(sizeBytes, sizeRandom):
     return obj
 
 
-def createObjectJson(size):
-    obj = {
-        "randomString": randomString(size),
-        "randomIntArray": randomInt(size),
-        "dataString": randomString(size),
-        "bool": False,
-        "anotherBool": False,
-        "nestedObj": {
-            "dataString": randomString(size),
-            "randomIntArray": randomInt(size)
-        }
-    }
-    return obj
+
+
+# def test_msgpack_bytearray(sizeBytes):
+#     encoding = Encoding('msgpack')
+#     data = bytearray(b'\xdd'*(sizeBytes * 1000000))
+#     encoded = encoding.encode(data)
+#     return encoded
+
+# sizes = [5000]
+# for size in sizes:
+#     test_msgpack_bytearray(size)
