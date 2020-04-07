@@ -2,6 +2,7 @@ import traceback
 from communication.zmq.ZMQServer import ZMQServer
 from util.encoding import Encoding
 import util.object_path as objectPath
+from gevent import sleep
 
 
 class DataServer:
@@ -60,6 +61,8 @@ class DataServer:
 
     def isServing(self):
         return self._adapter.isServing()
-
+    def waitTillServingEnds(self):
+        while(self.isServing()):
+            sleep(1)
     def close(self):
         self._adapter.close()
