@@ -2,7 +2,7 @@ import traceback
 from communication.zmq.ZMQServer import ZMQServer
 from util.encoding import Encoding
 import util.object_path as objectPath
-
+import util.type_check as typeCheck
 
 class DataServer:
 
@@ -37,6 +37,8 @@ class DataServer:
         else:
             datapath = message['dataPath']
             data = self._data
+            if typeCheck.isBytearray(self._data):
+                return self._data
             if(datapath):
                 data = objectPath.getPath(self._data, datapath)
                 if(data == 'DEFAULT'):

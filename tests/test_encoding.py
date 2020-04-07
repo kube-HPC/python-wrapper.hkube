@@ -83,14 +83,15 @@ def createObject(sizeBytes, sizeRandom):
     return obj
 
 
+encoding = Encoding('msgpack')
 
+def test_msgpack_bytearray(sizeBytes):
+    data = bytearray(b'\xdd'*(sizeBytes))
+    encoded = encoding.encode(data)
+    return encoded
 
-# def test_msgpack_bytearray(sizeBytes):
-#     encoding = Encoding('msgpack')
-#     data = bytearray(b'\xdd'*(sizeBytes * 1000000))
-#     encoded = encoding.encode(data)
-#     return encoded
+mb1 = 1 * 1000000
 
-# sizes = [5000]
-# for size in sizes:
-#     test_msgpack_bytearray(size)
+sizes = [2]
+for size in sizes:
+    test_msgpack_bytearray(size)

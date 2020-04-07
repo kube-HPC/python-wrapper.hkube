@@ -1,3 +1,4 @@
+import util.type_check as typeCheck
 
 class BaseStorageManager(object):
     def __init__(self, adpter, encoding):
@@ -13,6 +14,8 @@ class BaseStorageManager(object):
         data = self.adapter.get(options)
         if(data is None):
             return None
+        if typeCheck.isBytearray(data):
+            return data
         return self.encoding.decode(data)
 
     def list(self, options):

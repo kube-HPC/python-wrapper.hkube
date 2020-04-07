@@ -45,26 +45,28 @@ class Encoding:
         self.isBinary = encoder["isBinary"]
 
     @timing
-    def _bsonDecode(self, data):
-        res = bson.decode(data)
+    def _bsonDecode(self, value):
+        res = bson.decode(value)
         return res.get("data")
 
     @timing
-    def _bsonEncode(self, data):
-        return bson.encode({'data': data}, codec_options=codec_options)
+    def _bsonEncode(self, value):
+        return bson.encode({'data': value}, codec_options=codec_options)
 
     @timing
-    def _jsonEncode(self, *args):
-        return json.dumps(*args)
+    def _jsonEncode(self, value):
+        return json.dumps(value)
 
     @timing
-    def _jsonDecode(self, *args):
-        return json.loads(*args)
+    def _jsonDecode(self, value):
+        return json.loads(value)
 
     @timing
-    def _msgpackEncode(self, *args):
-        return msgpack.packb(*args, use_bin_type=True if PY3 else False)
+    def _msgpackEncode(self, value):
+        if typeCheck.isBytearray(value):
+            return value
+        return msgpack.packb(value, use_bin_type=True if PY3 else False)
 
     @timing
-    def _msgpackDecode(self, *args):
-        return msgpack.unpackb(*args, raw=False if PY3 else True)
+    def _msgpackDecode(self, value):
+        return msgpack.unpackb(value, raw=False if PY3 else True)

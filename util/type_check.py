@@ -1,5 +1,4 @@
 from __future__ import print_function, division, absolute_import
-import collections
 import six
 
 
@@ -20,4 +19,4 @@ def isInt(value):
 
 
 def isBytearray(value):
-    return isinstance(value, bytearray)
+    return isinstance(value, (bytes, bytearray))

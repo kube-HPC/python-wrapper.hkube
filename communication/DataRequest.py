@@ -1,6 +1,6 @@
 from communication.zmq.ZMQRequest import ZMQRequest
 from util.encoding import Encoding
-
+import util.type_check as typeCheck
 
 class DataRequest:
 
@@ -12,4 +12,7 @@ class DataRequest:
         self.adapter = ZMQRequest(flattenEncodedReqDetails)
 
     def invoke(self):
-        return self.encoding.decode(self.adapter.invokeAdapter())
+        response = self.adapter.invokeAdapter()
+        if typeCheck.isBytearray(response):
+            return response
+        return self.encoding.decode(response)

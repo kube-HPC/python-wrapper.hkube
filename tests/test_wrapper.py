@@ -6,10 +6,13 @@ from hkube_python_wrapper import Algorunner
 from tests.configs import config
 from tests.mocks import mockdata
 
+oneMB = 1024 * 1024
+
+def startCallbackBytes(args):
+    return bytearray(b'\xdd'*(1 * oneMB))
 
 def startCallback(args):
     return args["input"]["input"][0]
-
 
 def test_load_algorithm_callbacks():
     algorunner = Algorunner()
@@ -52,5 +55,20 @@ def test_connect_to_worker():
     algorunner.loadAlgorithmCallbacks(startCallback)
     algorunner.connectToWorker(config)
     time.sleep(2)
+    assert algorunner._connected == True
+    assert algorunner._input == mockdata.initData
+
+def test_connect_to_worker_bytes():
+    # sizeBytes = 8
+    # dataBA = bytearray(b'\xdd'*(sizeBytes))
+    # dataBT = b'\xdd'*(sizeBytes)
+    # res1 = isinstance(dataBA, (bytes, bytearray))
+    # res2 = isinstance(dataBT, (bytes, bytearray))
+
+    config.discovery.update({"port": "9021"})
+    algorunner = Algorunner()
+    algorunner.loadAlgorithmCallbacks(startCallbackBytes)
+    algorunner.connectToWorker(config)
+    time.sleep(60)
     assert algorunner._connected == True
     assert algorunner._input == mockdata.initData

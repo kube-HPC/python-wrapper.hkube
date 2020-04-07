@@ -192,7 +192,7 @@ class Algorunner:
             storingData = {'discovery': self._discovery}
             storingData.update(storageInfo)
 
-            self._dataServer.setSendingState(taskId, output)
+            # self._dataServer.setSendingState(taskId, output)
             self._sendCommand(messages.outgoing["storing"], storingData)
             self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': output})
 

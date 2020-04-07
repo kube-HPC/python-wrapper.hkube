@@ -104,6 +104,9 @@ class DataAdapter:
             dataRequest = DataRequest(request)
             response = dataRequest.invoke()
 
+        if typeCheck.isBytearray(response):
+            return response
+
         result = None
         error = response.get('error')
         if(error is not None):
