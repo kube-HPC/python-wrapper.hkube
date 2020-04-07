@@ -3,6 +3,7 @@ import os
 import sys
 import importlib
 import traceback
+import time
 import gevent
 from events import Events
 from communication.DataServer import DataServer
@@ -14,6 +15,7 @@ from .wc import WebsocketClient
 
 
 class Algorunner:
+    testingMode = False
     def __init__(self):
         self._url = None
         self._algorithm = dict()
@@ -195,8 +197,6 @@ class Algorunner:
             self._dataServer.setSendingState(taskId, output)
             self._sendCommand(messages.outgoing["storing"], storingData)
             self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': output})
-
-            # self._dataServer.endSendingState()
             self._sendCommand(messages.outgoing["done"], None)
 
         except Exception as e:
@@ -216,6 +216,9 @@ class Algorunner:
 
     def _exit(self, options):
         try:
+            while (self._dataServer.isServing()):
+                time.sleep(1)
+            self._dataServer.close()
             self._wsc.stopWS()
             method = self._getMethod('exit')
             if (method is not None):
@@ -224,7 +227,8 @@ class Algorunner:
             option = options if options is not None else dict()
             code = option.get('exitCode', 0)
             print('Got exit command. Exiting with code', code)
-            sys.exit(code)
+            if not (self.testingMode):
+                sys.exit(code)
 
         except Exception as e:
             self._sendError(e)

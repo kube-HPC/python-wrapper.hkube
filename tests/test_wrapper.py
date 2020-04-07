@@ -5,6 +5,7 @@ import time
 from hkube_python_wrapper import Algorunner
 from tests.configs import config
 from tests.mocks import mockdata
+from gevent import spawn,sleep
 
 
 def startCallback(args):
@@ -18,6 +19,29 @@ def test_load_algorithm_callbacks():
     result2 = startCallback({'input': mockdata.initData})
     assert result1 == result2
 
+def test_exit():
+    def doExit(a):
+        status['exit'] = True
+    def invokeExit():
+        algorunner._exit(None)
+    def isServingTrue():
+        return True
+    def isServingFalse():
+        return False
+    algorunner = Algorunner()
+    algorunner.testingMode = True
+    algorunner.loadAlgorithmCallbacks(startCallback)
+    algorunner.connectToWorker(config)
+    sleep(1)
+    status = {'exit':False}
+    algorunner.loadAlgorithmCallbacks(startCallback, exit=doExit)
+    algorunner._dataServer.isServing = isServingTrue
+    spawn(invokeExit)
+    sleep(1)
+    assert status['exit'] == False
+    algorunner._dataServer.isServing =isServingFalse
+    sleep(1)
+    assert status['exit'] == True
 
 def test_failed_load_algorithm():
     options = {
