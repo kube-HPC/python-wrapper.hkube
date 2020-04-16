@@ -1,22 +1,16 @@
-import util.type_check as typeCheck
 
 class BaseStorageManager(object):
-    def __init__(self, adpter, encoding):
+    def __init__(self, adpter):
         self.adapter = adpter
-        self.encoding = encoding
 
     def put(self, options):
-        encoded = self.encoding.encode(options["data"])
-        options.update({"data": encoded})
         return self.adapter.put(options)
 
     def get(self, options):
         data = self.adapter.get(options)
         if(data is None):
             return None
-        if typeCheck.isBytearray(data):
-            return data
-        return self.encoding.decode(data)
+        return data
 
     def list(self, options):
         return self.adapter.list(options)

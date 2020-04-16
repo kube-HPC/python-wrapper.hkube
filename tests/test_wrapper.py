@@ -2,6 +2,8 @@
 
 import os
 import time
+from mock import patch
+from gevent import spawn,sleep
 from hkube_python_wrapper import Algorunner
 from tests.configs import config
 from tests.mocks import mockdata
@@ -21,6 +23,30 @@ def test_load_algorithm_callbacks():
     result2 = startCallback({'input': mockdata.initData})
     assert result1 == result2
 
+def test_exit():
+    with patch('sys.exit') as exit_mock:
+        def doExit(a):
+            status['exit'] = True
+        def invokeExit():
+            algorunner._exit(None)
+        def isServingTrue():
+            return True
+        def isServingFalse():
+            return False
+        algorunner = Algorunner()
+        algorunner.loadAlgorithmCallbacks(startCallback)
+        algorunner.connectToWorker(config)
+        sleep(1)
+        status = {'exit':False}
+        algorunner.loadAlgorithmCallbacks(startCallback, exit=doExit)
+        algorunner._dataServer.isServing = isServingTrue
+        spawn(invokeExit)
+        sleep(1)
+        assert status['exit'] == False
+        algorunner._dataServer.isServing = isServingFalse
+        sleep(1)
+        assert status['exit'] == True
+        assert exit_mock.called
 
 def test_failed_load_algorithm():
     options = {
@@ -55,20 +81,5 @@ def test_connect_to_worker():
     algorunner.loadAlgorithmCallbacks(startCallback)
     algorunner.connectToWorker(config)
     time.sleep(2)
-    assert algorunner._connected == True
-    assert algorunner._input == mockdata.initData
-
-def test_connect_to_worker_bytes():
-    # sizeBytes = 8
-    # dataBA = bytearray(b'\xdd'*(sizeBytes))
-    # dataBT = b'\xdd'*(sizeBytes)
-    # res1 = isinstance(dataBA, (bytes, bytearray))
-    # res2 = isinstance(dataBT, (bytes, bytearray))
-
-    config.discovery.update({"port": "9021"})
-    algorunner = Algorunner()
-    algorunner.loadAlgorithmCallbacks(startCallbackBytes)
-    algorunner.connectToWorker(config)
-    time.sleep(60)
     assert algorunner._connected == True
     assert algorunner._input == mockdata.initData

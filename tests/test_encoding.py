@@ -1,8 +1,6 @@
 import os
-import string
 import random
 from util.encoding import Encoding
-
 
 def test_json_encoding():
     encoding = Encoding('json')
@@ -23,6 +21,17 @@ def test_bson_encoding():
         decoded = encoding.decode(encoded)
         assert data == decoded
 
+mb = 1024 * 1024
+def create_bytearray(sizeBytes):
+    return bytearray(b'\xdd'*(sizeBytes))
+
+def test_msgpack_encoding_bytearray():
+    encoding = Encoding('msgpack')
+    data = create_bytearray(20)
+    data2 = data.copy()
+    encoded = encoding.encode(data)
+    decoded = encoding.decode(encoded)
+    assert data2 == decoded
 
 def test_msgpack_encoding():
     encoding = Encoding('msgpack')
@@ -83,15 +92,16 @@ def createObject(sizeBytes, sizeRandom):
     return obj
 
 
-encoding = Encoding('msgpack')
-
-def test_msgpack_bytearray(sizeBytes):
-    data = bytearray(b'\xdd'*(sizeBytes))
-    encoded = encoding.encode(data)
-    return encoded
-
-mb1 = 1 * 1000000
-
-sizes = [2]
-for size in sizes:
-    test_msgpack_bytearray(size)
+def createObjectJson(sizeRandom):
+    obj = {
+        "randomString": randomString(sizeRandom),
+        "randomIntArray": randomInt(sizeRandom),
+        "dataString": randomString(sizeRandom),
+        "bool": False,
+        "anotherBool": False,
+        "nestedObj": {
+            "dataString": randomString(sizeRandom),
+            "randomIntArray": randomInt(sizeRandom)
+        }
+    }
+    return obj

@@ -1,5 +1,5 @@
 import os
-
+from util.decorators import timing
 
 class FSAdapter:
     def __init__(self, config):
@@ -9,13 +9,15 @@ class FSAdapter:
         path = options["path"]
         return self.ensure_dir(path)
 
+    @timing
     def put(self, options):
         filePath = self.getPath(self.basePath, options['path'])
         self.ensure_dir(filePath)
         with open(filePath, 'wb') as f:
             f.write(options['data'])
         return {'path': options['path']}
-
+        
+    @timing
     def get(self, options):
         filePath = self.getPath(self.basePath, options['path'])
         if not (os.path.exists(filePath)):

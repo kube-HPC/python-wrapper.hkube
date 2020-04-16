@@ -89,7 +89,8 @@ class DataAdapter:
 
         response = None
         if(self._dataServer and host == self._dataServer._host and port == self._dataServer._port):
-            response = self._dataServer.createData({'taskId': taskId, 'dataPath': dataPath})
+            res = self._dataServer.createData({'taskId': taskId, 'dataPath': dataPath})
+            response = self._encoding.decode(res)
 
         else:
             request = {
@@ -104,16 +105,13 @@ class DataAdapter:
             dataRequest = DataRequest(request)
             response = dataRequest.invoke()
 
-        if typeCheck.isBytearray(response):
-            return response
+        if(typeCheck.isDict(response)):
+            error = response.get('error')
+            if(error is not None):
+                print(json.dumps(error, indent=2))
+                return None
 
-        result = None
-        error = response.get('error')
-        if(error is not None):
-            print(json.dumps(error, indent=2))
-        else:
-            result = response.get('data')
-        return result
+        return response
 
     def _getFromCacheOrStorage(self, options):
         path = options.get('path')
@@ -132,7 +130,8 @@ class DataAdapter:
 
     @timing
     def _getFromStorage(self, options):
-        return self._storageManager.storage.get(options)
+        response = self._storageManager.storage.get(options)
+        return self._encoding.decode(response)
 
     def createStorageInfo(self, options):
         jobId = options.get("jobId")

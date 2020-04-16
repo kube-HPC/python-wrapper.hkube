@@ -7,9 +7,9 @@ PY3 = sys.version_info[0] == 3
 
 
 def timing(func):
-    def wrap(*args):
+    def wrap(*args, **kwargs):
         time1 = time.time()
-        ret = func(*args)
+        ret = func(*args, **kwargs)
         time2 = time.time()
         printTime(func, time1, time2)
         return ret

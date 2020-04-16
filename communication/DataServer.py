@@ -1,8 +1,10 @@
 import traceback
+from gevent import sleep
 from communication.zmq.ZMQServer import ZMQServer
 from util.encoding import Encoding
 import util.object_path as objectPath
 import util.type_check as typeCheck
+
 
 class DataServer:
 
@@ -22,31 +24,29 @@ class DataServer:
 
     def _createReply(self, message):
         try:
-            decodedMessage = self._encoding.decode(message)
+            decodedMessage = self._encoding.decode(message, plain_encode=True)
             result = self.createData(decodedMessage)
         except Exception as e:
             traceback.print_exc()
             result = self._createError('unknown', str(e))
         finally:
-            return self._encoding.encode(result)
+            return result
 
     def createData(self, message):
         taskId = message['taskId']
+        result = None
         if(taskId != self._task):
-            result = self._createError('notAvailable', 'Current taskId is ' + str(self._task))
+            result = self._createError('notAvailable', 'Current taskId is {task}'.format(task=str(self._task)))
         else:
             datapath = message['dataPath']
-            data = self._data
-            if typeCheck.isBytearray(self._data):
-                return self._data
+            result = self._data
             if(datapath):
-                data = objectPath.getPath(self._data, datapath)
-                if(data == 'DEFAULT'):
+                data = self._encoding.decode(self._data)
+                result = objectPath.getPath(data, datapath)
+                if(result == 'DEFAULT'):
                     result = self._createError('noSuchDataPath', '{datapath} does not exist in data'.format(datapath=datapath))
                 else:
-                    result = {'data': data}
-            else:
-                result = {'data': data}
+                    result = self._encoding.encode(result)
         return result
 
     def setSendingState(self, task, data):
@@ -58,10 +58,14 @@ class DataServer:
         self._data = None
 
     def _createError(self, code, message):
-        return {'error': {'code': code, 'message': message}}
+        return self._encoding.encode({'error': {'code': code, 'message': message}})
 
     def isServing(self):
         return self._adapter.isServing()
 
+    def waitTillServingEnds(self):
+        while(self.isServing()):
+            sleep(1)
+                     
     def close(self):
         self._adapter.close()

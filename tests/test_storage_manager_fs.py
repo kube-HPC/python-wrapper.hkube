@@ -1,9 +1,9 @@
+import os
+import shutil
+import pytest
 from storage.storage_manager import StorageManager
 from tests.configs import config
-import pytest
-import shutil
-import os
-
+from util.encoding import Encoding
 
 def ensure_dir(f):
     d = os.path.dirname(f)
@@ -11,14 +11,16 @@ def ensure_dir(f):
         os.makedirs(d)
     return os.path.exists(f)
 
+config = config.storage
+baseDirectory = config["fs"]['baseDirectory']
+sm = StorageManager(config)
+encoding = Encoding(config['encoding'])
 
 dir1 = 'dir1'
 dir2 = 'dir2'
 
-content = {"data": 'all_my_data'}
-config = config.storage
-
-baseDirectory = config["fs"]['baseDirectory']
+raw = {"data": 'all_my_data'}
+encoded = encoding.encode({"data": 'all_my_data'})
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -32,27 +34,24 @@ def beforeall(request):
 
 
 def test_put_get():
-    sm = StorageManager(config)
-    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': content}
+    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': encoded}
     sm.storage.put(options)
     a = sm.storage.get(options)
-    assert a == content
+    assert encoding.decode(a) == raw
 
 
 def test_fail_to_get():
-    options = {'path': dir1 + os.path.sep + 'no_such_path.txt', 'data': content}
-    sm = StorageManager(config)
+    options = {'path': dir1 + os.path.sep + 'no_such_path.txt', 'data': encoded}
     a = sm.storage.get(options)
     assert a == None
 
 
 def test_list():
-    sm = StorageManager(config)
-    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': content}
+    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': encoded}
     sm.storage.put(options)
-    options = {'path': dir1 + os.path.sep + 'b.txt', 'data': content}
+    options = {'path': dir1 + os.path.sep + 'b.txt', 'data': encoded}
     sm.storage.put(options)
-    options = {'path': dir1 + os.path.sep + 'inner' + os.path.sep + 'c.txt', 'data': content}
+    options = {'path': dir1 + os.path.sep + 'inner' + os.path.sep + 'c.txt', 'data': encoded}
     sm.storage.put(options)
     options = {'path': dir1}
     resultArr = sm.storage.list(options)
@@ -63,12 +62,11 @@ def test_list():
 
 
 def test_prefixlist():
-    sm = StorageManager(config)
-    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': content}
+    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': encoded}
     sm.storage.put(options)
-    options = {'path': dir1 + os.path.sep + 'b.txt', 'data': content}
+    options = {'path': dir1 + os.path.sep + 'b.txt', 'data': encoded}
     sm.storage.put(options)
-    options = {'path': dir1 + os.path.sep + 'inner' + os.path.sep + 'c.txt', 'data': content}
+    options = {'path': dir1 + os.path.sep + 'inner' + os.path.sep + 'c.txt', 'data': encoded}
     sm.storage.put(options)
     options = {'path': dir1}
     resultArr = sm.storage.listPrefix(options)
@@ -79,17 +77,15 @@ def test_prefixlist():
 
 
 def test_list_noneExsistingPath():
-    sm = StorageManager(config)
     options = {'path': 'noneExisting'}
     result = sm.storage.list(options)
     assert result == None
 
 
 def test_delete():
-    sm = StorageManager(config)
-    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': content}
+    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': encoded}
     sm.storage.put(options)
-    options = {'path': dir1 + os.path.sep + 'b.txt', 'data': content}
+    options = {'path': dir1 + os.path.sep + 'b.txt', 'data': encoded}
     sm.storage.put(options)
     sm.storage.delete(options)
     options = {'path': dir1}
@@ -102,8 +98,8 @@ def test_delete():
 def test_task_output_put_get():
     newConfig = config.copy()
     newConfig.update({"clusterName": dir2})
-    sm = StorageManager(newConfig)
-    obj_path = sm.hkube.put('myJobId', 'myTaksId', content)
+    sm2 = StorageManager(newConfig)
+    obj_path = sm2.hkube.put('myJobId', 'myTaksId', encoded)
     assert obj_path == {'path': dir2 + '-hkube/myJobId/myTaksId'}
-    a = sm.hkube.get('myJobId', 'myTaksId')
-    assert a == content
+    a = sm2.hkube.get('myJobId', 'myTaksId')
+    assert encoding.decode(a) == raw

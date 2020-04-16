@@ -63,7 +63,7 @@ class WebsocketClient:
         self.events.on_subPipelineStopped(data)
 
     def on_message(self, message):
-        decoded = self._encoding.decode(message)
+        decoded = self._encoding.decode(message, plain_encode=True)
         command = decoded["command"]
         data = decoded.get("data", None)
         print('got message from worker: {command}'.format(command=command))
@@ -83,7 +83,7 @@ class WebsocketClient:
 
     def send(self, message):
         print('sending message to worker: {command}'.format(**message))
-        self._ws.send(self._encoding.encode(message), opcode=self._ws_opcode)
+        self._ws.send(self._encoding.encode(message, plain_encode=True), opcode=self._ws_opcode)
 
     def startWS(self, url):
         self._ws = websocket.WebSocketApp(

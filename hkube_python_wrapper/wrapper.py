@@ -3,6 +3,7 @@ import os
 import sys
 import importlib
 import traceback
+import time
 import gevent
 from events import Events
 from communication.DataServer import DataServer
@@ -192,11 +193,11 @@ class Algorunner:
             storingData = {'discovery': self._discovery}
             storingData.update(storageInfo)
 
-            # self._dataServer.setSendingState(taskId, output)
-            self._sendCommand(messages.outgoing["storing"], storingData)
-            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': output})
+            encodedOutput = self._dataAdapter.encode(output)
 
-            # self._dataServer.endSendingState()
+            self._dataServer.setSendingState(taskId, encodedOutput)
+            self._sendCommand(messages.outgoing["storing"], storingData)
+            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedOutput})
             self._sendCommand(messages.outgoing["done"], None)
 
         except Exception as e:
@@ -216,6 +217,8 @@ class Algorunner:
 
     def _exit(self, options):
         try:
+            self._dataServer.waitTillServingEnds()
+            self._dataServer.close()
             self._wsc.stopWS()
             method = self._getMethod('exit')
             if (method is not None):

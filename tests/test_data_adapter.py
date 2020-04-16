@@ -12,8 +12,10 @@ taskId2 = 'taskId-328901802'
 obj1 = [42, 37, 89, 95, 12, 126, 147]
 obj2 = {'data': {'array': obj1}}
 
-storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': obj1})
-storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'data': obj2})
+data1 = dataAdapter.encode(obj1)
+data2 = dataAdapter.encode(obj2)
+storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': data1})
+storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'data': data2})
 
 inputArgs = [
     {'data': '$$guid-1'},
@@ -74,7 +76,7 @@ def test_get_data():
 
 def test_set_data():
 
-    result = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': obj1})
+    result = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': data1})
     assert result['path'].find(jobId) != -1
 
 
@@ -99,8 +101,7 @@ def test_createMetadata_array():
         'data': {"prop": array},
         'savePaths': savePaths
     })
-
-    return result
+    assert result["green.prop.5"] == {"type": "int"}
 
 
 def test_createMetadata_bytes():
@@ -113,8 +114,7 @@ def test_createMetadata_bytes():
         'data': {"prop": bytesData},
         'savePaths': savePaths
     })
-
-    return result
+    assert result["green.prop"] == {"type": "bytearray"}
 
 
 def test_createStorageInfo():

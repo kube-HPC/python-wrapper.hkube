@@ -1,43 +1,56 @@
 
+from gevent import monkey
 from tests.configs import config
 from communication.DataRequest import DataRequest
 from tests.mocks import mockdata
-from gevent import monkey
+from util.encoding import Encoding
 
 monkey.patch_all()
 config = config.discovery
 
-data3 = bytearray(1024 * 1024 * 100)
+data1 = mockdata.dataTask1
+data2 = mockdata.dataTask2
+taskId1 = mockdata.taskId1
+taskId2 = mockdata.taskId2
+address1 = {'port': config['port'], 'host': config['host']}
+address2 = {'port': "9021", 'host': config['host']}
 
+encoding = Encoding(config['encoding'])
 
-data = mockdata.data
-taskId = mockdata.taskId1
-
+def test_get_data_bytes():
+    dr = DataRequest({
+        'address': address2,
+        'taskId': taskId2,
+        'dataPath': '',
+        'encoding': config['encoding']
+    })
+    reply = dr.invoke()
+    assert reply == data2
 
 def test_get_data_by_path():
     dr = DataRequest({
         'address': {'port': config['port'], 'host': config['host']},
-        'taskId': taskId,
+        'taskId': taskId1,
         'dataPath': 'level1',
         'encoding': config['encoding']
     })
     reply = dr.invoke()
-    assert reply['data'] == data['level1']
+    assert reply == data1['level1']
     dr = DataRequest({
         'address': {'port': config['port'], 'host': config['host']},
-        'taskId': taskId,
+        'taskId': taskId1,
         'dataPath': 'value1',
         'encoding': config['encoding']
     })
     reply = dr.invoke()
-    assert reply['data'] == data['value1']
+    assert reply == data1['value1']
 
 
 def test_path_not_exist():
     dr = DataRequest(
         {
             'address': {'port': config['port'], 'host': config['host']},
-            'taskId': taskId,
+            'taskId': taskId1,
             'dataPath': 'notExist',
             'encoding': config['encoding']
         })
@@ -46,58 +59,49 @@ def test_path_not_exist():
 
 
 def test_get_complete_data():
-
     dr = DataRequest({
         'address': {'port': config['port'], 'host': config['host']},
-        'taskId': taskId,
+        'taskId': taskId1,
         'dataPath': '',
         'encoding': config['encoding']
     })
     reply = dr.invoke()
-    assert reply['data'] == data
-    dr = DataRequest({
-        'address': {'port': config['port'], 'host': config['host']},
-        'taskId': taskId,
-        'dataPath': 'value1',
-        'encoding': config['encoding']
-    })
-    reply = dr.invoke()
-    assert reply['data'] == data['value1']
+    assert reply == data1
 
 
 def test_data_after_taskid_changed():
 
     dr = DataRequest({
         'address': {'port': config['port'], 'host': config['host']},
-        'taskId': taskId,
+        'taskId': taskId1,
         'dataPath': '',
         'encoding': config['encoding']
     })
     reply = dr.invoke()
-    assert reply['data'] == data
+    assert reply == data1
     dr = DataRequest({
         'address': {'port': config['port'], 'host': config['host']},
-        'taskId': taskId,
+        'taskId': taskId1,
         'dataPath': '',
         'encoding': config['encoding']
     })
     reply = dr.invoke()
-    assert reply['data'] == data
+    assert reply == data1
 
 
 # def test_failing_to_get_data_old_task_id():
 
 #     dr = DataRequest({
 #         'address': {'port': config['port'], 'host': config['host']},
-#         'taskId': taskId,
+#         'taskId': taskId1,
 #         'dataPath': '',
 #         'encoding': config['encoding']
 #     })
 #     reply = dr.invoke()
-#     assert reply['data'] == data
+#     assert reply == data
 #     dr = DataRequest({
 #         'address': {'port': config['port'], 'host': config['host']},
-#         'taskId': taskId,
+#         'taskId': taskId1,
 #         'dataPath': '',
 #         'encoding': config['encoding']
 #     })
@@ -109,15 +113,15 @@ def test_data_after_taskid_changed():
 
 #     dr = DataRequest({
 #         'address': {'port': config['port'], 'host': config['host']},
-#         'taskId': taskId,
+#         'taskId': taskId1,
 #         'dataPath': '',
 #         'encoding': config['encoding']
 #     })
 #     reply = dr.invoke()
-#     assert reply['data'] == data
+#     assert reply == data
 #     dr = DataRequest({
 #         'address': {'port': config['port'], 'host': config['host']},
-#         'taskId': taskId,
+#         'taskId': taskId1,
 #         'dataPath': '',
 #         'encoding': config['encoding']
 #     })
@@ -134,7 +138,7 @@ def test_data_after_taskid_changed():
 #     reources['ds'].setSendingState(taskId, data1)
 
 #     dr = DataRequest(
-#         {'address': {'port': config['port'], 'host': config['host']}, 'taskId': taskId, 'dataPath': 'level1',
+#         {'address': {'port': config['port'], 'host': config['host']}, 'taskId': taskId1, 'dataPath': 'level1',
 #          'encoding': 'bson'})
 #     gevent.spawn(dr.invoke)
 #     gevent.sleep(1)

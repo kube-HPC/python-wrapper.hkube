@@ -10,5 +10,6 @@ six
 pylint
 pytest
 pytest-cov
+mock==3.0.5
 pyzmq
 websocket_server
