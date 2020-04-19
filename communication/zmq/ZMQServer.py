@@ -1,4 +1,5 @@
 import zmq.green as zmq
+from util.decorators import timing
 context = zmq.Context()
 
 
@@ -17,8 +18,12 @@ class ZMQServer(object):
         while self._active:
             message = self._socket.recv()
             self._serving = True
-            self._socket.send(self._getReplyFunc(message))
+            self.send(message)
             self._serving = False
+
+    @timing
+    def send(self, message):
+        self._socket.send(self._getReplyFunc(message), copy=False)
 
     def isServing(self):
         return self._serving

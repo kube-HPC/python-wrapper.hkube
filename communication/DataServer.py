@@ -4,7 +4,7 @@ from communication.zmq.ZMQServer import ZMQServer
 from util.encoding import Encoding
 import util.object_path as objectPath
 import util.type_check as typeCheck
-
+from util.decorators import timing
 
 class DataServer:
 
@@ -22,6 +22,7 @@ class DataServer:
             host=self._host, port=self._port, encoding=self._encodingType))
         self._adapter.listen(self._port, self._createReply)
 
+    @timing
     def _createReply(self, message):
         try:
             decodedMessage = self._encoding.decode(message, plain_encode=True)

@@ -24,6 +24,9 @@ class Algorunner:
         self._connected = False
         self._hkubeApi = None
         self._dataAdapter = None
+        self._dataServer = None
+        self._discovery = None
+        self._wsc = None
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None):
         try:
@@ -197,7 +200,7 @@ class Algorunner:
 
             self._dataServer.setSendingState(taskId, encodedOutput)
             self._sendCommand(messages.outgoing["storing"], storingData)
-            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedOutput})
+            # self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedOutput})
             self._sendCommand(messages.outgoing["done"], None)
 
         except Exception as e:
