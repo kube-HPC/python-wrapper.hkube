@@ -26,6 +26,7 @@ UNUSED = 0x01
 DATA_TYPE_RAW = 0x01
 DATA_TYPE_ENCODED = 0x02
 
+
 class Encoding:
     def __init__(self, encoding):
         encoders = {
@@ -54,11 +55,13 @@ class Encoding:
         self._decode = encoder["decode"]
         self.isBinary = encoder["isBinary"]
         self.protocolType = encoder["protocolType"]
+        self._fromBytes = self._fromBytesPY3 if PY3 else self._fromBytesPY2
+        self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
 
     @timing
     def encode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
-        if(self.isBinary is False or plainEncode is True):
+        if(not self.isBinary or plainEncode is True):
             return self._encode(value)
 
         payload = None
@@ -69,17 +72,16 @@ class Encoding:
             dataType = DATA_TYPE_ENCODED
             payload = self._encode(value)
 
-        footer = self.creaetFooter(dataType, self.protocolType)
+        footer = self.createFooter(dataType, self.protocolType)
         payload += footer
         return payload
 
-    @timing
     def decode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
-        if(self.isBinary is False or plainEncode is True):
+        if(not self.isBinary or plainEncode is True):
             return self._decode(value)
 
-        view = memoryview(value)
+        view = self._fromBytes(value)
         totalLength = len(view)
         footer = bytes(view[-5:])
         ver = bytes(footer[0:1])
@@ -93,8 +95,20 @@ class Encoding:
         if(dataType == DATA_TYPE_ENCODED):
             payload = self._decode(data)
         else:
-            payload = data.tobytes()
+            payload = self._toBytes(data)
         return payload
+
+    def _fromBytesPY2(self, value):
+        return value
+
+    def _fromBytesPY3(self, value):
+        return memoryview(value)
+    
+    def _toBytesPY2(self, value):
+        return value
+
+    def _toBytesPY3(self, value):
+        return value.tobytes()
 
     def _bsonEncode(self, value):
         return bson.encode({'data': value}, codec_options=codec_options)
@@ -120,7 +134,7 @@ class Encoding:
     def _msgpackDecode(self, value):
         return msgpack.unpackb(value, raw=False if PY3 else True)
 
-    def creaetFooter(self, dataType, protocolType):
+    def createFooter(self, dataType, protocolType):
         footer = bytearray()
         footer.append(VERSION)
         footer.append(FOOTER_LENGTH)

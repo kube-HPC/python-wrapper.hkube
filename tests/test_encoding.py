@@ -2,6 +2,7 @@ import os
 import random
 from util.encoding import Encoding
 
+
 def test_json_encoding():
     encoding = Encoding('json')
     sizes = [100, 200, 300]
@@ -21,9 +22,13 @@ def test_bson_encoding():
         decoded = encoding.decode(encoded)
         assert data == decoded
 
+
 mb = 1024 * 1024
+
+
 def create_bytearray(sizeBytes):
-    return bytearray(b'\xdd'*(sizeBytes))
+    return b'\xdd'*(sizeBytes)
+
 
 def test_msgpack_encoding_bytearray():
     encoding = Encoding('msgpack')
@@ -33,9 +38,18 @@ def test_msgpack_encoding_bytearray():
     decoded = encoding.decode(encoded)
     assert data2 == decoded
 
+
+def test_msgpack_encoding_string():
+    encoding = Encoding('msgpack')
+    data = create_bytearray(20)
+    encoded = encoding.encode(data)
+    decoded = encoding.decode(data)
+    assert data2 == decoded
+
+
 def test_msgpack_encoding():
     encoding = Encoding('msgpack')
-    sizes = [1,2,3]
+    sizes = [1, 2, 3]
     for size in sizes:
         data = createObject(size * 1000000, size)
         encoded = encoding.encode(data)

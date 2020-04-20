@@ -136,12 +136,15 @@ class DataAdapter:
     def createStorageInfo(self, options):
         jobId = options.get("jobId")
         taskId = options.get("taskId")
+        encodedData = options.get("encodedData")
 
         path = self._storageManager.hkube.createPath(jobId, taskId)
         metadata = self.createMetadata(options)
+
         storageInfo = {
             'storageInfo': {
-                'path': path
+                'path': path,
+                'size':  len(encodedData)
             },
             'metadata': metadata
         }
