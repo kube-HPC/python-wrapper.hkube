@@ -61,6 +61,7 @@ def test_msgpack_bytearray(sizeBytes):
     # data = createObject(150, 50)
 
     encoded = encoding.encode(data)
+    leng = len(encoded)
 
     # assert data == encoded
 
@@ -73,6 +74,7 @@ def test_msgpack_bytearray(sizeBytes):
 
 mb = 1024 * 1024
 
-sizes = [5000 * mb]
+sizes = [100]
+
 for size in sizes:
     test_msgpack_bytearray(size)

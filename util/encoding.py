@@ -20,12 +20,32 @@ codec_options = CodecOptions(type_registry=type_registry)
 PY3 = sys.version_info[0] == 3
 
 
+'''
+
+- Hkube footer format: 8 bytes (64 bit)
+- Include 2 bytes for magic number and reserved 2 bytes 
+
++---------------------------------------------------------------+
+ 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
++---------------------------------------  ----------------------+
+|     VERSION    | PROTOCOL_TYPE |   DATA_TYPE   |    UNUSED    |
++---------------------------------------------------------------+
+|      UNUSED    | FOOTER_LENGTH |          MAGIC NUMBER        |
++---------------------------------------------------------------+
+|                         Payload Data                          |
++---------------------------------------------------------------+
+'''
+
 VERSION = 0x01
-FOOTER_LENGTH = 0x05
-UNUSED = 0x01
+FOOTER_LENGTH = 0x08
+PROTOCOL_TYPE_BSON = 0x01
+PROTOCOL_TYPE_JSON = 0x02
+PROTOCOL_TYPE_MSGPACK = 0x03
 DATA_TYPE_RAW = 0x01
 DATA_TYPE_ENCODED = 0x02
-
+UNUSED = 0x00
+MAGIC_NUMBER1 = 0x48 #H
+MAGIC_NUMBER2 = 0x4b #K
 
 class Encoding:
     def __init__(self, encoding):
@@ -34,19 +54,19 @@ class Encoding:
                 "encode": self._bsonEncode,
                 "decode": self._bsonDecode,
                 "isBinary": True,
-                "protocolType": 0x01
+                "protocolType": PROTOCOL_TYPE_BSON
             },
             "json": {
                 "encode": self._jsonEncode,
                 "decode": self._jsonDecode,
                 "isBinary": False,
-                "protocolType": 0x02
+                "protocolType": PROTOCOL_TYPE_JSON
             },
             "msgpack": {
                 "encode": self._msgpackEncode,
                 "decode": self._msgpackDecode,
                 "isBinary": True,
-                "protocolType": 0x03
+                "protocolType": PROTOCOL_TYPE_MSGPACK
             }
         }
         encoder = encoders[encoding]
@@ -83,12 +103,20 @@ class Encoding:
 
         view = self._fromBytes(value)
         totalLength = len(view)
-        footer = bytes(view[-5:])
+        mg = bytes(view[-2:])
+
+        if(mg != b'HK'):
+            return self._decode(value)
+        
+        print('found magic number')
+        ftl = bytes(view[-3:-2])
+        footerLength = struct.unpack(">B", ftl)[0]
+        footer = bytes(view[-footerLength:])
         ver = bytes(footer[0:1])
-        hel = bytes(footer[1:2])
-        dt = bytes(footer[3:4])
+        pt = bytes(footer[1:2])
+        dt = bytes(footer[2:3])
+       
         dataType = struct.unpack(">B", dt)[0]
-        footerLength = struct.unpack(">B", hel)[0]
         data = view[0: totalLength - footerLength]
 
         payload = None
@@ -137,8 +165,11 @@ class Encoding:
     def createFooter(self, dataType, protocolType):
         footer = bytearray()
         footer.append(VERSION)
-        footer.append(FOOTER_LENGTH)
         footer.append(protocolType)
         footer.append(dataType)
         footer.append(UNUSED)
+        footer.append(UNUSED)
+        footer.append(FOOTER_LENGTH)
+        footer.append(MAGIC_NUMBER1)
+        footer.append(MAGIC_NUMBER2)
         return footer

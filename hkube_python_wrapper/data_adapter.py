@@ -11,7 +11,7 @@ from communication.DataRequest import DataRequest
 class DataAdapter:
     def __init__(self, options, dataServer=None):
         self._dataServer = dataServer
-        self.storageCache = dict()
+        self._storageCache = dict()
         self._encoding = Encoding(options['encoding'])
         self._storageManager = StorageManager(options)
 
@@ -31,7 +31,7 @@ class DataAdapter:
             return inputArgs
 
         if (useCache is False):
-            self.storageCache = dict()
+            self._storageCache = dict()
             print('using clean cache')
         else:
             print('using old cache')
@@ -123,10 +123,10 @@ class DataAdapter:
         return data
 
     def _getFromCache(self, path):
-        return self.storageCache.get(path)
+        return self._storageCache.get(path)
 
     def _setToCache(self, path, data):
-        self.storageCache[path] = data
+        self._storageCache[path] = data
 
     @timing
     def _getFromStorage(self, options):

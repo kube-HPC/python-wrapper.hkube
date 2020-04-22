@@ -33,10 +33,9 @@ def create_bytearray(sizeBytes):
 def test_msgpack_encoding_bytearray():
     encoding = Encoding('msgpack')
     data = create_bytearray(20)
-    data2 = data.copy()
     encoded = encoding.encode(data)
     decoded = encoding.decode(encoded)
-    assert data2 == decoded
+    assert data == decoded
 
 
 def test_msgpack_encoding_string():

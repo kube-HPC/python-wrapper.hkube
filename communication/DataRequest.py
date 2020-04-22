@@ -16,4 +16,4 @@ class DataRequest:
 
     def invoke(self):
         response = self.adapter.invokeAdapter()
-        return self.encoding.decode(response.bytes)
+        return self.encoding.decode(response)

@@ -13,5 +13,5 @@ class ZMQRequest(object):
     @timing
     def invokeAdapter(self):
         self.socket.send(self.content)
-        message = self.socket.recv(copy=False)
+        message = self.socket.recv()
         return message
