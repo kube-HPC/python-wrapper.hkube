@@ -15,6 +15,10 @@ class ZMQServer(object):
         self._socket = context.socket(zmq.REP)
         self._socket.bind("tcp://*:" + str(port))
 
+        class Object(object):
+            pass
+        self.sendResult = Object()
+        self.sendResult.done = True
         while self._active:
             message = self._socket.recv()
             self._serving = True
@@ -23,10 +27,10 @@ class ZMQServer(object):
 
     @timing
     def send(self, message):
-        self._socket.send(self._getReplyFunc(message), copy=False)
+        self.sendResult = self._socket.send(self._getReplyFunc(message), copy=False,track= True)
 
     def isServing(self):
-        return self._serving
+        return self._serving or not self.sendResult.done
 
     def stop(self):
         self._active = False
