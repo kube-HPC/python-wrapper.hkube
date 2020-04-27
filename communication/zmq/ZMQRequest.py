@@ -15,3 +15,6 @@ class ZMQRequest(object):
         self.socket.send(self.content)
         message = self.socket.recv()
         return message
+
+    def close(self):
+        self.socket.close()
