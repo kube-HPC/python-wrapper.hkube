@@ -65,6 +65,7 @@ class DataServer:
         return self._adapter.isServing()
 
     def waitTillServingEnds(self):
+        self._adapter.stop()
         while(self.isServing()):
             sleep(1)
                      

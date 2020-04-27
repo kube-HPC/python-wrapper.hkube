@@ -19,9 +19,6 @@ class ZMQServer(object):
         self._socket = context.socket(zmq.REP)
         self._socket.bind("tcp://*:" + str(port))
 
-        class Object(object):
-            pass
-
         socketMoniotr = self._socket.get_monitor_socket()
 
         def invokeOnEvent(monitor, onConnect, onDisconnect):
