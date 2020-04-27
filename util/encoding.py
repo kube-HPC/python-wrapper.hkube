@@ -23,7 +23,7 @@ PY3 = sys.version_info[0] == 3
 '''
 
 - Hkube footer format: 8 bytes (64 bit)
-- Include 2 bytes for magic number and reserved 2 bytes 
+- Include 2 bytes for magic number and reserved 2 bytes
 
 +---------------------------------------------------------------+
  0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
@@ -44,8 +44,7 @@ PROTOCOL_TYPE_MSGPACK = 0x03
 DATA_TYPE_RAW = 0x01
 DATA_TYPE_ENCODED = 0x02
 UNUSED = 0x00
-MAGIC_NUMBER1 = 0x48 #H
-MAGIC_NUMBER2 = 0x4b #K
+MAGIC_NUMBER = b'HK'
 
 class Encoding:
     def __init__(self, encoding):
@@ -79,6 +78,7 @@ class Encoding:
         self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
 
     @timing
+    # TODO: add primitive check to not encode
     def encode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
         if(not self.isBinary or plainEncode is True):
@@ -105,7 +105,7 @@ class Encoding:
         totalLength = len(view)
         mg = bytes(view[-2:])
 
-        if(mg != b'HK'):
+        if(mg != MAGIC_NUMBER):
             return self._decode(value)
         
         print('found magic number')
@@ -170,6 +170,5 @@ class Encoding:
         footer.append(UNUSED)
         footer.append(UNUSED)
         footer.append(FOOTER_LENGTH)
-        footer.append(MAGIC_NUMBER1)
-        footer.append(MAGIC_NUMBER2)
+        footer.extend(MAGIC_NUMBER)
         return footer

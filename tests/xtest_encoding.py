@@ -74,7 +74,7 @@ def test_msgpack_bytearray(sizeBytes):
 
 mb = 1024 * 1024
 
-sizes = [100]
+sizes = [10]
 
 for size in sizes:
     test_msgpack_bytearray(size)
