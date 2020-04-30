@@ -68,11 +68,13 @@ class DataAdapter:
         discovery = options.get("discovery")
         storageInfo = options.get("storageInfo")
         data = None
+        hasResponse = False
 
         if (discovery):
             data = self._getFromPeer(options, path)
+            hasResponse = self._hasPeerResponse(data)
 
-        if (data is None and storageInfo):
+        if (not hasResponse and storageInfo):
             data = self._getFromCacheOrStorage(storageInfo)
             if(path):
                 data = getPath(data, path)
@@ -105,13 +107,16 @@ class DataAdapter:
             dataRequest = DataRequest(request)
             response = dataRequest.invoke()
 
-        if(typeCheck.isDict(response)):
-            error = response.get('error')
+        return response
+
+    def _hasPeerResponse(self, options):
+        if(typeCheck.isDict(options)):
+            error = options.get('hkube_error')
             if(error is not None):
                 print(json.dumps(error, indent=2))
-                return None
+                return False
 
-        return response
+        return True
 
     def _getFromCacheOrStorage(self, options):
         path = options.get('path')

@@ -59,7 +59,7 @@ class DataServer:
         self._data = None
 
     def _createError(self, code, message):
-        return self._encoding.encode({'error': {'code': code, 'message': message}})
+        return self._encoding.encode({'hkube_error': {'code': code, 'message': message}})
 
     def isServing(self):
         return self._adapter.isServing()
