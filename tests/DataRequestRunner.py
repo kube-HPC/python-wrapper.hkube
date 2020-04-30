@@ -16,6 +16,8 @@ def run():
     dr = DataRequest(
         {'address': {'port': config['port'], 'host': config['host']}, 'taskId': task1, 'dataPath': '',
          'encoding': 'bson'})
-    dr.invoke()
+    res = dr.invoke()
+    print (res)
+    gevent.sleep(5)
 if __name__ == '__main__':
     run()

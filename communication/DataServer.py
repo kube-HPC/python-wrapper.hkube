@@ -46,8 +46,8 @@ class DataServer:
                 result = objectPath.getPath(data, datapath)
                 if(result == 'DEFAULT'):
                     result = self._createError('noSuchDataPath', '{datapath} does not exist in data'.format(datapath=datapath))
-                else:
-                    result = self._encoding.encode(result)
+            else:
+                result = self._encoding.encode(result)
         return result
 
     def setSendingState(self, task, data):
