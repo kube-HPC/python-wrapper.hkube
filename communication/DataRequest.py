@@ -1,6 +1,7 @@
 from communication.zmq.ZMQRequest import ZMQRequest
 from util.encoding import Encoding
 
+
 class DataRequest:
 
     def __init__(self, reqDetails):
@@ -12,9 +13,16 @@ class DataRequest:
             u'dataPath': reqDetails['dataPath']
         }
         request['content'] = self.encoding.encode(options, plain_encode=True)
+        timeout = reqDetails['timeout']
         self.adapter = ZMQRequest(request)
 
     def invoke(self):
-        response = self.adapter.invokeAdapter()
+        try:
+            response = self.adapter.invokeAdapter()
+        except Exception as e:
+            response = self._createError('unknown', e.message)
         self.adapter.close()
         return self.encoding.decode(response)
+
+    def _createError(self, code, message):
+        return {'error': {'code': code, 'message': message}}

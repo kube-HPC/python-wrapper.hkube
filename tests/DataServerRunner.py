@@ -40,12 +40,12 @@ def run():
 
 
     def sleepNow(message):
-        sleep(1)
+        sleep(3)
         return ds.cr(message)
 
     ds.cr = ds._createReply
     ds._createReply = sleepNow
-    ds.setSendingState(task1, data3)
+    ds.setSendingState(task1, data2)
     def printServing():
         print (str(ds.isServing()))
         sleep(1)
