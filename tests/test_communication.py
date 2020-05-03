@@ -17,6 +17,7 @@ address2 = {'port': "9021", 'host': config['host']}
 
 encoding = Encoding(config['encoding'])
 
+
 def test_get_data_bytes():
     dr = DataRequest({
         'address': address2,
@@ -27,9 +28,10 @@ def test_get_data_bytes():
     reply = dr.invoke()
     assert reply == data2
 
+
 def test_get_data_by_path():
     dr = DataRequest({
-        'address': {'port': config['port'], 'host': config['host']},
+        'address': address1,
         'taskId': taskId1,
         'dataPath': 'level1',
         'encoding': config['encoding']
@@ -37,7 +39,7 @@ def test_get_data_by_path():
     reply = dr.invoke()
     assert reply == data1['level1']
     dr = DataRequest({
-        'address': {'port': config['port'], 'host': config['host']},
+        'address': address1,
         'taskId': taskId1,
         'dataPath': 'value1',
         'encoding': config['encoding']
@@ -49,7 +51,7 @@ def test_get_data_by_path():
 def test_path_not_exist():
     dr = DataRequest(
         {
-            'address': {'port': config['port'], 'host': config['host']},
+            'address': address1,
             'taskId': taskId1,
             'dataPath': 'notExist',
             'encoding': config['encoding']
@@ -60,7 +62,7 @@ def test_path_not_exist():
 
 def test_get_complete_data():
     dr = DataRequest({
-        'address': {'port': config['port'], 'host': config['host']},
+        'address': address1,
         'taskId': taskId1,
         'dataPath': '',
         'encoding': config['encoding']
@@ -72,7 +74,7 @@ def test_get_complete_data():
 def test_data_after_taskid_changed():
 
     dr = DataRequest({
-        'address': {'port': config['port'], 'host': config['host']},
+        'address': address1,
         'taskId': taskId1,
         'dataPath': '',
         'encoding': config['encoding']
@@ -80,7 +82,7 @@ def test_data_after_taskid_changed():
     reply = dr.invoke()
     assert reply == data1
     dr = DataRequest({
-        'address': {'port': config['port'], 'host': config['host']},
+        'address': address1,
         'taskId': taskId1,
         'dataPath': '',
         'encoding': config['encoding']
@@ -92,7 +94,7 @@ def test_data_after_taskid_changed():
 # def test_failing_to_get_data_old_task_id():
 
 #     dr = DataRequest({
-#         'address': {'port': config['port'], 'host': config['host']},
+#         'address':address1,
 #         'taskId': taskId1,
 #         'dataPath': '',
 #         'encoding': config['encoding']
@@ -100,7 +102,7 @@ def test_data_after_taskid_changed():
 #     reply = dr.invoke()
 #     assert reply == data
 #     dr = DataRequest({
-#         'address': {'port': config['port'], 'host': config['host']},
+#         'address':address1,
 #         'taskId': taskId1,
 #         'dataPath': '',
 #         'encoding': config['encoding']
@@ -112,7 +114,7 @@ def test_data_after_taskid_changed():
 # def test_failing_to_get_sending_ended():
 
 #     dr = DataRequest({
-#         'address': {'port': config['port'], 'host': config['host']},
+#         'address':address1,
 #         'taskId': taskId1,
 #         'dataPath': '',
 #         'encoding': config['encoding']
@@ -120,7 +122,7 @@ def test_data_after_taskid_changed():
 #     reply = dr.invoke()
 #     assert reply == data
 #     dr = DataRequest({
-#         'address': {'port': config['port'], 'host': config['host']},
+#         'address':address1,
 #         'taskId': taskId1,
 #         'dataPath': '',
 #         'encoding': config['encoding']
@@ -138,7 +140,7 @@ def test_data_after_taskid_changed():
 #     reources['ds'].setSendingState(taskId, data1)
 
 #     dr = DataRequest(
-#         {'address': {'port': config['port'], 'host': config['host']}, 'taskId': taskId1, 'dataPath': 'level1',
+#         {'address':address1, 'taskId': taskId1, 'dataPath': 'level1',
 #          'encoding': 'bson'})
 #     gevent.spawn(dr.invoke)
 #     gevent.sleep(1)
