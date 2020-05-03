@@ -68,6 +68,7 @@ class DataServer:
         self._adapter.stop()
         while(self.isServing()):
             sleep(1)
+        self._adapter.close()
                      
     def close(self):
         self._adapter.close()

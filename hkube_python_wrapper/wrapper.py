@@ -222,7 +222,6 @@ class Algorunner:
     def _exit(self, options):
         try:
             self._dataServer.waitTillServingEnds()
-            self._dataServer.close()
             self._wsc.stopWS()
             method = self._getMethod('exit')
             if (method is not None):
