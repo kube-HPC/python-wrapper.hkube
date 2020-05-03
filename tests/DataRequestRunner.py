@@ -15,7 +15,7 @@ task2 = 'task_2'
 def run():
     dr = DataRequest(
         {'address': {'port': config['port'], 'host': config['host']}, 'taskId': task1, 'dataPath': '',
-         'encoding': 'bson'})
+         'encoding': 'bson','timeout':'8'})
     res = dr.invoke()
     print (res)
     gevent.sleep(5)

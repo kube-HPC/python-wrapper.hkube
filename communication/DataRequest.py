@@ -13,7 +13,7 @@ class DataRequest:
             u'dataPath': reqDetails['dataPath']
         }
         request['content'] = self.encoding.encode(options, plain_encode=True)
-        timeout = reqDetails['timeout']
+        request['timeout'] = reqDetails['timeout']
         self.adapter = ZMQRequest(request)
 
     def invoke(self):

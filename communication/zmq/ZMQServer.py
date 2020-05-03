@@ -1,5 +1,6 @@
 import zmq.green as zmq
 from gevent import spawn
+import gevent
 from zmq.utils.monitor import recv_monitor_message
 
 from util.decorators import timing
@@ -11,33 +12,38 @@ class ZMQServer(object):
     def __init__(self):
         self._numberOfConn = 0
         self._active = True
-        self._getReplyFunc = None
+        self._createReplyFunc = None
         self._socket = None
 
     def listen(self, port, getReplyFunc):
-        self._getReplyFunc = getReplyFunc
+        self._createReplyFunc = getReplyFunc
         self._socket = context.socket(zmq.REP)
         self._socket.bind("tcp://*:" + str(port))
 
         socketMoniotr = self._socket.get_monitor_socket()
 
         def invokeOnEvent(monitor, onConnect, onDisconnect):
-            while monitor.poll():
-                evt = recv_monitor_message(monitor)
-                if evt['event'] == zmq.EVENT_HANDSHAKE_SUCCEEDED:
-                    onConnect()
-                if evt['event'] == zmq.EVENT_DISCONNECTED:
-                    onDisconnect()
+            while True:
+                res =  monitor.poll(0.1)
+                if(res != 0):
+                    evt = recv_monitor_message(monitor)
+                    if evt['event'] == zmq.EVENT_HANDSHAKE_SUCCEEDED:
+                        onConnect()
+                    if evt['event'] == zmq.EVENT_DISCONNECTED:
+                        onDisconnect()
+                gevent.sleep(0.1)
         spawn(invokeOnEvent,socketMoniotr, self.onConnect, self.onDisconnect)
-        while self._active:
-            message = self._socket.recv()
-            self.send(message)
-
+        def onRecieve():
+            while self._active:
+                message = self._socket.recv()
+                self.send(message)
+                print('sent back')
+        spawn(onRecieve)
 
     @timing
     def send(self, message):
-        self._socket.send(self._getReplyFunc(message), copy=False)
-
+            toBeSent = self._createReplyFunc(message)
+            self._socket.send(toBeSent, copy=False,track=True)
     def onConnect(self):
         self._numberOfConn = +1
 

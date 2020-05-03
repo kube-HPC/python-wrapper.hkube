@@ -38,7 +38,9 @@ class ZMQRequest(object):
             polls += 1
             result = self.socket.poll(1)
         if (polls>=self.timeout):
-            raise Exception('Timed out:' + str(self.timeout))
+            e = Exception()
+            e.__setattr__('message','Timed out:' + str(self.timeout))
+            raise e
         if(self.disconnected):
             raise Exception('Disconnected')
         message = self.socket.recv()

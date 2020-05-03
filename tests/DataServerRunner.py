@@ -52,6 +52,8 @@ def run():
         printServing()
     spawn(printServing)
     ds.listen()
+    gevent.sleep(3000)
+
 
 if __name__ == '__main__':
     run()
