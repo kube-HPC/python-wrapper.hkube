@@ -17,6 +17,7 @@ dataTask1 = {
 }
 
 dataTask2 = bytearray(b'\xdd'*(100))
+dataTask2_original = bytearray(b'\xdd'*(100))
 
 initData = {
     'jobId': 'jobId',

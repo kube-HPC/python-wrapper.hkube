@@ -20,8 +20,10 @@ class DataRequest:
         try:
             response = self.adapter.invokeAdapter()
         except Exception as e:
-            response = self._createError('unknown', e.message)
+            return self._createError('unknown', e.message)
         self.adapter.close()
+        print (str(response))
+        print(str(self.encoding.decode(response)))
         return self.encoding.decode(response)
 
     def _createError(self, code, message):
