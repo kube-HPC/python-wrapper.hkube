@@ -46,10 +46,10 @@ class ZMQServer(object):
         self._socket.send(toBeSent, copy=False, track=True)
 
     def onConnect(self):
-        self._numberOfConn = +1
+        self._numberOfConn += 1
 
     def onDisconnect(self):
-        self._numberOfConn = -1
+        self._numberOfConn -= 1
 
     def isServing(self):
         return self._numberOfConn > 0

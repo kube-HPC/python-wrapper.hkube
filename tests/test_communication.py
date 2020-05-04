@@ -1,5 +1,4 @@
 import pytest
-from gevent import monkey
 import gevent
 from tests.configs import config
 from communication.DataRequest import DataRequest
@@ -7,7 +6,6 @@ from communication.DataServer import DataServer
 from tests.mocks import mockdata
 from util.encoding import Encoding
 
-monkey.patch_all()
 config = config.discovery
 
 data1 = mockdata.dataTask1
@@ -20,7 +18,7 @@ address2 = {'port': "9021", 'host': config['host']}
 
 encoding = Encoding(config['encoding'])
 resources = {}
-
+resources['ds'] = None
 
 def test_get_data_bytes():
     ds = DataServer(config)
@@ -212,6 +210,16 @@ def test_waitTillServingEnds():
     assert ds.isServing() == True
     ds.waitTillServingEnds()
     assert ds.isServing() == False
+def test_fail_on_timeout():
+    dr = DataRequest({
+        'address': address1,
+        'taskId': taskId1,
+        'dataPath': '',
+        'encoding': config['encoding'],
+        'timeout': '5'
+    })
+    reply = dr.invoke()
+    assert reply == {'error': {'code': 'unknown', 'message': 'Timed out:5'}}
 
 @pytest.fixture(scope="function", autouse=True)
 def pytest_runtest_teardown(request):
