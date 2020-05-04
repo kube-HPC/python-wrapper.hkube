@@ -26,8 +26,6 @@ def pytest_sessionstart(session):
     copyEnv.update(environ)
     print('python_path: ' + python_path)
 
-    # subprocess.Popen(['python', 'tests/mock_data_server1.py'], env=copyEnv)
-    # subprocess.Popen(['python', 'tests/mock_data_server2.py'], env=copyEnv)
     subprocess.Popen(['python', 'tests/mock_ws_server.py'], env=copyEnv)
 
 
