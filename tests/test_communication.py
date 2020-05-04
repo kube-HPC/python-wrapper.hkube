@@ -106,7 +106,8 @@ def test_data_after_taskid_changed():
         'address': address1,
         'taskId': taskId1,
         'dataPath': '',
-        'encoding': config['encoding']
+        'encoding': config['encoding'],
+        'timeout': '5'
     })
     reply = dr.invoke()
     assert reply == data1
@@ -114,7 +115,8 @@ def test_data_after_taskid_changed():
         'address': address1,
         'taskId': taskId1,
         'dataPath': '',
-        'encoding': config['encoding']
+        'encoding': config['encoding'],
+        'timeout': '5'
     })
     reply = dr.invoke()
     assert reply == data1
