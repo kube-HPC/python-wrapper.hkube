@@ -45,9 +45,9 @@ class DataAdapter:
 
                 data = None
                 if(typeCheck.isList(link)):
-                    data = list(map(self._tryGetDataFromPeerOrStorage, link))
+                    data = list(map(self.tryGetDataFromPeerOrStorage, link))
                 else:
-                    data = self._tryGetDataFromPeerOrStorage(link)
+                    data = self.tryGetDataFromPeerOrStorage(link)
 
                 setPath(inputArgs, k, data)
 
@@ -63,7 +63,7 @@ class DataAdapter:
         result = self._storageManager.hkube.put(jobId, taskId, data)
         return result
 
-    def _tryGetDataFromPeerOrStorage(self, options):
+    def tryGetDataFromPeerOrStorage(self, options):
         path = options.get("path")
         discovery = options.get("discovery")
         storageInfo = options.get("storageInfo")
@@ -73,6 +73,7 @@ class DataAdapter:
         if (discovery):
             data = self._getFromPeer(options, path)
             hasResponse = self._hasPeerResponse(data)
+            data = data if hasResponse else None
 
         if (not hasResponse and storageInfo):
             data = self._getFromCacheOrStorage(storageInfo)

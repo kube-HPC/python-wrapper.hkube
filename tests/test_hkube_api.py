@@ -13,7 +13,7 @@ encoding = Encoding(config.storage['encoding'])
 
 def start(args, hkubeApi=None):
     print('start called')
-    waiter1 = hkubeApi.start_algorithm(algorithmName, [5, 10], resultAsRaw=True)
+    waiter1 = hkubeApi.start_algorithm(algorithmName, [5, 10])
     waiter2 = hkubeApi.start_stored_subpipeline(subpipelineName, {'d': [6, 'stam']})
     res = [waiter1.get(), waiter2.get()]
     return res
@@ -21,12 +21,15 @@ def start(args, hkubeApi=None):
 
 def test_callback():
     sm = StorageManager(config.storage)
+    data = {"data": {"prop": "bla"}}
+    encoded = encoding.encode(data, plain_encode=True)
+    sm.storage.put({"path": "local-hkube/jobId_start_algorithm/taskId_start_algorithm", "data": encoded})
     config.discovery.update({"port": "9022"})
     algorunner = Algorunner()
     algorunner.loadAlgorithmCallbacks(start)
     algorunner.connectToWorker(config)
     time.sleep(2)
-    data = sm.storage.get({"path": "local-hkube/jobId/taskId"})
-    data = encoding.decode(data)
-    assert data[0]['algorithmName'] == algorithmName
-    assert data[1]['subPipeline']['name'] == subpipelineName
+    res = sm.storage.get({"path": "local-hkube/jobId/taskId"})
+    decoded = encoding.decode(res)
+    assert decoded[0] == data
+    assert decoded[1]['subPipeline']['name'] == subpipelineName

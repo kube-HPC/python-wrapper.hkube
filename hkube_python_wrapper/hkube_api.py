@@ -5,8 +5,9 @@ import hkube_python_wrapper.messages as messages
 
 
 class HKubeApi:
-    def __init__(self, wc):
+    def __init__(self, wc, dataAdapter):
         self._wc = wc
+        self._dataAdapter = dataAdapter
         self._algorithmExecutionsMap = {}
         self._lastExecId = 0
         self._wc.events.on_algorithmExecutionDone += self.algorithmExecutionDone
@@ -17,8 +18,14 @@ class HKubeApi:
         self._wc.events.on_subPipelineStopped += self.subPipelineDone
 
     def algorithmExecutionDone(self, data):
-        execution = self._algorithmExecutionsMap.get(data.get('execId'))
-        execution.waiter.set(data)
+        response = data.get('response')
+        execId = data.get('execId')
+        result = data
+        if(response):
+            result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
+        
+        execution = self._algorithmExecutionsMap.get(execId)
+        execution.waiter.set(result)
 
     def subPipelineDone(self, data):
         execution = self._algorithmExecutionsMap.get(data.get('subPipelineId'))

@@ -28,7 +28,7 @@ def pytest_sessionstart(session):
 
     # subprocess.Popen(['python', 'tests/mock_data_server1.py'], env=copyEnv)
     # subprocess.Popen(['python', 'tests/mock_data_server2.py'], env=copyEnv)
-    # subprocess.Popen(['python', 'tests/mock_ws_server.py'], env=copyEnv)
+    subprocess.Popen(['python', 'tests/mock_ws_server.py'], env=copyEnv)
 
 
 def pytest_sessionfinish(session, exitstatus):

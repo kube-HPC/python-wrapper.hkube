@@ -13,9 +13,25 @@ class WebSocketServerClass:
         self._server.set_fn_message_received(self.handleMessage)
         self._encoding = Encoding(encoding)
         self._commands = {
-            "initialized":  "start",
-            "startAlgorithmExecution": "algorithmExecutionDone",
-            "startStoredSubPipeline": "subPipelineDone"
+            "initialized":  {
+                'command': "start",
+                'data': lambda x: x
+            },
+            "startAlgorithmExecution": {
+                'command': "algorithmExecutionDone",
+                'data': lambda x: {
+                    'execId': x.get('execId'),
+                    'response': {
+                        'storageInfo': {
+                            'path': "local-hkube/jobId_start_algorithm/taskId_start_algorithm"
+                            }
+                        }
+                    }
+            },
+            "startStoredSubPipeline": {
+                'command': "subPipelineDone",
+                'data': lambda x: x
+            }
         }
 
     def handleMessage(self, client, server, message):
@@ -25,8 +41,8 @@ class WebSocketServerClass:
         commandBack = self._commands.get(command)
         if(commandBack):
             msgBack = {
-                "command": commandBack,
-                "data": data
+                "command": commandBack["command"],
+                "data": commandBack["data"](data)
             }
             self.sendMsgToClient(client, msgBack)
 
@@ -38,7 +54,7 @@ class WebSocketServerClass:
         print('closed')
 
     def sendMsgToClient(self, client, data):
-        self._server.send_message(client, self._encoding.encode(data))
+        self._server.send_message(client, self._encoding.encode(data, plain_encode=True))
 
 
 def startWebSocketServer(options):

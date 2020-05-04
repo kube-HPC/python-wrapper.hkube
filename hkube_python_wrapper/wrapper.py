@@ -105,8 +105,8 @@ class Algorunner:
         self._url += '?storage={storage}&encoding={encoding}'.format(storage=storage, encoding=encoding)
 
         self._wsc = WebsocketClient(encoding)
-        self._hkubeApi = HKubeApi(self._wsc)
         self._initStorage(options)
+        self._hkubeApi = HKubeApi(self._wsc, self._dataAdapter)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))

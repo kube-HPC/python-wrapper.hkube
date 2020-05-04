@@ -80,7 +80,11 @@ class Encoding:
     @timing
     # TODO: add primitive check to not encode
     def encode(self, value, **kwargs):
+        if(value is None):
+            return None
+
         plainEncode = kwargs.get('plain_encode')
+        
         if(not self.isBinary or plainEncode is True):
             return self._encode(value)
 
@@ -97,7 +101,11 @@ class Encoding:
         return payload
 
     def decode(self, value, **kwargs):
+        if(value is None):
+            return None
+
         plainEncode = kwargs.get('plain_encode')
+
         if(not self.isBinary or plainEncode is True):
             return self._decode(value)
 
