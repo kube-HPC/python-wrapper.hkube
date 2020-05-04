@@ -32,21 +32,17 @@ class ZMQServer(object):
                     if evt['event'] == zmq.EVENT_DISCONNECTED:
                         onDisconnect()
                 gevent.sleep(0.1)
-
         spawn(invokeOnEvent, socketMoniotr, self.onConnect, self.onDisconnect)
-
         def onRecieve():
             while self._active:
                 message = self._socket.recv()
                 self.send(message)
                 print('sent back')
-
         spawn(onRecieve)
 
     @timing
     def send(self, message):
         toBeSent = self._createReplyFunc(message)
-        print('!!!!!!!!!!!!!!!' + str(toBeSent))
         self._socket.send(toBeSent, copy=False, track=True)
 
     def onConnect(self):

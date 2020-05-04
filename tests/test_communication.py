@@ -19,11 +19,12 @@ address1 = {'port': config['port'], 'host': config['host']}
 address2 = {'port': "9021", 'host': config['host']}
 
 encoding = Encoding(config['encoding'])
-ds = None
+resources = {}
 
 
 def test_get_data_bytes():
     ds = DataServer(config)
+    resources['ds'] = ds
     ds.setSendingState(mockdata.taskId2, encoding.encode(data2))
     ds.listen()
     dr = DataRequest({
@@ -39,6 +40,7 @@ def test_get_data_bytes():
 
 def test_get_data_by_path():
     ds = DataServer(config)
+    resources['ds'] = ds
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
     gevent.sleep()
@@ -64,6 +66,7 @@ def test_get_data_by_path():
 
 def test_path_not_exist():
     ds = DataServer(config)
+    resources['ds'] = ds
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
     dr = DataRequest(
@@ -80,6 +83,7 @@ def test_path_not_exist():
 
 def test_get_complete_data():
     ds = DataServer(config)
+    resources['ds'] = ds
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
     dr = DataRequest({
@@ -95,6 +99,7 @@ def test_get_complete_data():
 
 def test_data_after_taskid_changed():
     ds = DataServer(config)
+    resources['ds'] = ds
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
     dr = DataRequest({
@@ -117,6 +122,7 @@ def test_data_after_taskid_changed():
 
 def test_failing_to_get_data_old_task_id():
     ds = DataServer(config)
+    resources['ds'] = ds
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
     dr = DataRequest({
@@ -142,6 +148,7 @@ def test_failing_to_get_data_old_task_id():
 
 def test_failing_to_get_sending_ended():
     ds = DataServer(config)
+    resources['ds'] = ds
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
     dr = DataRequest({
@@ -167,6 +174,7 @@ def test_failing_to_get_sending_ended():
 
 def test_isServing():
     ds = DataServer(config)
+    resources['ds'] = ds
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
     def sleepNow(message):
@@ -186,6 +194,7 @@ def test_isServing():
 
 def test_waitTillServingEnds():
     ds = DataServer(config)
+    resources['ds'] = ds
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
     def sleepNow(message):
@@ -205,7 +214,7 @@ def test_waitTillServingEnds():
 @pytest.fixture(scope="function", autouse=True)
 def pytest_runtest_teardown(request):
     def closeResource():
-        if (ds != None):
-            ds.close()
-
+        if (resources['ds'] != None):
+            resources['ds'].close()
+            resources['ds'] = None
     request.addfinalizer(closeResource)
