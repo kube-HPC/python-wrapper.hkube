@@ -46,6 +46,7 @@ DATA_TYPE_ENCODED = 0x02
 UNUSED = 0x00
 MAGIC_NUMBER = b'HK'
 
+
 class Encoding:
     def __init__(self, encoding):
         encoders = {
@@ -80,11 +81,7 @@ class Encoding:
     @timing
     # TODO: add primitive check to not encode
     def encode(self, value, **kwargs):
-        if(value is None):
-            return None
-
         plainEncode = kwargs.get('plain_encode')
-        
         if(not self.isBinary or plainEncode is True):
             return self._encode(value)
 
@@ -101,13 +98,13 @@ class Encoding:
         return payload
 
     def decode(self, value, **kwargs):
-        if(value is None):
-            return None
-
         plainEncode = kwargs.get('plain_encode')
 
         if(not self.isBinary or plainEncode is True):
             return self._decode(value)
+
+        if (not typeCheck.isBytearray(value)):
+            return value
 
         view = self._fromBytes(value)
         totalLength = len(view)
@@ -115,7 +112,7 @@ class Encoding:
 
         if(mg != MAGIC_NUMBER):
             return self._decode(value)
-        
+
         print('found magic number')
         ftl = bytes(view[-3:-2])
         footerLength = struct.unpack(">B", ftl)[0]
@@ -123,7 +120,7 @@ class Encoding:
         ver = bytes(footer[0:1])
         pt = bytes(footer[1:2])
         dt = bytes(footer[2:3])
-       
+
         dataType = struct.unpack(">B", dt)[0]
         data = view[0: totalLength - footerLength]
 
@@ -139,7 +136,7 @@ class Encoding:
 
     def _fromBytesPY3(self, value):
         return memoryview(value)
-    
+
     def _toBytesPY2(self, value):
         return value
 

@@ -1,8 +1,10 @@
 import os
 
+
 def getIntEnv(name, defaultValue):
     strValue = os.environ.get(name, defaultValue)
     return int(strValue)
+
 
 socket = {
     "port": os.environ.get('WORKER_SOCKET_PORT', "3000"),

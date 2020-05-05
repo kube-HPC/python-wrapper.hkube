@@ -103,7 +103,8 @@ class DataAdapter:
                 },
                 'taskId': taskId,
                 'dataPath': dataPath,
-                'encoding': encoding
+                'encoding': encoding,
+                'timeout': 60
             }
             dataRequest = DataRequest(request)
             response = dataRequest.invoke()

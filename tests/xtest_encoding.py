@@ -5,6 +5,7 @@ from storage.storage_manager import StorageManager
 from tests.configs import config
 from util.decorators import timing
 
+
 def randomString(n):
     min_lc = ord(b'a')
     len_lc = 26
@@ -39,6 +40,7 @@ encoding = Encoding('msgpack')
 
 storageManager = StorageManager(config.storage)
 
+
 @timing
 def create_bytearray(sizeBytes):
     return bytearray(b'\xdd'*(sizeBytes))
@@ -49,11 +51,12 @@ def test_msgpack_bytearray_storage(sizeBytes):
 
     storageManager.storage.put({"path": "tests/file2", "data": data})
     res = storageManager.storage.get({"path": "tests/file2"})
-    
+
     data2 = data[0: sizeBytes]
     assert data2 == res
 
     return data2
+
 
 def test_msgpack_bytearray(sizeBytes):
     data = create_bytearray(sizeBytes)
@@ -71,6 +74,7 @@ def test_msgpack_bytearray(sizeBytes):
     # assert data2 == decoded
 
     return encoded
+
 
 mb = 1024 * 1024
 

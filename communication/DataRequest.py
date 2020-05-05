@@ -22,9 +22,7 @@ class DataRequest:
         except Exception as e:
             return self._createError('unknown', e.message)
         self.adapter.close()
-        print (str(response))
-        print(str(self.encoding.decode(response)))
         return self.encoding.decode(response)
 
     def _createError(self, code, message):
-        return {'error': {'code': code, 'message': message}}
+        return {'hkube_error': {'code': code, 'message': message}}

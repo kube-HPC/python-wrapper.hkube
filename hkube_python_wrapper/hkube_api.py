@@ -23,7 +23,7 @@ class HKubeApi:
         result = data
         if(response):
             result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
-        
+
         execution = self._algorithmExecutionsMap.get(execId)
         execution.waiter.set(result)
 
@@ -95,7 +95,6 @@ class HKubeApi:
                     "flowInput": flowInput
                 },
                 "subPipelineId": execId,
-
             }
         }
         self._wc.send(message)

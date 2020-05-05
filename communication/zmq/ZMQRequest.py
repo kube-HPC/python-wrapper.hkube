@@ -2,7 +2,6 @@ import gevent
 import zmq
 from gevent import spawn
 from zmq.utils.monitor import recv_monitor_message
-
 from util.decorators import timing
 
 context = zmq.Context()
@@ -14,9 +13,9 @@ class ZMQRequest(object):
         self.socket.connect('tcp://' + reqDetails['host'] + ':' + str(reqDetails['port']))
         self.connected = False
         self.content = reqDetails['content']
-        self.timeout= int(reqDetails['timeout'])
+        self.timeout = int(reqDetails['timeout'])
         self.disconnected = False
-        socketMoniotr = self.socket.get_monitor_socket()
+        socketMonitor = self.socket.get_monitor_socket()
 
         def invokeOnEvent(monitor, onDisconnect):
             while True:
@@ -25,7 +24,7 @@ class ZMQRequest(object):
                     if evt['event'] == zmq.EVENT_DISCONNECTED:
                         onDisconnect()
                 gevent.sleep(1)
-        spawn(invokeOnEvent, socketMoniotr, self.onDisconnect)
+        spawn(invokeOnEvent, socketMonitor, self.onDisconnect)
         gevent.sleep(0)
 
     @timing
@@ -37,9 +36,9 @@ class ZMQRequest(object):
             gevent.sleep(1)
             polls += 1
             result = self.socket.poll(1)
-        if (polls>=self.timeout):
+        if (polls >= self.timeout):
             e = Exception()
-            e.__setattr__('message','Timed out:' + str(self.timeout))
+            e.__setattr__('message', 'Timed out:' + str(self.timeout))
             raise e
         if(self.disconnected):
             raise Exception('Disconnected')

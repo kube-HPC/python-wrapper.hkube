@@ -20,6 +20,7 @@ encoding = Encoding(config['encoding'])
 resources = {}
 resources['ds'] = None
 
+
 def test_get_data_bytes():
     ds = DataServer(config)
     resources['ds'] = ds
@@ -126,17 +127,17 @@ def test_failing_to_get_data_old_task_id():
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
     dr = DataRequest({
-        'address':address1,
+        'address': address1,
         'taskId': taskId1,
         'dataPath': '',
         'encoding': config['encoding'],
-        'timeout':'5'
+        'timeout': '5'
     })
     reply = dr.invoke()
     assert reply == mockdata.dataTask1
     ds.setSendingState(mockdata.taskId2, encoding.encode(mockdata.dataTask2))
     dr = DataRequest({
-        'address':address1,
+        'address': address1,
         'taskId': taskId1,
         'dataPath': '',
         'encoding': config['encoding'],
@@ -152,21 +153,20 @@ def test_failing_to_get_sending_ended():
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
     dr = DataRequest({
-        'address':address1,
+        'address': address1,
         'taskId': taskId1,
         'dataPath': '',
         'encoding': config['encoding'],
-        'timeout':'5'
+        'timeout': '5'
     })
     reply = dr.invoke()
     assert reply == mockdata.dataTask1
     ds.endSendingState()
     dr = DataRequest({
-        'address':address1,
+        'address': address1,
         'taskId': taskId1,
         'dataPath': '',
-        'encoding': config['encoding']
-        ,'timeout':'5'
+        'encoding': config['encoding'], 'timeout': '5'
     })
     reply = dr.invoke()
     assert reply == {'hkube_error': {'message': 'Current taskId is None', 'code': 'notAvailable'}}
@@ -177,14 +177,15 @@ def test_isServing():
     resources['ds'] = ds
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
+
     def sleepNow(message):
         gevent.sleep(3)
         return ds.createReply(message)
     ds._adapter.getReplyFunc = sleepNow
     ds.setSendingState(mockdata.dataTask1, data1)
     dr = DataRequest(
-        {'address':address1, 'taskId': taskId1, 'dataPath': 'level1',
-         'encoding': 'bson','timeout':'5'})
+        {'address': address1, 'taskId': taskId1, 'dataPath': 'level1',
+         'encoding': 'bson', 'timeout': '5'})
     gevent.spawn(dr.invoke)
     gevent.sleep(1)
     assert ds.isServing() == True
@@ -197,19 +198,22 @@ def test_waitTillServingEnds():
     resources['ds'] = ds
     ds.setSendingState(mockdata.taskId1, encoding.encode(mockdata.dataTask1))
     ds.listen()
+
     def sleepNow(message):
         gevent.sleep(3)
         return ds.createReply(message)
     ds._adapter.getReplyFunc = sleepNow
     ds.setSendingState(mockdata.dataTask1, data1)
     dr = DataRequest(
-        {'address':address1, 'taskId': taskId1, 'dataPath': 'level1',
-         'encoding': 'bson','timeout':'5'})
+        {'address': address1, 'taskId': taskId1, 'dataPath': 'level1',
+         'encoding': 'bson', 'timeout': '5'})
     gevent.spawn(dr.invoke)
     gevent.sleep(1)
     assert ds.isServing() == True
     ds.waitTillServingEnds()
     assert ds.isServing() == False
+
+
 def test_fail_on_timeout():
     dr = DataRequest({
         'address': address1,
@@ -219,7 +223,8 @@ def test_fail_on_timeout():
         'timeout': '5'
     })
     reply = dr.invoke()
-    assert reply == {'error': {'code': 'unknown', 'message': 'Timed out:5'}}
+    assert reply == {'hkube_error': {'code': 'unknown', 'message': 'Timed out:5'}}
+
 
 @pytest.fixture(scope="function", autouse=True)
 def pytest_runtest_teardown(request):
