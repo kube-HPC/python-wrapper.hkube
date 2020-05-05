@@ -18,11 +18,12 @@ class ZMQRequest(object):
         socketMonitor = self.socket.get_monitor_socket()
 
         def invokeOnEvent(monitor, onDisconnect):
-            while True:
+            while not self.disconnected:
                 if(monitor.poll(0.1)):
                     evt = recv_monitor_message(monitor)
                     if evt['event'] == zmq.EVENT_DISCONNECTED:
                         onDisconnect()
+                        break
                 gevent.sleep(1)
         spawn(invokeOnEvent, socketMonitor, self.onDisconnect)
         gevent.sleep(0)
@@ -41,8 +42,12 @@ class ZMQRequest(object):
             e.__setattr__('message', 'Timed out:' + str(self.timeout))
             raise e
         if(self.disconnected):
-            raise Exception('Disconnected')
+            e = Exception()
+            e.__setattr__('message','Disconnected')
+            raise e
+
         message = self.socket.recv()
+        self.disconnected = True
         return message
 
     def onDisconnect(self):

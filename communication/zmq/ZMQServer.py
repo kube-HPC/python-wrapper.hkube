@@ -43,7 +43,7 @@ class ZMQServer(object):
     @timing
     def send(self, message):
         toBeSent = self._createReplyFunc(message)
-        self._socket.send(toBeSent, copy=False, track=True)
+        self._socket.send(toBeSent, copy=False)
 
     def onConnect(self):
         self._numberOfConn += 1
