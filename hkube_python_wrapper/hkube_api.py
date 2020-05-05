@@ -28,8 +28,14 @@ class HKubeApi:
         execution.waiter.set(result)
 
     def subPipelineDone(self, data):
-        execution = self._algorithmExecutionsMap.get(data.get('subPipelineId'))
-        execution.waiter.set(data)
+        response = data.get('response')
+        subPipelineId = data.get('subPipelineId')
+        result = data
+        if(response):
+            result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
+
+        execution = self._algorithmExecutionsMap.get(subPipelineId)
+        execution.waiter.set(result)
 
     def start_algorithm(self, algorithmName, input=[], resultAsRaw=False, blocking=False):
         print('start_algorithm called with {name}'.format(name=algorithmName))
@@ -67,8 +73,7 @@ class HKubeApi:
                     "name": name,
                     "flowInput": flowInput
                 },
-                "subPipelineId": execId,
-
+                "subPipelineId": execId
             }
         }
         self._wc.send(message)
@@ -94,7 +99,7 @@ class HKubeApi:
                     "webhooks": webhooks,
                     "flowInput": flowInput
                 },
-                "subPipelineId": execId,
+                "subPipelineId": execId
             }
         }
         self._wc.send(message)
