@@ -3,14 +3,13 @@ import os
 import sys
 import importlib
 import traceback
-import time
 import gevent
 from events import Events
-from communication.DataServer import DataServer
-import hkube_python_wrapper.messages as messages
-from hkube_python_wrapper.methods import methods
+from hkube_python_wrapper.communication.DataServer import DataServer
+from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
+from .messages import messages
+from .methods import methods
 from .data_adapter import DataAdapter
-from .hkube_api import HKubeApi
 from .wc import WebsocketClient
 
 
@@ -166,14 +165,14 @@ class Algorunner:
                 if (method is not None):
                     method(options)
 
-                self._sendCommand(messages.outgoing["initialized"], None)
+                self._sendCommand(messages.outgoing.initialized, None)
 
         except Exception as e:
             self._sendError(e)
 
     def _start(self, options):
         try:
-            self._sendCommand(messages.outgoing["started"], None)
+            self._sendCommand(messages.outgoing.started, None)
             jobId = self._input.get("jobId")
             taskId = self._input.get("taskId")
             nodeName = self._input.get("nodeName")
@@ -200,9 +199,9 @@ class Algorunner:
             storingData.update(storageInfo)
 
             self._dataServer.setSendingState(taskId, encodedData)
-            self._sendCommand(messages.outgoing["storing"], storingData)
+            self._sendCommand(messages.outgoing.storing, storingData)
             self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
-            self._sendCommand(messages.outgoing["done"], None)
+            self._sendCommand(messages.outgoing.done, None)
 
         except Exception as e:
             traceback.print_exc()
@@ -214,7 +213,7 @@ class Algorunner:
             if (method is not None):
                 method(options)
 
-            self._sendCommand(messages.outgoing["stopped"], None)
+            self._sendCommand(messages.outgoing.stopped, None)
 
         except Exception as e:
             self._sendError(e)
@@ -245,7 +244,7 @@ class Algorunner:
         try:
             print(error)
             self._wsc.send({
-                'command': messages.outgoing["error"],
+                'command': messages.outgoing.error,
                 'error': {
                     'code': 'Failed',
                     'message': self._errorMsg(error)

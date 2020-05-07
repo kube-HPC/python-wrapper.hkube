@@ -1,5 +1,5 @@
 import os
-from storage.base_storage_manager import BaseStorageManager
+from hkube_python_wrapper.storage.base_storage_manager import BaseStorageManager
 
 
 class TaskOutputManager(BaseStorageManager):

@@ -1,9 +1,9 @@
 
 import time
+from hkube_python_wrapper.storage.storage_manager import StorageManager
+from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper import Algorunner
-from storage.storage_manager import StorageManager
 from tests.configs import config
-from util.encoding import Encoding
 
 algorithmName = 'eval-alg'
 subpipelineName = 'simple'

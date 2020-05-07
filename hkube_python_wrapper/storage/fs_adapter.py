@@ -1,5 +1,5 @@
 import os
-from util.decorators import timing
+from hkube_python_wrapper.util.decorators import timing
 
 class FSAdapter:
     def __init__(self, config):

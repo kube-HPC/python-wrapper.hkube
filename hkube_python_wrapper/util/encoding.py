@@ -1,12 +1,12 @@
 from __future__ import print_function, division, absolute_import
 import sys
-import bson
 import struct
+import bson
 from bson.codec_options import CodecOptions, TypeRegistry
 import simplejson as json
 import msgpack
-import util.type_check as typeCheck
-from util.decorators import timing
+import hkube_python_wrapper.util.type_check as typeCheck
+from hkube_python_wrapper.util.decorators import timing
 
 
 def bson_fallback_encoder(value):

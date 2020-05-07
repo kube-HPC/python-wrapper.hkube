@@ -1,5 +1,5 @@
 from __future__ import print_function, division, absolute_import
-import util.type_check as typeCheck
+import hkube_python_wrapper.util.type_check as typeCheck
 
 
 def getPath(obj, path, defaultValue="DEFAULT"):

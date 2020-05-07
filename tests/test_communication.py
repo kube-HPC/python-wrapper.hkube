@@ -1,10 +1,10 @@
 import pytest
 import gevent
-from tests.configs import config
-from communication.DataRequest import DataRequest
-from communication.DataServer import DataServer
+from hkube_python_wrapper.communication.DataRequest import DataRequest
+from hkube_python_wrapper.communication.DataServer import DataServer
+from hkube_python_wrapper.util.encoding import Encoding
 from tests.mocks import mockdata
-from util.encoding import Encoding
+from tests.configs import config
 
 config = config.discovery
 

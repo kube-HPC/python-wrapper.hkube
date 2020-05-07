@@ -1,18 +1,17 @@
 import os
 import shutil
 import pytest
-from storage.storage_manager import StorageManager
+from hkube_python_wrapper.storage.storage_manager import StorageManager
+from hkube_python_wrapper.util.encoding import Encoding
 from tests.configs import config
-from util.encoding import Encoding
 
-def ensure_dir(f):
-    d = os.path.dirname(f)
-    if not os.path.exists(d):
-        os.makedirs(d)
-    return os.path.exists(f)
+def ensure_dir(dirName):
+    if not os.path.exists(dirName):
+        os.makedirs(dirName)  
 
 config = config.storage
-baseDirectory = config["fs"]['baseDirectory']
+baseDirectory = config["fs"]["baseDirectory"]
+rootDirectory = baseDirectory.split('/')[0]
 sm = StorageManager(config)
 encoding = Encoding(config['encoding'])
 
@@ -25,10 +24,10 @@ encoded = encoding.encode({"data": 'all_my_data'})
 
 @pytest.fixture(scope="session", autouse=True)
 def beforeall(request):
-    ensure_dir('./' + baseDirectory)
+    ensure_dir(baseDirectory)
 
     def afterall():
-        shutil.rmtree(baseDirectory, ignore_errors=True)
+        shutil.rmtree(rootDirectory, ignore_errors=True)
 
     request.addfinalizer(afterall)
 

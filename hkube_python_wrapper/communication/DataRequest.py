@@ -1,5 +1,5 @@
-from communication.zmq.ZMQRequest import ZMQRequest
-from util.encoding import Encoding
+from hkube_python_wrapper.communication.zmq.ZMQRequest import ZMQRequest
+from hkube_python_wrapper.util.encoding import Encoding
 
 
 class DataRequest:

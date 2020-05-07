@@ -1,6 +1,6 @@
 import os
 import random
-from util.encoding import Encoding
+from hkube_python_wrapper.util.encoding import Encoding
 
 
 def test_json_encoding():

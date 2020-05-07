@@ -2,7 +2,7 @@ import gevent
 import zmq
 from gevent import spawn
 from zmq.utils.monitor import recv_monitor_message
-from util.decorators import timing
+from hkube_python_wrapper.util.decorators import timing
 
 context = zmq.Context()
 

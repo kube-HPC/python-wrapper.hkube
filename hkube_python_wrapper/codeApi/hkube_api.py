@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
+from hkube_python_wrapper.wrapper.messages import messages
 from .execution import AlgorithmExecution
 from .waitFor import WaitForData
-import hkube_python_wrapper.messages as messages
 
 
 class HKubeApi:
@@ -45,7 +45,7 @@ class HKubeApi:
         self._algorithmExecutionsMap[execId] = execution
 
         message = {
-            "command": messages.outgoing["startAlgorithmExecution"],
+            "command": messages.outgoing.startAlgorithmExecution,
             "data": {
                 "execId": execId,
                 "algorithmName": algorithmName,
@@ -67,7 +67,7 @@ class HKubeApi:
         self._algorithmExecutionsMap[execId] = execution
 
         message = {
-            "command": messages.outgoing["startStoredSubPipeline"],
+            "command": messages.outgoing.startStoredSubPipeline,
             "data": {
                 "subPipeline": {
                     "name": name,
@@ -90,7 +90,7 @@ class HKubeApi:
         self._algorithmExecutionsMap[execId] = execution
 
         message = {
-            "command": messages.outgoing["startRawSubPipeline"],
+            "command": messages.outgoing.startRawSubPipeline,
             "data": {
                 "subPipeline": {
                     "name": name,

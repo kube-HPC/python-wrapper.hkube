@@ -1,10 +1,9 @@
 import traceback
 from gevent import sleep
-from communication.zmq.ZMQServer import ZMQServer
-from util.encoding import Encoding
-import util.object_path as objectPath
-import util.type_check as typeCheck
-from util.decorators import timing
+from hkube_python_wrapper.communication.zmq.ZMQServer import ZMQServer
+from hkube_python_wrapper.util.encoding import Encoding
+import hkube_python_wrapper.util.object_path as objectPath
+from hkube_python_wrapper.util.decorators import timing
 
 class DataServer:
 

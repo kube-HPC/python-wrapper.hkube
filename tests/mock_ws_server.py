@@ -1,6 +1,6 @@
 
 from websocket_server import WebsocketServer
-from util.encoding import Encoding
+from hkube_python_wrapper.util.encoding import Encoding
 from tests.mocks import mockdata
 from tests.configs import config
 
@@ -35,7 +35,7 @@ class WebSocketServerClass:
         }
 
     def handleMessage(self, client, server, message):
-        decoded = self._encoding.decode(message)
+        decoded = self._encoding.decode(message, plain_encode=True)
         command = decoded["command"]
         data = decoded.get("data", None)
         commandBack = self._commands.get(command)
@@ -47,11 +47,11 @@ class WebSocketServerClass:
             self.sendMsgToClient(client, msgBack)
 
     def handleConnected(self, client, server):
-        print('connected')
+        print('ws connected')
         self.sendMsgToClient(client, {'command': 'initialize', 'data': mockdata.initData})
 
     def handleDisconnected(self, client, server):
-        print('closed')
+        print('ws disconnected')
 
     def sendMsgToClient(self, client, data):
         self._server.send_message(client, self._encoding.encode(data, plain_encode=True))

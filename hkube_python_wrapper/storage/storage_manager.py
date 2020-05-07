@@ -1,8 +1,8 @@
 from __future__ import print_function, division, absolute_import
-from storage.task_output_manager import TaskOutputManager
-from storage.base_storage_manager import BaseStorageManager
-from storage.fsAdapter import FSAdapter
-from storage.s3Adapter import S3Adapter
+from hkube_python_wrapper.storage.task_output_manager import TaskOutputManager
+from hkube_python_wrapper.storage.base_storage_manager import BaseStorageManager
+from hkube_python_wrapper.storage.fs_adapter import FSAdapter
+from hkube_python_wrapper.storage.s3_adapter import S3Adapter
 
 adapterTypes = {
     'fs': FSAdapter,

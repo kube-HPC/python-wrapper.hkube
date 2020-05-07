@@ -1,7 +1,7 @@
 
-import collections
-from util.object_path import getPath, setPath
-import util.type_check as typeCheck
+
+from hkube_python_wrapper.util.object_path import getPath, setPath
+import hkube_python_wrapper.util.type_check as typeCheck
 
 
 def test_getPath_no_path():
