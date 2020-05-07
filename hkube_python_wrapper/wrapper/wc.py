@@ -5,7 +5,7 @@ from websocket import ABNF
 import websocket
 import gevent
 from gevent import monkey
-from util.encoding import Encoding
+from hkube_python_wrapper.util.encoding import Encoding
 monkey.patch_all()
 
 

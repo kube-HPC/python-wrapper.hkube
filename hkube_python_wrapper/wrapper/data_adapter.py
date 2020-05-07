@@ -1,11 +1,11 @@
 from __future__ import print_function, division, absolute_import
 import json
-import util.type_check as typeCheck
-from util.decorators import timing
-from util.object_path import getPath, setPath
-from util.encoding import Encoding
-from storage.storage_manager import StorageManager
-from communication.DataRequest import DataRequest
+import hkube_python_wrapper.util.type_check as typeCheck
+from hkube_python_wrapper.util.decorators import timing
+from hkube_python_wrapper.util.object_path import getPath, setPath
+from hkube_python_wrapper.util.encoding import Encoding
+from hkube_python_wrapper.storage.storage_manager import StorageManager
+from hkube_python_wrapper.communication.DataRequest import DataRequest
 
 
 class DataAdapter:

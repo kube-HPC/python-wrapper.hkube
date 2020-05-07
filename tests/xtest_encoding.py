@@ -1,9 +1,9 @@
 import os
 import random
-from util.encoding import Encoding
+from hkube_python_wrapper.util.encoding import Encoding
 from storage.storage_manager import StorageManager
 from tests.configs import config
-from util.decorators import timing
+from hkube_python_wrapper.util.decorators import timing
 
 
 def randomString(n):
