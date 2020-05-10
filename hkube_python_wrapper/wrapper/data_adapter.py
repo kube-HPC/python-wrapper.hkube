@@ -44,7 +44,20 @@ class DataAdapter:
                     raise Exception('unable to find storage key')
 
                 data = None
+                uniqueList = []
                 if(typeCheck.isList(link)):
+                    for item in link:
+                        discovery = item.get('discovery')
+                        taskId = discovery.get('taskId')
+                        port = discovery.get('port')
+                        host = discovery.get('host')
+                        item = list(filter(lambda x: x.host == host and x.port == port, uniqueList))
+
+                        if(item is None):
+                            uniqueList.append({})
+                            uniqueList[key]["tasks"].append(taskId)
+
+
                     data = list(map(self.tryGetDataFromPeerOrStorage, link))
                 else:
                     data = self.tryGetDataFromPeerOrStorage(link)

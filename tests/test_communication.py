@@ -24,12 +24,11 @@ resources['ds'] = None
 def test_get_data_bytes():
     ds = DataServer(config)
     resources['ds'] = ds
-    ds.setSendingState(mockdata.taskId2, encoding.encode(data2))
+    ds.setSendingState(mockdata.taskId2, data2)
     ds.listen()
     dr = DataRequest({
         'address': address1,
-        'taskId': taskId2,
-        'dataPath': '',
+        'tasks': [{"id": taskId2, "dp": ''}],
         'encoding': config['encoding'],
         'timeout': '5'
     })

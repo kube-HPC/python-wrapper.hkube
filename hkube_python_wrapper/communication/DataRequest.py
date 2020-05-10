@@ -9,8 +9,7 @@ class DataRequest:
         self.encoding = Encoding(encoding)
         request = reqDetails['address']
         options = {
-            u'taskId': reqDetails['taskId'],
-            u'dataPath': reqDetails['dataPath']
+            u'tasks': reqDetails['tasks'],
         }
         request['content'] = self.encoding.encode(options, plain_encode=True)
         request['timeout'] = reqDetails['timeout']

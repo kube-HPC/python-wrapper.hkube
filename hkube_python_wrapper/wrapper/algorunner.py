@@ -182,23 +182,22 @@ class Algorunner:
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
             method = self._getMethod('start')
-            output = method(self._input, self._hkubeApi)
-            encodedData = self._dataAdapter.encode(output)
+            algorithmData = method(self._input, self._hkubeApi)
+            encodedData = self._dataAdapter.encode(algorithmData)
 
             data = {
                 'jobId': jobId,
                 'taskId': taskId,
                 'nodeName': nodeName,
-                'data': output,
+                'data': algorithmData,
                 'encodedData': encodedData,
                 'savePaths': savePaths
             }
+            self._dataServer.setSendingState(taskId, algorithmData)
             storageInfo = self._dataAdapter.createStorageInfo(data)
-            
-            storingData = {'discovery': self._discovery}
+            storingData = {'discovery': self._discovery, 'taskId': taskId}
             storingData.update(storageInfo)
 
-            self._dataServer.setSendingState(taskId, encodedData)
             self._sendCommand(messages.outgoing.storing, storingData)
             self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
             self._sendCommand(messages.outgoing.done, None)
