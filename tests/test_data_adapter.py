@@ -1,21 +1,33 @@
 
+import pytest
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.data_adapter import DataAdapter
+from hkube_python_wrapper.communication.DataServer import DataServer
 from tests.configs import config
 
-dataAdapter = DataAdapter(config.storage)
+dataAdapter = DataAdapter(config)
 
 jobId = 'jobId-328901800'
 taskId1 = 'taskId-328901801'
 taskId2 = 'taskId-328901802'
+taskId3 = 'taskId-328901803'
+taskId4 = 'taskId-328901804'
 
-obj1 = [42, 37, 89, 95, 12, 126, 147]
-obj2 = {'data': {'array': obj1}}
+array = [42, 37, 89, 95, 12, 126, 147]
+obj1 = {'data1': {'array1': array}}
+obj2 = {'data2': {'array2': array}}
+obj3 = {'data3': {'array3': array}}
+obj4 = {'data4': {'array4': array}}
 
 data1 = dataAdapter.encode(obj1)
 data2 = dataAdapter.encode(obj2)
+data3 = dataAdapter.encode(obj3)
+data4 = dataAdapter.encode(obj4)
+
 storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': data1})
 storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'data': data2})
+storageInfo3 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId3, 'data': data3})
+storageInfo4 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId4, 'data': data4})
 
 inputArgs = [
     {'data': '$$guid-1'},
@@ -42,12 +54,19 @@ flatInput = {
 }
 
 storage = {
-    'guid-1': {'storageInfo': storageInfo2, 'path': 'data'},
-    'guid-2': {'storageInfo': storageInfo2, 'path': 'data.array'},
-    'guid-3': {'storageInfo': storageInfo2, 'path': 'data.array.4'},
-    'guid-4': {'storageInfo': storageInfo1},
-    'guid-5': [{'storageInfo': storageInfo1}, {'storageInfo': storageInfo2}]
+    'guid-1': {'storageInfo': storageInfo1, 'path': 'data1'},
+    'guid-2': {'storageInfo': storageInfo2, 'path': 'data2.array2'},
+    'guid-3': {'storageInfo': storageInfo3, 'path': 'data3.array3.4'},
+    'guid-4': {'storageInfo': storageInfo4},
+    'guid-5': {'storageInfo': storageInfo4, 'path': 'data4.array4'}
 }
+
+ds = DataServer(config.discovery)
+ds.listen()
+ds.setSendingState(taskId1, obj1)
+ds.setSendingState(taskId2, obj2)
+ds.setSendingState(taskId3, obj3)
+ds.setSendingState(taskId4, obj4)
 
 
 def test_get_data_no_storage():
@@ -63,15 +82,62 @@ def test_get_data_no_input():
 def test_get_data():
 
     result = dataAdapter.getData({'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
-    assert result[0]['data']['array'] == obj1
-    assert result[1]['prop'][0] == obj1
-    assert result[2][0]['prop'] == obj1[4]
-    assert result[3][0] == obj1
-    assert result[4] == [obj1, obj2]
+    assert result[0]['data']['array1'] == array
+    assert result[1]['prop'][0] == array
+    assert result[2][0]['prop'] == array[4]
+    assert result[3][0] == obj4
+    assert result[4] == array
     assert result[5] == inputArgs[5]
     assert result[6] == inputArgs[6]
     assert result[7] == inputArgs[7]
     assert result[8] == inputArgs[8]
+
+
+def test_get_batch_request_success():
+    inputArgs = [
+        '$$guid-1',
+    ]
+    flatInput = {
+        '0': '$$guid-5'
+    }
+    storage = {
+        'guid-5': [{'discovery': config.discovery, 'tasks': [taskId2, taskId3, taskId4]}]
+    }
+
+    result = dataAdapter.getData({'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
+    assert result[0] == [obj2, obj3, obj4]
+
+
+def test_get_batch_request_with_errors():
+    inputArgs = [
+        '$$guid-1',
+    ]
+    flatInput = {
+        '0': '$$guid-5'
+    }
+    storage = {
+        'guid-5': [{'discovery': config.discovery, 'tasks': [taskId1, taskId2, taskId3, taskId4]}]
+    }
+
+    result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
+    assert result[0] == [obj1, obj2, obj3, obj4]
+
+
+def test_get_batch_request_with_storage_fallback():
+    ds.close()
+    inputArgs = [
+        '$$guid-1',
+    ]
+    flatInput = {
+        '0': '$$guid-5'
+    }
+    storage = {
+        'guid-5': [{'discovery': config.discovery, 'tasks': [taskId1, taskId2, taskId3, taskId4]}]
+    }
+
+    result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
+    assert result[0] == [obj1, obj2, obj3, obj4]
+    ds.listen()
 
 
 def test_set_data():
@@ -118,16 +184,16 @@ def test_createMetadata_bytes():
 
 
 def test_createStorageInfo():
-    savePaths = ['green.data.array']
+    savePaths = ['green.data1.array1']
     result = dataAdapter.createStorageInfo({
         'jobId': jobId,
         'taskId': taskId1,
         'nodeName': 'green',
-        'data': obj2,
+        'data': obj1,
         'savePaths': savePaths
     })
     metadata = result['metadata'][savePaths[0]]
 
-    assert metadata.get('size') == len(obj1)
+    assert metadata.get('size') == len(array)
     assert metadata.get('type') == 'array'
     assert result['storageInfo']['path'].find(jobId) != -1

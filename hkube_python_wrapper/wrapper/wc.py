@@ -6,6 +6,7 @@ import websocket
 import gevent
 from gevent import monkey
 from hkube_python_wrapper.util.encoding import Encoding
+from hkube_python_wrapper.wrapper.messages import messages
 monkey.patch_all()
 
 
@@ -16,16 +17,16 @@ class WebsocketClient:
         self._reconnectInterval = 0.1
         self._active = True
         self._switcher = {
-            "initialize": self.init,
-            "start": self.start,
-            "stop": self.stop,
-            "exit": self.exit,
-            "algorithmExecutionDone": self.algorithmExecutionDone,
-            "algorithmExecutionError": self.algorithmExecutionError,
-            "subPipelineDone": self.subPipelineDone,
-            "subPipelineStarted": self.subPipelineStarted,
-            "subPipelineError": self.subPipelineError,
-            "subPipelineStopped": self.subPipelineStopped
+            messages.incoming.initialize: self.init,
+            messages.incoming.start: self.start,
+            messages.incoming.stop: self.stop,
+            messages.incoming.exit: self.exit,
+            messages.incoming.algorithmExecutionDone: self.algorithmExecutionDone,
+            messages.incoming.algorithmExecutionError: self.algorithmExecutionError,
+            messages.incoming.subPipelineDone: self.subPipelineDone,
+            messages.incoming.subPipelineStarted: self.subPipelineStarted,
+            messages.incoming.subPipelineError: self.subPipelineError,
+            messages.incoming.subPipelineStopped: self.subPipelineStopped
         }
         self._firstConnect = False
         self._encoding = Encoding(encoding)

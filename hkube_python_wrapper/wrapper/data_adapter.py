@@ -12,8 +12,10 @@ class DataAdapter:
     def __init__(self, options, dataServer=None):
         self._dataServer = dataServer
         self._storageCache = dict()
-        self._encoding = Encoding(options['encoding'])
-        self._storageManager = StorageManager(options)
+        self._encoding = Encoding(options.storage['encoding'])
+        self._storageManager = StorageManager(options.storage)
+        self._requestEncoding = options.discovery['encoding']
+        self._requestTimeout = options.discovery['timeout']
 
     def encode(self, value):
         return self._encoding.encode(value)
@@ -22,6 +24,7 @@ class DataAdapter:
         return self._encoding.decode(value)
 
     def getData(self, options):
+        jobId = options.get("jobId")
         inputArgs = options.get("input")
         flatInput = options.get("flatInput")
         storage = options.get("storage")
@@ -43,22 +46,8 @@ class DataAdapter:
                 if (link is None):
                     raise Exception('unable to find storage key')
 
-                data = None
-                uniqueList = []
                 if(typeCheck.isList(link)):
-                    for item in link:
-                        discovery = item.get('discovery')
-                        taskId = discovery.get('taskId')
-                        port = discovery.get('port')
-                        host = discovery.get('host')
-                        item = list(filter(lambda x: x.host == host and x.port == port, uniqueList))
-
-                        if(item is None):
-                            uniqueList.append({})
-                            uniqueList[key]["tasks"].append(taskId)
-
-
-                    data = list(map(self.tryGetDataFromPeerOrStorage, link))
+                    data = self.batchRequest(link, jobId)
                 else:
                     data = self.tryGetDataFromPeerOrStorage(link)
 
@@ -76,37 +65,76 @@ class DataAdapter:
         result = self._storageManager.hkube.put(jobId, taskId, data)
         return result
 
+    def batchRequest(self, options, jobId):
+        batchResponse = []
+
+        for d in options:
+            storageInfo = d.get('storageInfo')
+            tasks = d.get('tasks')
+            dataPath = d.get("path")
+            if (storageInfo):
+                storageResult = self._getFromCacheOrStorage(storageInfo, dataPath)
+                batchResponse.append(storageResult)
+                continue
+
+            peerResponse = self._getFromPeer(d, dataPath)
+            peerError = self._getPeerError(peerResponse)
+
+            if(peerError):
+                message = peerError.get("message")
+                print('batch request has failed with {message}, using storage fallback'.format(message=message))
+                for t in tasks:
+                    path = self._storageManager.hkube.createPath(jobId, t)
+                    storageData = self._getFromCacheOrStorage({'path': path}, dataPath)
+                    batchResponse.append(storageData)
+            else:
+                errors = peerResponse.get('errors')
+                items = peerResponse.get('items')
+
+                if(errors):
+                    for i, t in enumerate(items):
+                        peerError = self._getPeerError(t)
+                        if(peerError):
+                            taskId = tasks[i]
+                            path = self._storageManager.hkube.createPath(jobId, taskId)
+                            storageData = self._getFromCacheOrStorage({'path': path}, dataPath)
+                            batchResponse.append(storageData)
+                        else:
+                            batchResponse.append(t)
+                else:
+                    batchResponse += items
+
+        return batchResponse
+
     def tryGetDataFromPeerOrStorage(self, options):
-        path = options.get("path")
-        discovery = options.get("discovery")
+        dataPath = options.get("path")
         storageInfo = options.get("storageInfo")
+        discovery = options.get("discovery")
         data = None
         hasResponse = False
 
         if (discovery):
-            data = self._getFromPeer(options, path)
-            hasResponse = self._hasPeerResponse(data)
-            data = data if hasResponse else None
+            data = self._getFromPeer(options, dataPath)
+            peerError = self._getPeerError(data)
+            hasResponse = False if peerError else True
+            data = None if peerError else data
 
         if (not hasResponse and storageInfo):
-            data = self._getFromCacheOrStorage(storageInfo)
-            if(path):
-                data = getPath(data, path)
+            data = self._getFromCacheOrStorage(storageInfo, dataPath)
 
         return data
 
     @timing
     def _getFromPeer(self, options, dataPath):
+        tasks = options.get('tasks')
         taskId = options.get('taskId')
         discovery = options.get('discovery')
         port = discovery.get('port')
         host = discovery.get('host')
-        encoding = discovery.get('encoding')
 
         response = None
         if(self._dataServer and host == self._dataServer._host and port == self._dataServer._port):
-            res = self._dataServer.createData({'taskId': taskId, 'dataPath': dataPath})
-            response = self._encoding.decode(res)
+            response = self._dataServer.createData(taskId, tasks, dataPath)
 
         else:
             request = {
@@ -114,31 +142,33 @@ class DataAdapter:
                     'port': port,
                     'host': host
                 },
+                'tasks': tasks,
                 'taskId': taskId,
                 'dataPath': dataPath,
-                'encoding': encoding,
-                'timeout': 60
+                'encoding': self._requestEncoding,
+                'timeout': self._requestTimeout
             }
             dataRequest = DataRequest(request)
             response = dataRequest.invoke()
 
         return response
 
-    def _hasPeerResponse(self, options):
+    def _getPeerError(self, options):
+        error = None
         if(typeCheck.isDict(options)):
             error = options.get('hkube_error')
-            if(error is not None):
-                print(json.dumps(error, indent=2))
-                return False
 
-        return True
+        return error
 
-    def _getFromCacheOrStorage(self, options):
+    def _getFromCacheOrStorage(self, options, dataPath):
         path = options.get('path')
         data = self._getFromCache(path)
         if (data is None):
             data = self._getFromStorage(options)
             self._setToCache(path, data)
+
+        if(dataPath):
+            data = getPath(data, dataPath)
 
         return data
 

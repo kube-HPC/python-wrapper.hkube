@@ -13,7 +13,8 @@ class ZMQRequest(object):
         self.socket.connect('tcp://' + reqDetails['host'] + ':' + str(reqDetails['port']))
         self.connected = False
         self.content = reqDetails['content']
-        self.timeout = int(reqDetails['timeout'])
+        self.timeout = int(reqDetails['timeout']) * 1000
+        self.pollTimeout = (self.timeout / 3)
         self.disconnected = False
         socketMonitor = self.socket.get_monitor_socket()
 
@@ -31,20 +32,16 @@ class ZMQRequest(object):
     @timing
     def invokeAdapter(self):
         self.socket.send(self.content)
-        result = self.socket.poll(1)
+        result = self.socket.poll(self.pollTimeout)
         polls = 0
         while (result == 0 and polls < self.timeout and not self.disconnected):
-            gevent.sleep(1)
-            polls += 1
-            result = self.socket.poll(1)
+            gevent.sleep(0.1)
+            polls += self.pollTimeout
+            result = self.socket.poll(self.pollTimeout)
         if (polls >= self.timeout):
-            e = Exception()
-            e.__setattr__('message', 'Timed out:' + str(self.timeout))
-            raise e
+            raise Exception('Timed out:' + str(self.timeout))
         if(self.disconnected):
-            e = Exception()
-            e.__setattr__('message','Disconnected')
-            raise e
+            raise Exception('Disconnected')
 
         message = self.socket.recv()
         self.disconnected = True

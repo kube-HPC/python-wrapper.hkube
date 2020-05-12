@@ -22,22 +22,22 @@ PY3 = sys.version_info[0] == 3
 
 '''
 
-- Hkube footer format: 8 bytes (64 bit)
+- Hkube header format: 8 bytes (64 bit)
 - Include 2 bytes for magic number and reserved 2 bytes
 
 +---------------------------------------------------------------+
  0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
 +---------------------------------------  ----------------------+
-|     VERSION    | PROTOCOL_TYPE |   DATA_TYPE   |    UNUSED    |
+|     VERSION    | HEADER_LENGTH  |  DATA_TYPE  | PROTOCOL_TYPE |
 +---------------------------------------------------------------+
-|      UNUSED    | FOOTER_LENGTH |          MAGIC NUMBER        |
+|      UNUSED    |     UNUSED     |        MAGIC NUMBER         |
 +---------------------------------------------------------------+
 |                         Payload Data                          |
 +---------------------------------------------------------------+
 '''
 
 VERSION = 0x01
-FOOTER_LENGTH = 0x08
+HEADER_LENGTH = 0x08
 PROTOCOL_TYPE_BSON = 0x01
 PROTOCOL_TYPE_JSON = 0x02
 PROTOCOL_TYPE_MSGPACK = 0x03
@@ -79,7 +79,6 @@ class Encoding:
         self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
 
     @timing
-    # TODO: add primitive check to not encode
     def encode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
         if(not self.isBinary or plainEncode is True):
@@ -93,9 +92,9 @@ class Encoding:
             dataType = DATA_TYPE_ENCODED
             payload = self._encode(value)
 
-        footer = self.createFooter(dataType, self.protocolType)
-        payload += footer
-        return payload
+        header = self.createHeader(dataType, self.protocolType)
+        header += payload
+        return header
 
     def decode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
@@ -108,21 +107,19 @@ class Encoding:
 
         view = self._fromBytes(value)
         totalLength = len(view)
-        mg = bytes(view[-2:])
+        header = bytes(view[0:HEADER_LENGTH])
+        mg = bytes(header[-2:])
 
         if(mg != MAGIC_NUMBER):
             return self._decode(value)
 
         print('found magic number')
-        ftl = bytes(view[-3:-2])
-        footerLength = struct.unpack(">B", ftl)[0]
-        footer = bytes(view[-footerLength:])
-        ver = bytes(footer[0:1])
-        pt = bytes(footer[1:2])
-        dt = bytes(footer[2:3])
-
+        ver = bytes(header[0:1])
+        ftl = bytes(header[1:2])
+        dt = bytes(header[2:3])
+        headerLength = struct.unpack(">B", ftl)[0]
         dataType = struct.unpack(">B", dt)[0]
-        data = view[0: totalLength - footerLength]
+        data = view[headerLength: totalLength]
 
         payload = None
         if(dataType == DATA_TYPE_ENCODED):
@@ -167,13 +164,13 @@ class Encoding:
     def _msgpackDecode(self, value):
         return msgpack.unpackb(value, raw=False if PY3 else True)
 
-    def createFooter(self, dataType, protocolType):
-        footer = bytearray()
-        footer.append(VERSION)
-        footer.append(protocolType)
-        footer.append(dataType)
-        footer.append(UNUSED)
-        footer.append(UNUSED)
-        footer.append(FOOTER_LENGTH)
-        footer.extend(MAGIC_NUMBER)
-        return footer
+    def createHeader(self, dataType, protocolType):
+        header = bytearray()
+        header.append(VERSION)
+        header.append(HEADER_LENGTH)
+        header.append(dataType)
+        header.append(protocolType)
+        header.append(UNUSED)
+        header.append(UNUSED)
+        header.extend(MAGIC_NUMBER)
+        return header

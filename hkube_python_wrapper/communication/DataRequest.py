@@ -5,23 +5,29 @@ from hkube_python_wrapper.util.encoding import Encoding
 class DataRequest:
 
     def __init__(self, reqDetails):
-        encoding = reqDetails['encoding']
-        self.encoding = Encoding(encoding)
-        request = reqDetails['address']
+        encoding = reqDetails.get('encoding')
+        address = reqDetails.get('address')
+        timeout = reqDetails.get('timeout')
         options = {
-            u'tasks': reqDetails['tasks'],
+            u'tasks': reqDetails.get('tasks'),
+            u'taskId': reqDetails.get('taskId'),
+            u'path': reqDetails.get('dataPath')
         }
-        request['content'] = self.encoding.encode(options, plain_encode=True)
-        request['timeout'] = reqDetails['timeout']
-        self.adapter = ZMQRequest(request)
+        self.encoding = Encoding(encoding)
+        content = self.encoding.encode(options, plain_encode=True)
+        self.request = dict()
+        self.request.update(address)
+        self.request.update({"content": content, "timeout": timeout})
 
     def invoke(self):
         try:
-            response = self.adapter.invokeAdapter()
+            adapter = ZMQRequest(self.request)
+            response = adapter.invokeAdapter()
+            return self.encoding.decode(response)
         except Exception as e:
-            return self._createError('unknown', e.message)
-        self.adapter.close()
-        return self.encoding.decode(response)
+            return self._createError('unknown', str(e))
+        finally:
+            adapter.close()
 
     def _createError(self, code, message):
         return {'hkube_error': {'code': code, 'message': message}}

@@ -118,19 +118,14 @@ class Algorunner:
         self._initDataAdapter(options)
 
     def _initDataServer(self, options):
-        disc = options.discovery
-        host = disc.get("host")
-        port = disc.get("port")
-        encoding = disc.get("encoding")
         self._discovery = {
-            'host': host,
-            'port': port,
-            'encoding': encoding
+            'host': options.discovery.get("host"),
+            'port': options.discovery.get("port")
         }
-        self._dataServer = DataServer(self._discovery)
+        self._dataServer = DataServer(options.discovery)
 
     def _initDataAdapter(self, options):
-        self._dataAdapter = DataAdapter(options.storage, self._dataServer)
+        self._dataAdapter = DataAdapter(options, self._dataServer)
 
     def close(self):
         self._wsc.stopWS()

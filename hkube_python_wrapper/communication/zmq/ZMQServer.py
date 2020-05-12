@@ -32,6 +32,7 @@ class ZMQServer(object):
                         onDisconnect()
                 gevent.sleep(0.1)
         spawn(invokeOnEvent, socketMoniotr, self.onConnect, self.onDisconnect)
+
         def onRecieve():
             while self._active:
                 message = self._socket.recv()
