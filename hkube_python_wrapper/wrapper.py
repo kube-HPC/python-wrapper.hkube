@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 import os
-import sys
+import sys, traceback
 import importlib
 import logging
 from .wc import WebsocketClient
@@ -214,12 +214,12 @@ class Algorunner:
 
     def _sendError(self, error):
         try:
-            logging.error(error)
+            logging.exception(error)
             self._wsc.send({
                 "command": messages.outgoing["error"],
                 "error": {
                     "code": "Failed",
-                    "message": str(error)
+                    "message": repr(error)
                 }
             })
         except Exception as e:
