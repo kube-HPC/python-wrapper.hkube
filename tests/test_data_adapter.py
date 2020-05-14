@@ -61,7 +61,9 @@ storage = {
     'guid-5': {'storageInfo': storageInfo4, 'path': 'data4.array4'}
 }
 
-ds = DataServer(config.discovery)
+discovery = dict(config.discovery)
+discovery.update({"port": 9025})
+ds = DataServer(discovery)
 ds.listen()
 ds.setSendingState(taskId1, obj1)
 ds.setSendingState(taskId2, obj2)
@@ -101,7 +103,7 @@ def test_get_batch_request_success():
         '0': '$$guid-5'
     }
     storage = {
-        'guid-5': [{'discovery': config.discovery, 'tasks': [taskId2, taskId3, taskId4]}]
+        'guid-5': [{'discovery': discovery, 'tasks': [taskId2, taskId3, taskId4]}]
     }
 
     result = dataAdapter.getData({'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
@@ -116,7 +118,7 @@ def test_get_batch_request_with_errors():
         '0': '$$guid-5'
     }
     storage = {
-        'guid-5': [{'discovery': config.discovery, 'tasks': [taskId1, taskId2, taskId3, taskId4]}]
+        'guid-5': [{'discovery': discovery, 'tasks': [taskId1, taskId2, taskId3, taskId4]}]
     }
 
     result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
@@ -132,12 +134,11 @@ def test_get_batch_request_with_storage_fallback():
         '0': '$$guid-5'
     }
     storage = {
-        'guid-5': [{'discovery': config.discovery, 'tasks': [taskId1, taskId2, taskId3, taskId4]}]
+        'guid-5': [{'discovery': discovery, 'tasks': [taskId1, taskId2, taskId3, taskId4]}]
     }
 
     result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
     assert result[0] == [obj1, obj2, obj3, obj4]
-    ds.listen()
 
 
 def test_set_data():
