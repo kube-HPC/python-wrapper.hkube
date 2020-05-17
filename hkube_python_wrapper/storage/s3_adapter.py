@@ -22,6 +22,7 @@ class S3Adapter:
         bucket = options["bucket"]
         if(self.isBucketExist(bucket) is False):
             return self.client.create_bucket(Bucket=bucket)
+        return None
 
     def isBucketExist(self, bucket):
         try:

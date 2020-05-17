@@ -102,12 +102,13 @@ def test_get_batch_request_success():
     flatInput = {
         '0': '$$guid-5'
     }
-    storage = {
-        'guid-5': [{'discovery': discovery, 'tasks': [taskId2, taskId3, taskId4]}]
-    }
+    storage = {'guid-5': [{'discovery': discovery, 'tasks': [taskId2, taskId3, taskId4]},
+                          {'discovery': discovery, 'tasks': [taskId2, taskId3, taskId4]},
+                          {'discovery': discovery, 'tasks': [taskId2, taskId3, taskId4]},
+                          {'discovery': discovery, 'tasks': [taskId2, taskId3, taskId4]}]}
 
     result = dataAdapter.getData({'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
-    assert result[0] == [obj2, obj3, obj4]
+    assert result[0] == [obj2, obj3, obj4, obj2, obj3, obj4, obj2, obj3, obj4, obj2, obj3, obj4]
 
 
 def test_get_batch_request_with_errors():

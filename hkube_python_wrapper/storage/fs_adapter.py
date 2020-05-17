@@ -1,5 +1,5 @@
 import os
-from hkube_python_wrapper.util.decorators import timing
+
 
 class FSAdapter:
     def __init__(self, config):
@@ -9,15 +9,13 @@ class FSAdapter:
         path = options["path"]
         return self.ensure_dir(path)
 
-    @timing
     def put(self, options):
         filePath = self.getPath(self.basePath, options['path'])
         self.ensure_dir(filePath)
         with open(filePath, 'wb') as f:
             f.write(options['data'])
         return {'path': options['path']}
-        
-    @timing
+
     def get(self, options):
         filePath = self.getPath(self.basePath, options['path'])
         if not (os.path.exists(filePath)):
@@ -58,12 +56,12 @@ class FSAdapter:
         return files_in_dir
 
     @staticmethod
-    def ensure_dir(dir):
-        d = os.path.dirname(dir)
+    def ensure_dir(dirName):
+        d = os.path.dirname(dirName)
         if not os.path.exists(d):
             os.makedirs(d)
-        return os.path.exists(dir)
+        return os.path.exists(dirName)
 
     @staticmethod
-    def getPath(base, dir):
-        return base + os.path.sep + dir
+    def getPath(base, dirName):
+        return base + os.path.sep + dirName

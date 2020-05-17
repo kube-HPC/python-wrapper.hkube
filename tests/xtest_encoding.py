@@ -1,7 +1,7 @@
 import os
 import random
 from hkube_python_wrapper.util.encoding import Encoding
-from storage.storage_manager import StorageManager
+from hkube_python_wrapper.storage.storage_manager import StorageManager
 from tests.configs import config
 from hkube_python_wrapper.util.decorators import timing
 

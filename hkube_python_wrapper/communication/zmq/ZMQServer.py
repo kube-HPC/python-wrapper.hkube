@@ -33,14 +33,13 @@ class ZMQServer(object):
                 gevent.sleep(0.1)
         spawn(invokeOnEvent, socketMoniotr, self.onConnect, self.onDisconnect)
 
-        def onRecieve():
+        def onReceive():
             while self._active:
                 message = self._socket.recv()
                 self.send(message)
-                print('sent back')
-        spawn(onRecieve)
 
-    @timing
+        spawn(onReceive)
+
     def send(self, message):
         toBeSent = self._createReplyFunc(message)
         self._socket.send(toBeSent, copy=False)

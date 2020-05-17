@@ -110,7 +110,7 @@ class Algorunner:
 
         print('connecting to {url}'.format(url=self._url))
         job1 = gevent.spawn(self._wsc.startWS, self._url)
-        job2 = gevent.spawn(self._dataServer.listen)
+        job2 = gevent.spawn(self._dataServer and self._dataServer.listen)
         return [job1, job2]
 
     def _initStorage(self, options):
@@ -118,11 +118,13 @@ class Algorunner:
         self._initDataAdapter(options)
 
     def _initDataServer(self, options):
-        self._discovery = {
-            'host': options.discovery.get("host"),
-            'port': options.discovery.get("port")
-        }
-        self._dataServer = DataServer(options.discovery)
+        enable = options.discovery.get("enable")
+        if(enable):
+            self._discovery = {
+                'host': options.discovery.get("host"),
+                'port': options.discovery.get("port")
+            }
+            self._dataServer = DataServer(options.discovery)
 
     def _initDataAdapter(self, options):
         self._dataAdapter = DataAdapter(options, self._dataServer)
@@ -188,13 +190,19 @@ class Algorunner:
                 'encodedData': encodedData,
                 'savePaths': savePaths
             }
-            self._dataServer.setSendingState(taskId, algorithmData)
+            storingData = dict()
             storageInfo = self._dataAdapter.createStorageInfo(data)
-            storingData = {'discovery': self._discovery, 'taskId': taskId}
             storingData.update(storageInfo)
 
-            self._sendCommand(messages.outgoing.storing, storingData)
-            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+            if(self._dataServer):
+                self._dataServer.setSendingState(taskId, algorithmData)
+                storingData.update({'discovery': self._discovery, 'taskId': taskId})
+                self._sendCommand(messages.outgoing.storing, storingData)
+                self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+            else:
+                self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+                self._sendCommand(messages.outgoing.storing, storingData)
+
             self._sendCommand(messages.outgoing.done, None)
 
         except Exception as e:
@@ -214,7 +222,7 @@ class Algorunner:
 
     def _exit(self, options):
         try:
-            self._dataServer.waitTillServingEnds()
+            self._dataServer and self._dataServer.waitTillServingEnds()
             self._wsc.stopWS()
             method = self._getMethod('exit')
             if (method is not None):

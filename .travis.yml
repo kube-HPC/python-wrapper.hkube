@@ -18,7 +18,7 @@ install:
   - python setup.py sdist bdist_wheel
   - pip install $PWD/dist/hkube_python_wrapper-1.0.0a1.dev3-py2.py3-none-any.whl
 script:
-  # - pylint communication hkube_python_wrapper storage util
+  # - pylint hkube_python_wrapper
   - pytest
 # after_success:
 #   - |

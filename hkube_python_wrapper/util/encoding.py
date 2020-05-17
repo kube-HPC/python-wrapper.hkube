@@ -78,7 +78,6 @@ class Encoding:
         self._fromBytes = self._fromBytesPY3 if PY3 else self._fromBytesPY2
         self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
 
-    @timing
     def encode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
         if(not self.isBinary or plainEncode is True):
@@ -113,7 +112,6 @@ class Encoding:
         if(mg != MAGIC_NUMBER):
             return self._decode(value)
 
-        print('found magic number')
         ver = bytes(header[0:1])
         ftl = bytes(header[1:2])
         dt = bytes(header[2:3])
@@ -156,11 +154,9 @@ class Encoding:
     def _jsonDecode(self, value):
         return json.loads(value)
 
-    @timing
     def _msgpackEncode(self, value):
         return msgpack.packb(value, use_bin_type=True if PY3 else False)
 
-    @timing
     def _msgpackDecode(self, value):
         return msgpack.unpackb(value, raw=False if PY3 else True)
 

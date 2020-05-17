@@ -1,5 +1,5 @@
 from __future__ import print_function, division, absolute_import
-import json
+import concurrent.futures
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.util.decorators import timing
 from hkube_python_wrapper.util.object_path import getPath, setPath
@@ -24,20 +24,17 @@ class DataAdapter:
         return self._encoding.decode(value)
 
     def getData(self, options):
-        jobId = options.get("jobId")
-        inputArgs = options.get("input")
-        flatInput = options.get("flatInput")
-        storage = options.get("storage")
-        useCache = options.get("useCache")
+        jobId = options.get('jobId')
+        inputArgs = options.get('input')
+        flatInput = options.get('flatInput')
+        storage = options.get('storage')
+        useCache = options.get('useCache')
 
         if (flatInput is None or len(flatInput) == 0):
             return inputArgs
 
         if (useCache is False):
             self._storageCache = dict()
-            print('using clean cache')
-        else:
-            print('using old cache')
 
         for k, v in flatInput.items():
             if self._isStorage(v):
@@ -59,57 +56,70 @@ class DataAdapter:
         return typeCheck.isString(value) and value.startswith('$$')
 
     def setData(self, options):
-        jobId = options.get("jobId")
-        taskId = options.get("taskId")
-        data = options.get("data")
+        jobId = options.get('jobId')
+        taskId = options.get('taskId')
+        data = options.get('data')
         result = self._storageManager.hkube.put(jobId, taskId, data)
         return result
 
+    @timing
     def batchRequest(self, options, jobId):
         batchResponse = []
-
         for d in options:
-            storageInfo = d.get('storageInfo')
-            tasks = d.get('tasks')
-            dataPath = d.get("path")
-            if (storageInfo):
-                storageResult = self._getFromCacheOrStorage(storageInfo, dataPath)
-                batchResponse.append(storageResult)
-                continue
+            d.update({"jobId": jobId})
 
-            peerResponse = self._getFromPeer(d, dataPath)
-            peerError = self._getPeerError(peerResponse)
-
-            if(peerError):
-                message = peerError.get("message")
-                print('batch request has failed with {message}, using storage fallback'.format(message=message))
-                for t in tasks:
-                    path = self._storageManager.hkube.createPath(jobId, t)
-                    storageData = self._getFromCacheOrStorage({'path': path}, dataPath)
-                    batchResponse.append(storageData)
-            else:
-                errors = peerResponse.get('errors')
-                items = peerResponse.get('items')
-
-                if(errors):
-                    for i, t in enumerate(items):
-                        peerError = self._getPeerError(t)
-                        if(peerError):
-                            taskId = tasks[i]
-                            path = self._storageManager.hkube.createPath(jobId, taskId)
-                            storageData = self._getFromCacheOrStorage({'path': path}, dataPath)
-                            batchResponse.append(storageData)
-                        else:
-                            batchResponse.append(t)
-                else:
-                    batchResponse += items
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for out in executor.map(self._batchRequest, options):
+                batchResponse += out
 
         return batchResponse
 
+    def _batchRequest(self, options):
+        batchResponse = []
+        jobId = options.get('jobId')
+        tasks = options.get('tasks')
+        dataPath = options.get('path')
+        storageInfo = options.get('storageInfo')
+        if (storageInfo):
+            storageResult = self._getFromCacheOrStorage(storageInfo, dataPath)
+            batchResponse.append(storageResult)
+            return batchResponse
+
+        peerResponse = self._getFromPeer(options, dataPath)
+        peerError = self._getPeerError(peerResponse)
+
+        if(peerError):
+            message = peerError.get('message')
+            print('batch request has failed with {message}, using storage fallback'.format(message=message))
+            for t in tasks:
+                storageData = self._getDataForTask(jobId, t, dataPath)
+                batchResponse.append(storageData)
+        else:
+            errors = peerResponse.get('errors')
+            items = peerResponse.get('items')
+
+            if(errors):
+                for i, t in enumerate(items):
+                    peerError = self._getPeerError(t)
+                    if(peerError):
+                        taskId = tasks[i]
+                        storageData = self._getDataForTask(jobId, taskId, dataPath)
+                        batchResponse.append(storageData)
+                    else:
+                        batchResponse.append(t)
+            else:
+                batchResponse += items
+
+        return batchResponse
+
+    def _getDataForTask(self, jobId, taskId, dataPath):
+        path = self._storageManager.hkube.createPath(jobId, taskId)
+        return self._getFromCacheOrStorage({'path': path}, dataPath)
+
     def tryGetDataFromPeerOrStorage(self, options):
-        dataPath = options.get("path")
-        storageInfo = options.get("storageInfo")
-        discovery = options.get("discovery")
+        dataPath = options.get('path')
+        storageInfo = options.get('storageInfo')
+        discovery = options.get('discovery')
         data = None
         hasResponse = False
 
@@ -172,6 +182,7 @@ class DataAdapter:
 
         return data
 
+    @timing
     def _getFromCache(self, path):
         return self._storageCache.get(path)
 
@@ -184,9 +195,9 @@ class DataAdapter:
         return self._encoding.decode(response)
 
     def createStorageInfo(self, options):
-        jobId = options.get("jobId")
-        taskId = options.get("taskId")
-        encodedData = options.get("encodedData")
+        jobId = options.get('jobId')
+        taskId = options.get('taskId')
+        encodedData = options.get('encodedData')
 
         path = self._storageManager.hkube.createPath(jobId, taskId)
         metadata = self.createMetadata(options)
@@ -201,9 +212,9 @@ class DataAdapter:
         return storageInfo
 
     def createMetadata(self, options):
-        nodeName = options.get("nodeName")
-        data = options.get("data")
-        savePaths = options.get("savePaths", [])
+        nodeName = options.get('nodeName')
+        data = options.get('data')
+        savePaths = options.get('savePaths', [])
 
         metadata = dict()
         objData = dict()

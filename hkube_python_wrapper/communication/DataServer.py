@@ -52,7 +52,6 @@ class DataServer:
             host=self._host, port=self._port, encoding=self._encodingType))
         self._adapter.listen(self._port, self._createReply)
 
-    @timing
     def _createReply(self, message):
         try:
             decoded = self._encoding.decode(message, plain_encode=True)

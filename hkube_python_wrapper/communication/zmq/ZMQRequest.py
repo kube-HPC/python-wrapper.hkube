@@ -29,10 +29,9 @@ class ZMQRequest(object):
         spawn(invokeOnEvent, socketMonitor, self.onDisconnect)
         gevent.sleep(0)
 
-    @timing
     def invokeAdapter(self):
         self.socket.send(self.content)
-        result = self.socket.poll(self.pollTimeout)
+        result = self.socket.poll(1)
         polls = 0
         while (result == 0 and polls < self.timeout and not self.disconnected):
             gevent.sleep(0.1)
