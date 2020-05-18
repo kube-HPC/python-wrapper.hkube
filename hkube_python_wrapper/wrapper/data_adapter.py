@@ -1,5 +1,5 @@
 from __future__ import print_function, division, absolute_import
-import os
+import multiprocessing
 import concurrent.futures
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.util.decorators import timing
@@ -17,7 +17,7 @@ class DataAdapter:
         self._storageManager = StorageManager(options.storage)
         self._requestEncoding = options.discovery['encoding']
         self._requestTimeout = options.discovery['timeout']
-        self._maxWorkers = min(32, (os.cpu_count() or 1) + 4)
+        self._maxWorkers = min(32, (multiprocessing.cpu_count() or 1) + 4)
 
     def encode(self, value):
         return self._encoding.encode(value)
