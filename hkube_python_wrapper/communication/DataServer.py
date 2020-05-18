@@ -67,13 +67,13 @@ class DataServer:
 
     def createData(self, taskId, tasks, datapath):
         if(taskId is not None):
-            return self.getDataByTaskId(taskId, datapath)
+            return self._getDataByTaskId(taskId, datapath)
 
         errors = False
         items = []
 
         for taskId in tasks:
-            result = self.getDataByTaskId(taskId, datapath)
+            result = self._getDataByTaskId(taskId, datapath)
             if(typeCheck.isDict(result) and 'hkube_error' in result):
                 errors = True
 
@@ -81,7 +81,7 @@ class DataServer:
 
         return dict({"items": items, "errors": errors})
 
-    def getDataByTaskId(self, taskId, datapath):
+    def _getDataByTaskId(self, taskId, datapath):
         result = None
         if(taskId not in self._cache):
             result = self._createError('notAvailable', 'taskId notAvailable')
@@ -103,6 +103,9 @@ class DataServer:
 
     def _createError(self, code, message):
         return {'hkube_error': {'code': code, 'message': message}}
+
+    def isLocal(self, host, port):
+        return host == self._host and port == self._port
 
     def isServing(self):
         return self._adapter.isServing()

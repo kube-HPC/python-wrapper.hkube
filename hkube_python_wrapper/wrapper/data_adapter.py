@@ -143,7 +143,7 @@ class DataAdapter:
         host = discovery.get('host')
 
         response = None
-        if(self._dataServer and host == self._dataServer._host and port == self._dataServer._port):
+        if(self._dataServer and self._dataServer.isLocal(host, port)):
             response = self._dataServer.createData(taskId, tasks, dataPath)
 
         else:

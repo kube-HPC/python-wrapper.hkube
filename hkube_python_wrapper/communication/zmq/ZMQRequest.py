@@ -2,7 +2,6 @@ import gevent
 import zmq
 from gevent import spawn
 from zmq.utils.monitor import recv_monitor_message
-from hkube_python_wrapper.util.decorators import timing
 
 context = zmq.Context()
 
@@ -31,7 +30,7 @@ class ZMQRequest(object):
 
     def invokeAdapter(self):
         self.socket.send(self.content)
-        result = self.socket.poll(1)
+        result = self.socket.poll(self.pollTimeout)
         polls = 0
         while (result == 0 and polls < self.timeout and not self.disconnected):
             gevent.sleep(0.1)
