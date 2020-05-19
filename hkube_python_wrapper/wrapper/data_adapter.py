@@ -25,7 +25,7 @@ class DataAdapter:
     def decode(self, value):
         return self._encoding.decode(value)
     
-    @trace
+    @trace()
     def getData(self, options):
         jobId = options.get('jobId')
         inputArgs = options.get('input')
@@ -58,7 +58,7 @@ class DataAdapter:
     def _isStorage(self, value):
         return typeCheck.isString(value) and value.startswith('$$')
 
-    @trace
+    @trace()
     def setData(self, options):
         jobId = options.get('jobId')
         taskId = options.get('taskId')

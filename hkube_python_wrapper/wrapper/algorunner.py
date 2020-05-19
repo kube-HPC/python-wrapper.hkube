@@ -170,7 +170,7 @@ class Algorunner:
 
         except Exception as e:
             self._sendError(e)
-    @trace()
+    @trace("start")
     def _start(self, options):
         try:
             self._sendCommand(messages.outgoing.started, None)
