@@ -52,6 +52,7 @@ class DataServer:
             host=self._host, port=self._port, encoding=self._encodingType))
         self._adapter.listen(self._port, self._createReply)
 
+    @timing
     def _createReply(self, message):
         try:
             decoded = self._encoding.decode(message, plain_encode=True)
@@ -110,11 +111,12 @@ class DataServer:
     def isServing(self):
         return self._adapter.isServing()
 
-    def waitTillServingEnds(self):
+    def shutDown(self):
         self._adapter.stop()
         while(self.isServing()):
             sleep(1)
-        self._adapter.close()
+        sleep(1)
+        self.close()
 
     def close(self):
         self._adapter.close()

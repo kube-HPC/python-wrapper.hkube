@@ -8,6 +8,7 @@ PY3 = sys.version_info[0] == 3
 
 def timing(func):
     def wrap(*args, **kwargs):
+        printStartFunction(func)
         time1 = time.time()
         ret = func(*args, **kwargs)
         time2 = time.time()
@@ -24,6 +25,10 @@ def printTimePY2(func, time1, time2):
 
 def printTimePY3(func, time1, time2):
     print('{:s} {:s} function took {:.3f} ms'.format(timeFormat(), func.__name__, (time2-time1)*1000.0))
+
+
+def printStartFunction(func):
+    print('starting function {:s}'.format(func.__name__))
 
 
 def timeFormat():
