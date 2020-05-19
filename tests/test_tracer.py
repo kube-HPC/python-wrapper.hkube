@@ -18,7 +18,7 @@ def test_tracer_init_empty_config():
 def test_tracer_init_config():
     tracer = Tracer(config.tracer)
     assert tracer.tracer is not None
-    assert tracer.tracer.service_name == 'test_algorithm'
+    assert tracer.tracer.service_name == config.tracer.get("service_name")
 def test_tracer_start_span():
     tracer = Tracer(config.tracer)
     with tracer.tracer.start_span(operation_name='test1') as span1:
