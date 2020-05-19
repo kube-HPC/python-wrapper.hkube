@@ -1,14 +1,11 @@
 import zmq.green as zmq
 from gevent import spawn
-import gevent
-from zmq.utils.monitor import recv_monitor_message
-
 context = zmq.Context()
 
 
 class ZMQServer(object):
     def __init__(self):
-        self._numberOfConn = 0
+        self._isServing = False
         self._active = True
         self._createReplyFunc = None
         self._socket = None
@@ -18,24 +15,12 @@ class ZMQServer(object):
         self._socket = context.socket(zmq.REP)
         self._socket.bind("tcp://*:" + str(port))
 
-        socketMoniotr = self._socket.get_monitor_socket()
-
-        def invokeOnEvent(monitor, onConnect, onDisconnect):
-            while True:
-                res = monitor.poll(0.1)
-                if (res != 0):
-                    evt = recv_monitor_message(monitor)
-                    if evt['event'] == zmq.EVENT_HANDSHAKE_SUCCEEDED:
-                        onConnect()
-                    if evt['event'] == zmq.EVENT_DISCONNECTED:
-                        onDisconnect()
-                gevent.sleep(0.1)
-        spawn(invokeOnEvent, socketMoniotr, self.onConnect, self.onDisconnect)
-
         def onReceive():
             while self._active:
                 message = self._socket.recv()
+                self._isServing = True
                 self.send(message)
+                self._isServing = False
 
         spawn(onReceive)
 
@@ -43,14 +28,8 @@ class ZMQServer(object):
         toBeSent = self._createReplyFunc(message)
         self._socket.send(toBeSent, copy=False)
 
-    def onConnect(self):
-        self._numberOfConn += 1
-
-    def onDisconnect(self):
-        self._numberOfConn -= 1
-
     def isServing(self):
-        return self._numberOfConn > 0
+        return self._isServing
 
     def stop(self):
         self._active = False

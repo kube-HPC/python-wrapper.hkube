@@ -17,7 +17,7 @@ discovery = {
     "host": os.environ.get('POD_NAME', '127.0.0.1'),
     "port": os.environ.get('DISCOVERY_PORT', "9020"),
     "encoding": os.environ.get('DISCOVERY_ENCODING', 'bson'),
-    "timeout": getIntEnv('DISCOVERY_TIMEOUT', 5),
+    "timeout": getIntEnv('DISCOVERY_TIMEOUT', 5000),
     "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 3)
 }
 algorithm = {

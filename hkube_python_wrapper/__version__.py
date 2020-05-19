@@ -1,7 +1,7 @@
 __title__ = 'hkube_python_wrapper'
 __description__ = 'Hkube Python Wrapper'
 __url__ = 'https://github.com/kube-HPC/python-wrapper.hkube'
-__version__ = '1.0.0a1.dev5'
+__version__ = '1.0.0a1.dev6'
 __author__ = 'Hkube'
 __author_email__ = 'hkube.dev@gmail.com'
 __license__ = 'MIT'

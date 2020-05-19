@@ -134,7 +134,7 @@ class Algorunner:
         self._dataAdapter = DataAdapter(options, self._dataServer)
 
     def close(self):
-        self._wsc.stopWS()
+        self._wsc.shutDown()
 
     def _registerToWorkerEvents(self):
         self._wsc.events.on_connection += self._connection
@@ -226,8 +226,8 @@ class Algorunner:
 
     def _exit(self, options):
         try:
-            self._dataServer and self._dataServer.waitTillServingEnds()
-            self._wsc.stopWS()
+            self._dataServer and self._dataServer.shutDown()
+            self._wsc.shutDown()
             method = self._getMethod('exit')
             if (method is not None):
                 method(options)

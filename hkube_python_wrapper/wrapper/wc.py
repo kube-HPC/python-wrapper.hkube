@@ -100,5 +100,5 @@ class WebsocketClient:
             except:
                 pass
 
-    def stopWS(self):
+    def shutDown(self):
         self._active = False

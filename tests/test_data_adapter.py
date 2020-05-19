@@ -95,7 +95,7 @@ def test_get_data():
     assert result[8] == inputArgs[8]
 
 
-def test_get_batch_request_success():
+def xtest_get_batch_request_success():
     inputArgs = [
         '$$guid-1',
     ]
