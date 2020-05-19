@@ -7,11 +7,12 @@ import gevent
 from events import Events
 from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
+from hkube_python_wrapper.tracing import Tracer
+from hkube_python_wrapper.util.decorators import trace
 from .messages import messages
 from .methods import methods
 from .data_adapter import DataAdapter
 from .wc import WebsocketClient
-
 
 class Algorunner:
     def __init__(self):
@@ -27,7 +28,7 @@ class Algorunner:
         self._discovery = None
         self._wsc = None
 
-    def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None):
+    def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None, options=None):
         try:
             cwd = os.getcwd()
             print('Initializing algorithm callbacks')
@@ -50,6 +51,8 @@ class Algorunner:
             # fix start if it has only one argument
             if start.__code__.co_argcount == 1:
                 self._algorithm['start'] = lambda args, api: start(args)
+            self.tracer=Tracer(getattr(options, 'tracer', None))
+            
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)
             print(e)
@@ -84,6 +87,7 @@ class Algorunner:
                     if (isMandatory):
                         raise Exception(error)
                     print(error)
+            self.tracer=Tracer(getattr(options, 'tracer', None))
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)
             traceback.print_exc()
@@ -166,10 +170,11 @@ class Algorunner:
 
         except Exception as e:
             self._sendError(e)
-
+    @trace()
     def _start(self, options):
         try:
             self._sendCommand(messages.outgoing.started, None)
+            # TODO: add parent span from worker
             jobId = self._input.get("jobId")
             taskId = self._input.get("taskId")
             nodeName = self._input.get("nodeName")
@@ -202,7 +207,6 @@ class Algorunner:
             else:
                 self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
                 self._sendCommand(messages.outgoing.storing, storingData)
-
             self._sendCommand(messages.outgoing.done, None)
 
         except Exception as e:
