@@ -10,17 +10,19 @@ class Tracer(object):
     def __init__(self, tracer_config):
         if (Tracer.instance is not None):
             Tracer.instance.close()
-        defaultConfig = {  # usually read from some yaml config
-            'sampler': {
-                'type': 'const',
-                'param': 1,
+        defaultConfig = {
+            "config":{
+                'sampler': {
+                    'type': 'const',
+                    'param': 1,
+                },
+                'logging': False,
             },
-            'logging': False,
+            "service_name": "algorunner",
         }
-        config = tracer_config.get(
-            'config', defaultConfig) if tracer_config is not None else defaultConfig
-        service_name = tracer_config.get(
-            'service_name', 'algorunner') if tracer_config is not None else 'algorunner'
+        tracer_config = tracer_config or defaultConfig
+        config = tracer_config.get('config')
+        service_name = tracer_config.get('service_name')
         tracerConfig = Config(
             config=config,
             service_name=service_name,
@@ -49,7 +51,7 @@ class Tracer(object):
         span.span.set_tag('taskId', taskId)
         span.span.set_tag('nodeName', nodeName)
         return span
-    
+
     def finish_span(self, span, error=None):
         if (span is None):
             return
