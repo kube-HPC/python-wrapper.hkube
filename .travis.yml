@@ -15,8 +15,8 @@ before_install:
   - docker run -d -p 9000:9000 --name minio1 -e "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE" -e "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" minio/minio server /data
 install:
   - pip install -U -r tests/requirements.txt
-  - python setup.py sdist bdist_wheel
-  - pip install $PWD/dist/hkube_python_wrapper-1.0.0a1.dev5-py2.py3-none-any.whl
+  - python setup.py bdist_wheel
+  - pip install $PWD/dist/*
 script:
   # - pylint hkube_python_wrapper
   - pytest
