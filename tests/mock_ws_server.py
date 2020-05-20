@@ -1,4 +1,3 @@
-import pytest
 from websocket_server import WebsocketServer
 from hkube_python_wrapper.util.encoding import Encoding
 from tests.mocks import mockdata
@@ -66,8 +65,5 @@ def startWebSocketServer(options):
     server.run_forever()
 
 
-# startWebSocketServer(config.socket)
-
 if __name__ == "__main__":
-    # print('starting websocket server')
     startWebSocketServer(config.socket)

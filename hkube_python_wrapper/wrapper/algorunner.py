@@ -94,7 +94,7 @@ class Algorunner:
                     if (isMandatory):
                         raise Exception(error)
                     print(error)
-            self.tracer = Tracer(getattr(options, 'tracer', None))
+            self.tracer = Tracer(options.tracer)
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)
             traceback.print_exc()
@@ -190,13 +190,7 @@ class Algorunner:
             info = self._input.get("info", {})
             savePaths = info.get("savePaths", [])
             topSpan = self._input.get('spanId')
-            print(topSpan)
-            topSpanContext = Tracer.instance.extract(topSpan) if topSpan else None
-            span = Tracer.instance.tracer.start_active_span(
-                operation_name="start", child_of=topSpanContext)
-            span.span.set_tag('jobId',jobId )
-            span.span.set_tag('taskId',taskId )
-            span.span.set_tag('nodeName',nodeName )
+            span = Tracer.instance.create_span("start", topSpan, jobId, taskId, nodeName)
 
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
@@ -227,16 +221,12 @@ class Algorunner:
                 self._dataAdapter.setData(
                     {'jobId': jobId, 'taskId': taskId, 'data': encodedData})
                 self._sendCommand(messages.outgoing.storing, storingData)
-            if (span):
-                span.span.finish()
+            Tracer.instance.finish_span(span)
             self._sendCommand(messages.outgoing.done, None)
 
         except Exception as e:
             traceback.print_exc()
-            if (span):
-                span.span.set_tag('error', "true")
-                span.span.log_kv({'event': 'error', 'error.object': e})
-                span.span.finish()
+            Tracer.instance.finish_span(span,e)
             self._sendError(e)
 
     def _stop(self, options):

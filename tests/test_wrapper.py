@@ -1,4 +1,3 @@
-import pytest
 import os
 import time
 # from mock import patch
@@ -16,6 +15,7 @@ def startCallbackBytes(args):
 
 
 def startCallback(args):
+    print('xxxxxxxxxxxx',args)
     return args["input"]["input"][0]
 
 

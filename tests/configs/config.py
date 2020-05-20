@@ -48,7 +48,7 @@ tracer = {
             'reporting_host': os.environ.get('JAEGER_AGENT_SERVICE_HOST', 'localhost'),
             'reporting_port': os.environ.get('JAEGER_AGENT_SERVICE_PORT_AGENT_BINARY', os.environ.get('JAEGER_AGENT_SERVICE_PORT', "6831")),
         },
-        'logging': False,
+        'logging': True,
     },
     "service_name": os.environ.get('ALGORITHM_NAME', 'algorithm')
 }
