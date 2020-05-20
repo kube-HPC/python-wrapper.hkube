@@ -15,7 +15,6 @@ def startCallbackBytes(args):
 
 
 def startCallback(args):
-    print('xxxxxxxxxxxx',args)
     return args["input"]["input"][0]
 
 
@@ -82,11 +81,13 @@ def xtest_load_algorithm():
     result2 = startCallback({'input': mockdata.initData})
     assert result1 == result2
 
+def startCallback2(args):
+    return args["input"][0]
 
 def test_connect_to_worker():
     config.discovery.update({"port": "9021"})
     algorunner = Algorunner()
-    algorunner.loadAlgorithmCallbacks(startCallback)
+    algorunner.loadAlgorithmCallbacks(startCallback2)
     algorunner.connectToWorker(config)
     time.sleep(2)
     assert algorunner._connected == True
