@@ -209,7 +209,7 @@ class Algorunner:
             storageInfo = self._dataAdapter.createStorageInfo(data)
             storingData.update(storageInfo)
 
-            if(self._dataServer and len(savePaths) > 0):
+            if(self._dataServer and savePaths):
                 self._dataServer.setSendingState(taskId, algorithmData)
                 storingData.update(
                     {'discovery': self._discovery, 'taskId': taskId})

@@ -33,7 +33,7 @@ class DataAdapter:
         storage = options.get('storage')
         useCache = options.get('useCache')
 
-        if (flatInput is None or len(flatInput) == 0):
+        if (not flatInput):
             return inputArgs
 
         if (useCache is False):

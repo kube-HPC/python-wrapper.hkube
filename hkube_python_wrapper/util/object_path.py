@@ -4,7 +4,7 @@ import hkube_python_wrapper.util.type_check as typeCheck
 
 def getPath(obj, path, defaultValue="DEFAULT"):
 
-    if (path is None or len(path) == 0):
+    if (not path):
         return obj
 
     if (obj is None):
@@ -47,7 +47,7 @@ def setPath(obj, path, value, doNotReplace=False):
     if (typeCheck.isInt(path)):
         path = [path]
 
-    if (path is None or len(path) == 0):
+    if (not path):
         return obj
 
     if (typeCheck.isString(path)):

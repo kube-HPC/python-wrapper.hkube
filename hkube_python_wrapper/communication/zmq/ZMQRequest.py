@@ -17,7 +17,7 @@ class ZMQRequest(object):
     def invokeAdapter(self):
         self.socket.send(self.content)
         result = self.poller.poll(self.timeout)
-        if len(result) != 0:
+        if (result):
             message = self.socket.recv()
             return message
         raise Exception('Timed out:' + str(self.timeout))
