@@ -24,7 +24,7 @@ class DataAdapter:
 
     def decode(self, value):
         return self._encoding.decode(value)
-    
+
     @trace()
     def getData(self, options):
         jobId = options.get('jobId')

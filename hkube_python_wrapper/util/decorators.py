@@ -13,8 +13,8 @@ def trace(name=None):
             if (Tracer.instance is None):
                 return func(*args, **kwargs)
             func_name = func.__name__ if PY3 else func.func_name
-            operation_name=func_name if name is None else name
-            with Tracer.instance.tracer.start_active_span(operation_name=operation_name) as span:
+            operation_name = func_name if name is None else name
+            with Tracer.instance.tracer.start_active_span(operation_name=operation_name):
                 return func(*args, **kwargs)
         return wrap
     return func_wrap

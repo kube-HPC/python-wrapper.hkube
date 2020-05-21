@@ -8,7 +8,6 @@ from events import Events
 from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
 from hkube_python_wrapper.tracing import Tracer
-from hkube_python_wrapper.util.decorators import trace
 from .messages import messages
 from .methods import methods
 from .data_adapter import DataAdapter
@@ -28,6 +27,7 @@ class Algorunner:
         self._dataServer = None
         self._discovery = None
         self._wsc = None
+        self.tracer = None
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None, options=None):
         try:
@@ -226,7 +226,7 @@ class Algorunner:
 
         except Exception as e:
             traceback.print_exc()
-            Tracer.instance.finish_span(span,e)
+            Tracer.instance.finish_span(span, e)
             self._sendError(e)
 
     def _stop(self, options):
