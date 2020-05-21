@@ -7,6 +7,8 @@ import gevent
 from events import Events
 from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
+from hkube_python_wrapper.tracing import Tracer
+from hkube_python_wrapper.util.decorators import trace
 from .messages import messages
 from .methods import methods
 from .data_adapter import DataAdapter
@@ -27,7 +29,7 @@ class Algorunner:
         self._discovery = None
         self._wsc = None
 
-    def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None):
+    def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None, options=None):
         try:
             cwd = os.getcwd()
             print('Initializing algorithm callbacks')
@@ -43,13 +45,16 @@ class Algorunner:
                     print('found method {methodName}'.format(methodName=methodName))
                 else:
                     mandatory = "mandatory" if isMandatory else "optional"
-                    error = 'unable to find {mandatory} method {methodName}'.format(mandatory=mandatory, methodName=methodName)
+                    error = 'unable to find {mandatory} method {methodName}'.format(
+                        mandatory=mandatory, methodName=methodName)
                     if (isMandatory):
                         raise Exception(error)
                     print(error)
             # fix start if it has only one argument
             if start.__code__.co_argcount == 1:
                 self._algorithm['start'] = lambda args, api: start(args)
+            self.tracer = Tracer(options.tracer)
+
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)
             print(e)
@@ -64,7 +69,8 @@ class Algorunner:
             __import__(package)
             os.chdir('{cwd}/{package}'.format(cwd=cwd, package=package))
             print('loading {entry}'.format(entry=entry))
-            mod = importlib.import_module('.{entryPoint}'.format(entryPoint=entryPoint), package=package)
+            mod = importlib.import_module('.{entryPoint}'.format(
+                entryPoint=entryPoint), package=package)
             print('algorithm code loaded')
 
             for k, v in methods.items():
@@ -76,14 +82,18 @@ class Algorunner:
                     # fix start if it has only one argument
                     if methodName == 'start' and self._algorithm['start'].__code__.co_argcount == 1:
                         self._algorithm['startOrig'] = self._algorithm['start']
-                        self._algorithm['start'] = lambda args, api: self._algorithm['startOrig'](args)
-                    print('found method {methodName}'.format(methodName=methodName))
+                        self._algorithm['start'] = lambda args, api: self._algorithm['startOrig'](
+                            args)
+                    print('found method {methodName}'.format(
+                        methodName=methodName))
                 except Exception as e:
                     mandatory = "mandatory" if isMandatory else "optional"
-                    error = 'unable to find {mandatory} method {methodName}'.format(mandatory=mandatory, methodName=methodName)
+                    error = 'unable to find {mandatory} method {methodName}'.format(
+                        mandatory=mandatory, methodName=methodName)
                     if (isMandatory):
                         raise Exception(error)
                     print(error)
+            self.tracer = Tracer(options.tracer)
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)
             traceback.print_exc()
@@ -101,7 +111,8 @@ class Algorunner:
         else:
             self._url = '{protocol}://{host}:{port}'.format(**socket)
 
-        self._url += '?storage={storage}&encoding={encoding}'.format(storage=storage, encoding=encoding)
+        self._url += '?storage={storage}&encoding={encoding}'.format(
+            storage=storage, encoding=encoding)
 
         self._wsc = WebsocketClient(encoding)
         self._initStorage(options)
@@ -169,13 +180,17 @@ class Algorunner:
 
     def _start(self, options):
         # pylint: disable=unused-argument
+        span = None
         try:
             self._sendCommand(messages.outgoing.started, None)
+            # TODO: add parent span from worker
             jobId = self._input.get("jobId")
             taskId = self._input.get("taskId")
             nodeName = self._input.get("nodeName")
             info = self._input.get("info", {})
             savePaths = info.get("savePaths", [])
+            topSpan = self._input.get('spanId')
+            span = Tracer.instance.create_span("start", topSpan, jobId, taskId, nodeName)
 
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
@@ -197,17 +212,21 @@ class Algorunner:
 
             if(self._dataServer and len(savePaths) > 0):
                 self._dataServer.setSendingState(taskId, algorithmData)
-                storingData.update({'discovery': self._discovery, 'taskId': taskId})
+                storingData.update(
+                    {'discovery': self._discovery, 'taskId': taskId})
                 self._sendCommand(messages.outgoing.storing, storingData)
-                self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+                self._dataAdapter.setData(
+                    {'jobId': jobId, 'taskId': taskId, 'data': encodedData})
             else:
-                self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+                self._dataAdapter.setData(
+                    {'jobId': jobId, 'taskId': taskId, 'data': encodedData})
                 self._sendCommand(messages.outgoing.storing, storingData)
-
+            Tracer.instance.finish_span(span)
             self._sendCommand(messages.outgoing.done, None)
 
         except Exception as e:
             traceback.print_exc()
+            Tracer.instance.finish_span(span,e)
             self._sendError(e)
 
     def _stop(self, options):

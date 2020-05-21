@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 import multiprocessing
 import concurrent.futures
 import hkube_python_wrapper.util.type_check as typeCheck
-from hkube_python_wrapper.util.decorators import timing
+from hkube_python_wrapper.util.decorators import timing, trace
 from hkube_python_wrapper.util.object_path import getPath, setPath
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.storage.storage_manager import StorageManager
@@ -24,7 +24,8 @@ class DataAdapter:
 
     def decode(self, value):
         return self._encoding.decode(value)
-
+    
+    @trace()
     def getData(self, options):
         jobId = options.get('jobId')
         inputArgs = options.get('input')
@@ -57,6 +58,7 @@ class DataAdapter:
     def _isStorage(self, value):
         return typeCheck.isString(value) and value.startswith('$$')
 
+    @trace()
     def setData(self, options):
         jobId = options.get('jobId')
         taskId = options.get('taskId')
