@@ -18,7 +18,8 @@ requires = [
     'boto3',
     "wsaccel",
     "six",
-    "pyzmq"
+    "pyzmq",
+    "jaeger-client"
 ]
 
 with open("README.md", "r") as f:

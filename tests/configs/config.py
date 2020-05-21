@@ -7,7 +7,7 @@ def getIntEnv(name, defaultValue):
 
 
 socket = {
-    "port": os.environ.get('WORKER_SOCKET_PORT', "3000"),
+    "port": os.environ.get('WORKER_SOCKET_PORT', "3001"),
     "host": os.environ.get('WORKER_SOCKET_HOST', "127.0.0.1"),
     "protocol": os.environ.get('WORKER_SOCKET_PROTOCOL', "ws"),
     "url": os.environ.get('WORKER_SOCKET_URL', None),
@@ -37,4 +37,18 @@ storage = {
         "secretAccessKey": os.environ.get('AWS_SECRET_ACCESS_KEY', 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'),
         "endpoint": os.environ.get('AWS_ENDPOINT', 'http://127.0.0.1:9000')
     }
+}
+tracer = {
+    "config": {
+        'sampler': {
+            'type': 'const',
+            'param': 1,
+        },
+        'local_agent': {
+            'reporting_host': os.environ.get('JAEGER_AGENT_SERVICE_HOST', 'localhost'),
+            'reporting_port': os.environ.get('JAEGER_AGENT_SERVICE_PORT_AGENT_BINARY', os.environ.get('JAEGER_AGENT_SERVICE_PORT', "6831")),
+        },
+        'logging': True,
+    },
+    "service_name": os.environ.get('ALGORITHM_NAME', 'algorithm')
 }
