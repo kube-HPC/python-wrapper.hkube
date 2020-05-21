@@ -6,6 +6,8 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+__version__ = '1.0.0'
+
 packages = setuptools.find_packages()
 
 requires = [
@@ -30,7 +32,7 @@ with open(os.path.join(here, 'hkube_python_wrapper', '__version__.py'), 'r') as 
 
 setuptools.setup(
     name=about['__title__'],
-    version=about['__version__'],
+    version=__version__,
     author=about['__author__'],
     author_email=about['__author_email__'],
     description=about['__description__'],
