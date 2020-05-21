@@ -128,7 +128,7 @@ class DataAdapter:
         if (discovery):
             data = self._getFromPeer(options, dataPath)
             peerError = self._getPeerError(data)
-            hasResponse = False if peerError else True
+            hasResponse = not peerError
             data = None if peerError else data
 
         if (not hasResponse and storageInfo):
@@ -227,13 +227,12 @@ class DataAdapter:
                 if (value != 'DEFAULT'):
                     meta = self._getMetadata(value)
                     metadata[path] = meta
-            except Exception as e:
+            except Exception:
                 pass
 
         return metadata
 
-    @staticmethod
-    def _getMetadata(value):
+    def _getMetadata(self, value):
         if(typeCheck.isDict(value)):
             meta = {'type': 'object'}
         elif(typeCheck.isList(value)):

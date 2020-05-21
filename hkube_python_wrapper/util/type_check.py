@@ -15,7 +15,7 @@ def isDict(value):
 
 
 def isInt(value):
-    return isinstance(value,  six.integer_types)
+    return isinstance(value, six.integer_types)
 
 
 def isBytearray(value):

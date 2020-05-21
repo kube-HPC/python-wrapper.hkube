@@ -97,7 +97,7 @@ class WebsocketClient:
             try:
                 self._ws.run_forever()
                 time.sleep(self._reconnectInterval)
-            except:
+            except Exception:
                 pass
 
     def shutDown(self):

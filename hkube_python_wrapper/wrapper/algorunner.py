@@ -39,7 +39,7 @@ class Algorunner:
                 methodName = k
                 method = v
                 isMandatory = method["mandatory"]
-                if self._algorithm[methodName] != None:
+                if self._algorithm[methodName] is not None:
                     print('found method {methodName}'.format(methodName=methodName))
                 else:
                     mandatory = "mandatory" if isMandatory else "optional"
@@ -168,6 +168,7 @@ class Algorunner:
             self._sendError(e)
 
     def _start(self, options):
+        # pylint: disable=unused-argument
         try:
             self._sendCommand(messages.outgoing.started, None)
             jobId = self._input.get("jobId")

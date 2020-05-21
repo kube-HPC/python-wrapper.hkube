@@ -35,6 +35,7 @@ def test_get_data_bytes():
     resources['ds'] = ds
     ds.setSendingState(mockdata.taskId2, data2)
     ds.listen()
+    gevent.sleep(0.5)
     dr = DataRequest({
         'address': address1,
         'taskId': mockdata.taskId2,

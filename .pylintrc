@@ -11,7 +11,7 @@ optimize-ast=no
 [MESSAGES CONTROL]
 confidence=
 #enable=
-disable=invalid-name,superfluous-parens,missing-docstring,W0511,long-suffix,standarderror-builtin,indexing-exception,delslice-method,unichr-builtin,dict-view-method,parameter-unpacking,unicode-builtin,cmp-builtin,intern-builtin,round-builtin,backtick,nonzero-method,xrange-builtin,coerce-method,raw_input-builtin,old-division,filter-builtin-not-iterating,old-octal-literal,input-builtin,map-builtin-not-iterating,buffer-builtin,basestring-builtin,zip-builtin-not-iterating,using-cmp-argument,unpacking-in-except,old-raise-syntax,coerce-builtin,dict-iter-method,hex-method,range-builtin-not-iterating,useless-suppression,cmp-method,print-statement,reduce-builtin,file-builtin,long-builtin,getslice-method,execfile-builtin,no-absolute-import,metaclass-assignment,oct-method,reload-builtin,import-star-module-level,suppressed-message,apply-builtin,raising-string,next-method-called,setslice-method,old-ne-operator,arguments-differ,wildcard-import,locally-disabled
+disable=redefined-builtin,consider-using-ternary,expression-not-assigned,dangerous-default-value,no-self-use,broad-except,no-member,useless-object-inheritance,invalid-name,superfluous-parens,missing-docstring,W0511,long-suffix,standarderror-builtin,indexing-exception,delslice-method,unichr-builtin,dict-view-method,parameter-unpacking,unicode-builtin,cmp-builtin,intern-builtin,round-builtin,backtick,nonzero-method,xrange-builtin,coerce-method,raw_input-builtin,old-division,filter-builtin-not-iterating,old-octal-literal,input-builtin,map-builtin-not-iterating,buffer-builtin,basestring-builtin,zip-builtin-not-iterating,using-cmp-argument,unpacking-in-except,old-raise-syntax,coerce-builtin,dict-iter-method,hex-method,range-builtin-not-iterating,useless-suppression,cmp-method,print-statement,reduce-builtin,file-builtin,long-builtin,getslice-method,execfile-builtin,no-absolute-import,metaclass-assignment,oct-method,reload-builtin,import-star-module-level,suppressed-message,apply-builtin,raising-string,next-method-called,setslice-method,old-ne-operator,arguments-differ,wildcard-import,locally-disabled
 
 [REPORTS]
 output-format=text
@@ -22,11 +22,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 
 
 [BASIC]
-
-# Good variable names which should always be accepted, separated by a comma
 good-names=i,j,k,ex,Run,_
-
-# Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
 
 name-group=
@@ -51,30 +47,17 @@ docstring-min-length=-1
 
 
 [ELIF]
-# Maximum number of nested blocks for function / method body
 max-nested-blocks=5
 
 
 [FORMAT]
-
-# Maximum number of characters on a single line.
 max-line-length=120
-
-# Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
-
 single-line-if-stmt=y
 no-space-check=trailing-comma,dict-separator
-
-# Maximum number of lines in a module
 max-module-lines=1000
-
 indent-string='    '
-
-# Number of spaces of indent required inside a hanging  or continued line.
 indent-after-paren=4
-
-# Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
 expected-line-ending-format=
 
 
@@ -146,11 +129,11 @@ max-returns=6
 max-branches=12
 max-statements=100
 max-parents=7
-max-attributes=10
+max-attributes=15
 min-public-methods=0
 max-public-methods=20
 max-bool-expr=5
-
+max-line-length=240
 
 [IMPORTS]
 

@@ -11,31 +11,17 @@ jobs:
 services:
   - docker
 before_install:
-  - python --version
-  - docker run -d -p 9000:9000 --name minio1 -e "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE" -e "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" minio/minio server /data
+  - ./tools/ci/before-install.sh
 install:
-  - pip install -U -r tests/requirements.txt
-  - python setup.py bdist_wheel
-  - pip install $PWD/dist/*
+  - ./tools/ci/install.sh
 script:
-  # - pylint hkube_python_wrapper
-  - pytest
-# after_success:
-#   - |
-#     if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-#       git config --global user.email "travis@travis-ci.org"
-#       git config --global user.name "Travis CI"
-#       git remote set-url --push origin "https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git"
-#       git remote -v
-#       git checkout -f -b version-branch
-#       npm version patch -m "$(git log -1 --pretty=%B) .... bump version [skip ci]"
-#       git push origin version-branch:master --follow-tags
-#     else
-#       echo "version skiped!"
-#     fi
-# deploy:
-#   provider: pypi
-#   username: ${PYPI_USER}
-#   password: ${PYPI_PASSWORD}
-#   on:
-#     branch: master
+  - ./tools/ci/run-test.sh
+after_success:
+  - ./tools/ci/after-success.sh
+
+deploy:
+  provider: pypi
+  username: ${PYPI_USER}
+  password: ${PYPI_PASSWORD}
+  on:
+    branch: master

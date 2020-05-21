@@ -6,7 +6,6 @@ from bson.codec_options import CodecOptions, TypeRegistry
 import simplejson as json
 import msgpack
 import hkube_python_wrapper.util.type_check as typeCheck
-from hkube_python_wrapper.util.decorators import timing
 
 
 def bson_fallback_encoder(value):
@@ -112,7 +111,6 @@ class Encoding:
         if(mg != MAGIC_NUMBER):
             return self._decode(value)
 
-        ver = bytes(header[0:1])
         ftl = bytes(header[1:2])
         dt = bytes(header[2:3])
         headerLength = struct.unpack(">B", ftl)[0]
@@ -155,10 +153,10 @@ class Encoding:
         return json.loads(value)
 
     def _msgpackEncode(self, value):
-        return msgpack.packb(value, use_bin_type=True if PY3 else False)
+        return msgpack.packb(value, use_bin_type=bool(PY3))
 
     def _msgpackDecode(self, value):
-        return msgpack.unpackb(value, raw=False if PY3 else True)
+        return msgpack.unpackb(value, raw=not PY3)
 
     def createHeader(self, dataType, protocolType):
         header = bytearray()

@@ -1,7 +1,5 @@
-import gevent
+
 import zmq
-from gevent import spawn
-from zmq.utils.monitor import recv_monitor_message
 
 context = zmq.Context()
 
@@ -22,8 +20,7 @@ class ZMQRequest(object):
         if len(result) != 0:
             message = self.socket.recv()
             return message
-        else:
-            raise Exception('Timed out:' + str(self.timeout))
+        raise Exception('Timed out:' + str(self.timeout))
 
     def close(self):
         self.socket.close()

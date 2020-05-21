@@ -1,4 +1,3 @@
-import traceback
 import datetime
 from gevent import sleep
 from hkube_python_wrapper.communication.zmq.ZMQServer import ZMQServer
@@ -6,8 +5,6 @@ from hkube_python_wrapper.util.encoding import Encoding
 import hkube_python_wrapper.util.object_path as objectPath
 from hkube_python_wrapper.util.decorators import timing
 import hkube_python_wrapper.util.type_check as typeCheck
-
-MAX_CACHE_BYTES = 1024 * 1024 * 20
 
 
 class CustomCache:
@@ -73,8 +70,8 @@ class DataServer:
         errors = False
         items = []
 
-        for taskId in tasks:
-            result = self._getDataByTaskId(taskId, datapath)
+        for task in tasks:
+            result = self._getDataByTaskId(task, datapath)
             if(typeCheck.isDict(result) and 'hkube_error' in result):
                 errors = True
 

@@ -40,6 +40,7 @@ def hasShallowProperty(obj, prop):
 def getShallowProperty(obj, prop):
     if (hasShallowProperty(obj, prop)):
         return obj[prop]
+    return None
 
 
 def setPath(obj, path, value, doNotReplace=False):
