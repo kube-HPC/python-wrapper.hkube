@@ -51,7 +51,7 @@ max-nested-blocks=5
 
 
 [FORMAT]
-max-line-length=120
+max-line-length=240
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
 single-line-if-stmt=y
 no-space-check=trailing-comma,dict-separator
@@ -133,7 +133,6 @@ max-attributes=15
 min-public-methods=0
 max-public-methods=20
 max-bool-expr=5
-max-line-length=240
 
 [IMPORTS]
 

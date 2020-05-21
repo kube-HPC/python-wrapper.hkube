@@ -16,9 +16,9 @@ install:
   - ./tools/ci/install.sh
 script:
   - ./tools/ci/run-test.sh
+  - ./tools/ci/run-coverage.sh
 after_success:
-  - ./tools/ci/after-success.sh
-
+  - ./tools/ci/bump-version.sh
 deploy:
   provider: pypi
   username: ${PYPI_USER}

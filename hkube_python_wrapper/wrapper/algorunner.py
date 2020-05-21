@@ -31,7 +31,6 @@ class Algorunner:
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None, options=None):
         try:
-            cwd = os.getcwd()
             print('Initializing algorithm callbacks')
             self._algorithm['start'] = start
             self._algorithm['init'] = init
