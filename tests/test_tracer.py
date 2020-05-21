@@ -13,19 +13,20 @@ def test_tracer_fail_init():
         tracer = Tracer()
 
 def test_tracer_init_empty_config():
-    tracer = Tracer(None)
-    assert tracer.tracer is not None
-    assert tracer.tracer.service_name == 'algorunner'
+    with pytest.raises(AttributeError):
+        tracer = Tracer(None)
 
 def test_tracer_init_config():
     tracer = Tracer(config.tracer)
     assert tracer.tracer is not None
     assert tracer.tracer.service_name == config.tracer.get("service_name")
+    tracer.close()
 
 def test_tracer_start_span():
     tracer = Tracer(config.tracer)
     with tracer.tracer.start_span(operation_name='test1') as span1:
         assert span1 is not None
+    tracer.close()
         
 def test_tracer_start_child_span():
     tracer = Tracer(config.tracer)

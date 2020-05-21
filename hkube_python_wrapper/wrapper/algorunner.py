@@ -54,7 +54,7 @@ class Algorunner:
             # fix start if it has only one argument
             if start.__code__.co_argcount == 1:
                 self._algorithm['start'] = lambda args, api: start(args)
-            self.tracer = Tracer(getattr(options, 'tracer', None))
+            self.tracer = Tracer(options.tracer)
 
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)

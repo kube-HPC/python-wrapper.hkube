@@ -2,6 +2,7 @@ import logging
 import time
 from jaeger_client import Config
 import opentracing
+from tornado import ioloop # needed for python 3.7+ (workaround https://github.com/jaegertracing/jaeger-client-python/blob/master/README.md#initialization--configuration)
 
 
 class Tracer(object):
@@ -10,17 +11,7 @@ class Tracer(object):
     def __init__(self, tracer_config):
         if (Tracer.instance is not None):
             Tracer.instance.close()
-        defaultConfig = {
-            "config":{
-                'sampler': {
-                    'type': 'const',
-                    'param': 1,
-                },
-                'logging': False,
-            },
-            "service_name": "algorunner",
-        }
-        tracer_config = tracer_config or defaultConfig
+
         config = tracer_config.get('config')
         service_name = tracer_config.get('service_name')
         tracerConfig = Config(
@@ -28,7 +19,7 @@ class Tracer(object):
             service_name=service_name,
             validate=True
         )
-        self.tracer = tracerConfig.new_tracer()
+        self.tracer = tracerConfig.new_tracer(io_loop=ioloop.IOLoop.current())
         opentracing.set_global_tracer(self.tracer)
         Tracer.instance = self
 
@@ -59,3 +50,5 @@ class Tracer(object):
             span.span.set_tag('error', "true")
             span.span.log_kv({'event': 'error', 'error.object': error})
         span.span.finish()
+
+

@@ -19,7 +19,7 @@ def startCallback(args):
 
 def test_load_algorithm_callbacks():
     algorunner = Algorunner()
-    algorunner.loadAlgorithmCallbacks(startCallback)
+    algorunner.loadAlgorithmCallbacks(startCallback, options=config)
     result1 = algorunner._algorithm['start']({'input': mockdata.initData}, None)
     result2 = startCallback({'input': mockdata.initData})
     assert result1 == result2
@@ -86,7 +86,7 @@ def startCallback2(args):
 def test_connect_to_worker():
     config.discovery.update({"port": "9021"})
     algorunner = Algorunner()
-    algorunner.loadAlgorithmCallbacks(startCallback2)
+    algorunner.loadAlgorithmCallbacks(startCallback2, options=config)
     algorunner.connectToWorker(config)
     time.sleep(2)
     assert algorunner._connected == True
