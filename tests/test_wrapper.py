@@ -8,6 +8,9 @@ from tests.mocks import mockdata
 
 oneMB = 1024 * 1024
 
+class Algorithm(object):
+    pass
+
 
 def startCallbackBytes(args):
     return bytearray(b'\xdd'*(1 * oneMB))
@@ -55,25 +58,27 @@ def xtest_exit():
 
 
 def test_failed_load_algorithm():
-    options = {
+    alg = Algorithm()
+    alg.algorithm = {
         "path": "no_such_path",
         "entryPoint": "main.py"
-    }
+        }
     algorunner = Algorunner()
-    algorunner.loadAlgorithm(options)
+    algorunner.loadAlgorithm(alg)
     assert "No module named" in algorunner._loadAlgorithmError
     assert "no_such_path" in algorunner._loadAlgorithmError
 
 
 def xtest_load_algorithm():
-    options = {
+    alg = Algorithm()
+    alg.algorithm = {
         "path": "test_alg",
         "entryPoint": "main.py"
     }
     cwd = os.getcwd()
     os.chdir(cwd + '/tests')
     algorunner = Algorunner()
-    algorunner.loadAlgorithm(options)
+    algorunner.loadAlgorithm(alg)
 
     # os.chdir(cwd)
     result1 = algorunner._algorithm['start']({'input': mockdata.initData}, None)

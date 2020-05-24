@@ -61,8 +61,9 @@ class Algorunner:
     def loadAlgorithm(self, options):
         try:
             cwd = os.getcwd()
-            package = options["path"]
-            entry = options["entryPoint"]
+            algOptions = options.algorithm
+            package = algOptions["path"]
+            entry = algOptions["entryPoint"]
             entryPoint = entry.replace("/", ".")
             entryPoint = os.path.splitext(entryPoint)[0]
             __import__(package)

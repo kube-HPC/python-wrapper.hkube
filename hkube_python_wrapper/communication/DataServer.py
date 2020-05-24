@@ -63,6 +63,7 @@ class DataServer:
 
         return self._encoding.encode(result)
 
+    @timing
     def createData(self, taskId, tasks, datapath):
         if(taskId is not None):
             return self._getDataByTaskId(taskId, datapath)
