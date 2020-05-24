@@ -4,9 +4,11 @@ stages:
   - Coverage
   - Github
   - Deploy
-
 services:
   - docker
+
+before_install: skip
+install: skip
 
 jobs:
   fast_finish: true
