@@ -27,7 +27,6 @@ jobs:
       script: ./tools/ci/github.sh
 
     - stage: Deploy
-      python: 3.7
       script: echo "Starting Pypi deploy"
       deploy:
         provider: pypi
