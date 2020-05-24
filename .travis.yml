@@ -9,6 +9,7 @@ services:
 
 before_install: skip
 install: skip
+script: skip
 
 jobs:
   fast_finish: true
