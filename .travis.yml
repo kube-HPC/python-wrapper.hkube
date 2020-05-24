@@ -1,27 +1,34 @@
 language: python
+stages:
+  - Tests
+  - Coverage
+  - Github
+  - Deploy
+services:
+  - docker
 jobs:
   fast_finish: true
   include:
-    - python: 2.7
-    - python: 3.4
-    - python: 3.5
-    - python: 3.6
-    - python: 3.7
-    - python: 3.8
-services:
-  - docker
-before_install:
-  - ./tools/ci/before-install.sh
-install:
-  - ./tools/ci/install.sh
-script:
-  - ./tools/ci/run-test.sh
-  - ./tools/ci/run-coverage.sh
-after_success:
-  - ./tools/ci/bump-version.sh
-deploy:
-  provider: pypi
-  username: ${PYPI_USER}
-  password: ${PYPI_PASSWORD}
-  on:
-    branch: master
+    - stage: Tests
+      script: ./tools/ci/tests.sh
+      python:
+        - 2.7
+        - 3.4
+        - 3.5
+        - 3.6
+        - 3.7
+        - 3.8
+
+    - stage: Coverage
+      script: ./tools/ci/coverage.sh
+
+    - stage: Github
+      script: ./tools/ci/github.sh
+
+    - stage: Deploy
+      deploy:
+        provider: pypi
+        username: ${PYPI_USER}
+        password: ${PYPI_PASSWORD}
+        on:
+          branch: master
