@@ -17,7 +17,7 @@ python:
 jobs:
   fast_finish: true
   include:
-    - stage: Tests
+    - stage: test
       script: ./tools/ci/tests.sh
 
     - stage: Coverage
