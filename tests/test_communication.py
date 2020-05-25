@@ -32,10 +32,9 @@ def pytest_runtest_teardown(request):
 
 def test_get_data_bytes():
     ds = DataServer(discovery)
-    resources['ds'] = ds
     ds.setSendingState(mockdata.taskId2, data2)
-    ds.listen()
-    gevent.sleep(0.5)
+    gevent.spawn(ds.listen)
+    gevent.sleep(0.2)
     dr = DataRequest({
         'address': address1,
         'taskId': mockdata.taskId2,
@@ -173,25 +172,20 @@ def test_failing_no_such_taskid():
     assert reply == {'hkube_error': {'code': 'notAvailable', 'message': 'taskId notAvailable'}}
 
 
-def xtest_isServing():
+def test_isServing():
     ds = DataServer(discovery)
-    resources['ds'] = ds
-    ds.setSendingState(mockdata.taskId1, mockdata.dataTask1)
-    ds.listen()
-
-    def sleepNow(message):
-        gevent.sleep(3)
-        return ds._createReply(message)
-    ds._adapter.getReplyFunc = sleepNow
-    ds.setSendingState(mockdata.taskId1, data1)
-    dr = DataRequest(
-        {'address': address1, 'taskId': taskId1, 'dataPath': 'level1',
-         'encoding': 'bson', 'timeout': timeout})
-    gevent.spawn(dr.invoke)
-    gevent.sleep(1)
-    assert ds.isServing() == True
-    gevent.sleep(3)
+    gevent.spawn(ds.listen)
+    gevent.sleep(0.5)
     assert ds.isServing() == False
+
+
+def test_shutDown():
+    ds = DataServer(discovery)
+    gevent.spawn(ds.listen)
+    gevent.sleep(0.5)
+    ds.shutDown()
+    assert ds.isServing() == False
+
 
 
 def xtest_waitTillServingEnds():

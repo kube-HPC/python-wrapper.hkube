@@ -1,53 +1,26 @@
-import datetime
+
 from gevent import sleep
-from hkube_python_wrapper.communication.zmq.ZMQServer import ZMQServer
+from hkube_python_wrapper.communication.zmq.ZMQServers import ZMQServers
 from hkube_python_wrapper.util.encoding import Encoding
 import hkube_python_wrapper.util.object_path as objectPath
 from hkube_python_wrapper.util.decorators import timing
 import hkube_python_wrapper.util.type_check as typeCheck
-
-
-class CustomCache:
-    def __init__(self, config):
-        self._cache = dict()
-        self._maxCacheSize = config.get('maxCacheSize')
-
-    def update(self, key, value):
-        if key not in self._cache and len(self._cache) >= self._maxCacheSize:
-            self._remove_oldest()
-        self._cache[key] = {'timestamp': datetime.datetime.now(), 'value': value}
-
-    def __contains__(self, key):
-        return key in self._cache
-
-    def _remove_oldest(self):
-        oldest = None
-        for key in self._cache:
-            if oldest is None:
-                oldest = key
-            elif self._cache[key]['timestamp'] < self._cache[oldest]['timestamp']:
-                oldest = key
-        self._cache.pop(oldest)
-
-    def get(self, key):
-        item = self._cache[key]
-        return item.get('value')
-
+from hkube_python_wrapper.cache.caching import CustomCache
 
 class DataServer:
 
     def __init__(self, config):
-        self._adapter = ZMQServer()
         self._cache = CustomCache(config)
         self._host = config['host']
         self._port = config['port']
         self._encodingType = config['encoding']
         self._encoding = Encoding(self._encodingType)
+        self._adapter = ZMQServers(self._port, self._createReply)
 
     def listen(self):
         print('discovery serving on {host}:{port} with {encoding} encoding'.format(
             host=self._host, port=self._port, encoding=self._encodingType))
-        self._adapter.listen(self._port, self._createReply)
+        self._adapter.listen()
 
     @timing
     def _createReply(self, message):
@@ -114,7 +87,6 @@ class DataServer:
         while(self.isServing()):
             sleep(1)
         sleep(1)
-        self.close()
-
-    def close(self):
         self._adapter.close()
+
+        

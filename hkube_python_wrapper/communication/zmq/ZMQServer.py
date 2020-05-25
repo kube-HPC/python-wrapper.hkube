@@ -1,31 +1,30 @@
+import threading
 import zmq.green as zmq
-from gevent import spawn
-context = zmq.Context()
 
 
-class ZMQServer(object):
-    def __init__(self):
+class ZMQServer(threading.Thread):
+    def __init__(self, context, replyFunc, workerUrl):
         self._isServing = False
         self._active = True
-        self._createReplyFunc = None
         self._socket = None
+        self._replyFunc = replyFunc
+        self._workerUrl = workerUrl
+        self._context = context
+        threading.Thread.__init__(self)
 
-    def listen(self, port, getReplyFunc):
-        self._createReplyFunc = getReplyFunc
-        self._socket = context.socket(zmq.REP)
-        self._socket.bind("tcp://*:" + str(port))
+    def run(self):
+        self._socket = self._context.socket(zmq.REP)
+        self._socket.connect(self._workerUrl)
 
-        def onReceive():
-            while self._active:
-                message = self._socket.recv()
-                self._isServing = True
-                self.send(message)
-                self._isServing = False
+        while self._active:
+            message = self._socket.recv()
+            self._isServing = True
+            self._send(message)
+            self._isServing = False
 
-        spawn(onReceive)
 
-    def send(self, message):
-        toBeSent = self._createReplyFunc(message)
+    def _send(self, message):
+        toBeSent = self._replyFunc(message)
         self._socket.send(toBeSent, copy=False)
 
     def isServing(self):
