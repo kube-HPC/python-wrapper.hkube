@@ -17,10 +17,14 @@ class ZMQServer(threading.Thread):
         self._socket.connect(self._workerUrl)
 
         while self._active:
-            message = self._socket.recv()
-            self._isServing = True
-            self._send(message)
-            self._isServing = False
+            try:
+                message = self._socket.recv()
+                self._isServing = True
+                self._send(message)
+                self._isServing = False
+            except Exception:
+                 print('socket closed')
+           
 
 
     def _send(self, message):

@@ -83,10 +83,8 @@ class DataServer:
         return self._adapter.isServing()
 
     def shutDown(self):
-        self._adapter.stop()
         while(self.isServing()):
             sleep(1)
-        sleep(1)
         self._adapter.close()
 
         

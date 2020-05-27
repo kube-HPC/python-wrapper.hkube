@@ -14,31 +14,33 @@ class ZMQServers(object):
         self._instances = []
 
     def listen(self):
-        clients = context.socket(zmq.ROUTER)
-        clients.bind(self._url_client)
+        self.clients = context.socket(zmq.ROUTER)
+        self.clients.bind(self._url_client)
 
-        workers = context.socket(zmq.DEALER)
-        workers.bind(self._url_worker)
+        self.workers = context.socket(zmq.DEALER)
+        self.workers.bind(self._url_worker)
 
         for i in range(5):
             server = ZMQServer(context, self._replyFunc, self._url_worker)
             server.start()
             self._instances.append(server)
 
-        zmq.device(zmq.QUEUE, clients, workers)
+        zmq.device(zmq.QUEUE, self.clients, self.workers)
 
-        clients.close()
-        workers.close()
+        self.clients.close()
+        self.workers.close()
         context.term()
 
     def isServing(self):
         res = all(i.isServing() for i in self._instances)
         return res
 
-    def stop(self):
-        for i in self._instances:
-            i.stop()
-
     def close(self):
         for i in self._instances:
+            i.stop()
             i.close()
+            i.join(timeout=1)
+        
+        self.clients.close()
+        self.workers.close()
+        context.term()
