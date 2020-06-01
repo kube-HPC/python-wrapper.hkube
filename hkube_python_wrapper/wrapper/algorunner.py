@@ -189,7 +189,7 @@ class Algorunner:
             nodeName = self._input.get("nodeName")
             info = self._input.get("info", {})
             savePaths = info.get("savePaths", [])
-            topSpan = self._input.get('spanId')
+            topSpan = options.get('spanId', self._input.get('spanId'))
             span = Tracer.instance.create_span("start", topSpan, jobId, taskId, nodeName)
 
             newInput = self._dataAdapter.getData(self._input)
