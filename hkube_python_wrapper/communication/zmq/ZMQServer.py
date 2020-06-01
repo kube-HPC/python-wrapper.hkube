@@ -23,9 +23,7 @@ class ZMQServer(threading.Thread):
                 self._send(message)
                 self._isServing = False
             except Exception:
-                 print('socket closed')
-           
-
+                print('socket closed')
 
     def _send(self, message):
         toBeSent = self._replyFunc(message)

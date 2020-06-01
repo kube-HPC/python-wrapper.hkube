@@ -86,5 +86,4 @@ class DataServer:
         while(self.isServing()):
             sleep(1)
         self._adapter.close()
-
         
