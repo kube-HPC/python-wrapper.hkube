@@ -25,3 +25,4 @@ class CustomCache:
     def get(self, key):
         item = self._cache[key]
         return item.get('value')
+        

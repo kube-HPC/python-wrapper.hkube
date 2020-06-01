@@ -1,5 +1,6 @@
 
 import pytest
+import gevent
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.data_adapter import DataAdapter
 from hkube_python_wrapper.communication.DataServer import DataServer
@@ -64,7 +65,7 @@ storage = {
 discovery = dict(config.discovery)
 discovery.update({"port": 9025})
 ds = DataServer(discovery)
-ds.listen()
+gevent.spawn(ds.listen)
 ds.setSendingState(taskId1, obj1)
 ds.setSendingState(taskId2, obj2)
 ds.setSendingState(taskId3, obj3)
@@ -127,7 +128,7 @@ def test_get_batch_request_with_errors():
 
 
 def test_get_batch_request_with_storage_fallback():
-    ds.close()
+    ds.shutDown()
     inputArgs = [
         '$$guid-1',
     ]

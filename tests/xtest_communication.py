@@ -1,3 +1,4 @@
+import threading
 import pytest
 import gevent
 from hkube_python_wrapper.communication.DataRequest import DataRequest
@@ -16,25 +17,20 @@ taskId2 = mockdata.taskId2
 address1 = {'port': "9024", 'host': discovery['host']}
 
 encoding = Encoding(discovery['encoding'])
-resources = {}
-resources['ds'] = None
 timeout = 5000
 
+ds = DataServer(discovery)
+ds.setSendingState(mockdata.taskId1, data1)
+ds.setSendingState(mockdata.taskId2, data2)
+ds.setSendingState(mockdata.taskId1, mockdata.dataTask1)
+ds.setSendingState(mockdata.taskId2, mockdata.dataTask2)
 
-@pytest.fixture(scope="function", autouse=True)
-def pytest_runtest_teardown(request):
-    def closeResource():
-        if (resources['ds'] != None):
-            resources['ds'].close()
-            resources['ds'] = None
-    request.addfinalizer(closeResource)
-
+thread = threading.Thread(target=ds.listen)
+thread.start()
+gevent.sleep(2)
 
 def test_get_data_bytes():
-    ds = DataServer(discovery)
-    ds.setSendingState(mockdata.taskId2, data2)
-    gevent.spawn(ds.listen)
-    gevent.sleep(0.2)
+
     dr = DataRequest({
         'address': address1,
         'taskId': mockdata.taskId2,
@@ -46,11 +42,6 @@ def test_get_data_bytes():
 
 
 def test_get_data_by_path():
-    ds = DataServer(discovery)
-    resources['ds'] = ds
-    ds.setSendingState(mockdata.taskId1, mockdata.dataTask1)
-    ds.listen()
-    gevent.sleep()
     dr = DataRequest({
         'address': address1,
         'taskId': taskId1,
@@ -72,12 +63,7 @@ def test_get_data_by_path():
 
 
 def test_path_not_exist():
-    ds = DataServer(discovery)
-    resources['ds'] = ds
-    ds.setSendingState(mockdata.taskId1, mockdata.dataTask1)
-    ds.listen()
-    dr = DataRequest(
-        {
+    dr = DataRequest({
             'address': address1,
             'taskId': taskId1,
             'dataPath': 'notExist',
@@ -89,10 +75,6 @@ def test_path_not_exist():
 
 
 def test_get_complete_data():
-    ds = DataServer(discovery)
-    resources['ds'] = ds
-    ds.setSendingState(mockdata.taskId1, mockdata.dataTask1)
-    ds.listen()
     dr = DataRequest({
         'address': address1,
         'taskId': taskId1,
@@ -105,10 +87,6 @@ def test_get_complete_data():
 
 
 def test_data_after_taskid_changed():
-    ds = DataServer(discovery)
-    resources['ds'] = ds
-    ds.setSendingState(mockdata.taskId1, mockdata.dataTask1)
-    ds.listen()
     dr = DataRequest({
         'address': address1,
         'taskId': taskId1,
@@ -130,10 +108,6 @@ def test_data_after_taskid_changed():
 
 
 def test_success_to_get_data_old_task_id():
-    ds = DataServer(discovery)
-    resources['ds'] = ds
-    ds.setSendingState(mockdata.taskId1, mockdata.dataTask1)
-    ds.listen()
     dr = DataRequest({
         'address': address1,
         'taskId': taskId1,
@@ -143,7 +117,6 @@ def test_success_to_get_data_old_task_id():
     })
     reply = dr.invoke()
     assert reply == mockdata.dataTask1
-    ds.setSendingState(mockdata.taskId2, mockdata.dataTask2)
     dr = DataRequest({
         'address': address1,
         'taskId': taskId2,
@@ -156,10 +129,6 @@ def test_success_to_get_data_old_task_id():
 
 
 def test_failing_no_such_taskid():
-    ds = DataServer(discovery)
-    resources['ds'] = ds
-    ds.setSendingState(mockdata.taskId1, mockdata.dataTask1)
-    ds.listen()
     taskId = 'no_such_taskid'
     dr = DataRequest({
         'address': address1,
@@ -187,18 +156,11 @@ def test_shutDown():
     assert ds.isServing() == False
 
 
-
 def xtest_waitTillServingEnds():
-    ds = DataServer(discovery)
-    resources['ds'] = ds
-    ds.setSendingState(mockdata.taskId1, mockdata.dataTask1)
-    ds.listen()
-
     def sleepNow(message):
         gevent.sleep(3)
         return ds._createReply(message)
     ds._adapter.getReplyFunc = sleepNow
-    ds.setSendingState(mockdata.taskId1, data1)
     dr = DataRequest(
         {'address': address1, 'taskId': taskId1, 'dataPath': 'level1',
          'encoding': 'bson', 'timeout': timeout})
