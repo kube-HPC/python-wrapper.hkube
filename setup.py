@@ -21,7 +21,7 @@ requires = [
     "wsaccel",
     "six",
     "pyzmq",
-    "jaeger-client"
+    "jaeger-client==4"
 ]
 
 with open("README.md", "r") as f:

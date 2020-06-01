@@ -1,11 +1,9 @@
 from jaeger_client import Config
 import opentracing
-from tornado import ioloop # needed for python 3.7+ (workaround https://github.com/jaegertracing/jaeger-client-python/blob/master/README.md#initialization--configuration)
 
 
 class Tracer(object):
     instance = None
-
     def __init__(self, tracer_config):
         if (Tracer.instance is not None):
             Tracer.instance.close()
@@ -17,8 +15,7 @@ class Tracer(object):
             service_name=service_name,
             validate=True
         )
-        self.tracer = tracerConfig.new_tracer(io_loop=ioloop.IOLoop.current())
-        opentracing.set_global_tracer(self.tracer)
+        self.tracer = tracerConfig.new_tracer()
         Tracer.instance = self
 
     def close(self):
