@@ -1,4 +1,3 @@
-import threading
 import zmq.green as zmq
 from .ZMQServer import ZMQServer
 context = zmq.Context()
@@ -12,23 +11,25 @@ class ZMQServers(object):
         self._url_worker = "inproc://workers"
         self._url_client = "tcp://*:" + str(port)
         self._instances = []
+        self._clients = None
+        self._workers = None
 
     def listen(self):
-        self.clients = context.socket(zmq.ROUTER)
-        self.clients.bind(self._url_client)
+        self._clients = context.socket(zmq.ROUTER)
+        self._clients.bind(self._url_client)
 
-        self.workers = context.socket(zmq.DEALER)
-        self.workers.bind(self._url_worker)
+        self._workers = context.socket(zmq.DEALER)
+        self._workers.bind(self._url_worker)
 
-        for i in range(5):
+        for _ in range(5):
             server = ZMQServer(context, self._replyFunc, self._url_worker)
             server.start()
             self._instances.append(server)
 
-        zmq.device(zmq.QUEUE, self.clients, self.workers)
+        zmq.device(zmq.QUEUE, self._clients, self._workers)
 
-        self.clients.close()
-        self.workers.close()
+        self._clients.close()
+        self._workers.close()
         context.term()
 
     def isServing(self):
@@ -40,7 +41,6 @@ class ZMQServers(object):
             i.stop()
             i.close()
             i.join(timeout=1)
-
-        self.clients.close()
-        self.workers.close()
+        self._clients.close()
+        self._workers.close()
         context.term()

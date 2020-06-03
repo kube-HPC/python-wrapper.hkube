@@ -1,16 +1,17 @@
 language: python
 stages:
-  - Tests
+  - test
   - Coverage
   - Github
   - Deploy
 services:
   - docker
-
+branches:
+  only:
+    - master
 jobs:
   fast_finish: true
   include:
-    - stage: Tests
     - python: 2.7
       script: ./tools/ci/tests.sh
     - python: 3.4
@@ -25,12 +26,15 @@ jobs:
       script: ./tools/ci/tests.sh
 
     - stage: Coverage
+      python: 3.7
       script: ./tools/ci/coverage.sh
 
     - stage: Github
+      python: 3.7
       script: ./tools/ci/github.sh
 
     - stage: Deploy
+      python: 3.7
       script: echo "Starting Pypi deploy"
       deploy:
         provider: pypi

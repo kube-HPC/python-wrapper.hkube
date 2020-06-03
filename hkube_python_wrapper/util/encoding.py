@@ -153,10 +153,10 @@ class Encoding:
         return json.loads(value)
 
     def _msgpackEncode(self, value):
-        return msgpack.packb(value, use_bin_type=bool(PY3))
+        return msgpack.packb(value, use_bin_type=True)
 
     def _msgpackDecode(self, value):
-        return msgpack.unpackb(value, raw=bool(PY3))
+        return msgpack.unpackb(value, raw=False)
 
     def createHeader(self, dataType, protocolType):
         header = bytearray()

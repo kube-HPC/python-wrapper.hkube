@@ -6,7 +6,7 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = '1.0.0a1.dev8'
+VERSION = '1.0.0a1.dev10'
 
 packages = setuptools.find_packages()
 
@@ -21,7 +21,7 @@ requires = [
     "wsaccel",
     "six",
     "pyzmq",
-    "jaeger-client"
+    "jaeger-client==4"
 ]
 
 with open("README.md", "r") as f:
