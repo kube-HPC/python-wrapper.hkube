@@ -40,7 +40,7 @@ class ZMQServers(object):
             i.stop()
             i.close()
             i.join(timeout=1)
-        
+
         self.clients.close()
         self.workers.close()
         context.term()

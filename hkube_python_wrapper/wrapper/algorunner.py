@@ -212,14 +212,11 @@ class Algorunner:
 
             if(self._dataServer and savePaths):
                 self._dataServer.setSendingState(taskId, algorithmData)
-                storingData.update(
-                    {'discovery': self._discovery, 'taskId': taskId})
+                storingData.update({'discovery': self._discovery, 'taskId': taskId})
                 self._sendCommand(messages.outgoing.storing, storingData)
-                self._dataAdapter.setData(
-                    {'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+                self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
             else:
-                self._dataAdapter.setData(
-                    {'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+                self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
                 self._sendCommand(messages.outgoing.storing, storingData)
             Tracer.instance.finish_span(span)
             self._sendCommand(messages.outgoing.done, None)

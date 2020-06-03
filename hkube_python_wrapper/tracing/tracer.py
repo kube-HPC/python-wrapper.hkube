@@ -1,6 +1,8 @@
 from jaeger_client import Config
 import opentracing
-from tornado import ioloop # needed for python 3.7+ (workaround https://github.com/jaegertracing/jaeger-client-python/blob/master/README.md#initialization--configuration)
+# needed for python 3.7+ (workaround
+# https://github.com/jaegertracing/jaeger-client-python/blob/master/README.md#initialization--configuration)
+from tornado import ioloop
 
 
 class Tracer(object):
@@ -48,4 +50,3 @@ class Tracer(object):
             span.span.set_tag('error', "true")
             span.span.log_kv({'event': 'error', 'error.object': error})
         span.span.finish()
-        

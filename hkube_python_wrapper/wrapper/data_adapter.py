@@ -209,7 +209,7 @@ class DataAdapter:
         storageInfo = {
             'storageInfo': {
                 'path': path,
-                'size':  len(encodedData) if encodedData else 0
+                'size': len(encodedData) if encodedData else 0
             },
             'metadata': metadata
         }

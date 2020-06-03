@@ -22,7 +22,7 @@ PY3 = sys.version_info[0] == 3
 '''
 
 - Hkube header format: 8 bytes (64 bit)
-- Include 2 bytes for magic number and reserved 2 bytes
+- Include 2 bytes for magic number and 2 reserved bytes
 
 +---------------------------------------------------------------+
  0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
@@ -156,7 +156,7 @@ class Encoding:
         return msgpack.packb(value, use_bin_type=bool(PY3))
 
     def _msgpackDecode(self, value):
-        return msgpack.unpackb(value, raw=not PY3)
+        return msgpack.unpackb(value, raw=bool(PY3))
 
     def createHeader(self, dataType, protocolType):
         header = bytearray()

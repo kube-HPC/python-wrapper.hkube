@@ -7,6 +7,7 @@ from hkube_python_wrapper.util.decorators import timing
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.cache.caching import CustomCache
 
+
 class DataServer:
 
     def __init__(self, config):
@@ -86,5 +87,3 @@ class DataServer:
         while(self.isServing()):
             sleep(1)
         self._adapter.close()
-
-        

@@ -31,12 +31,11 @@ def timing(func):
 
 
 def printTimePY2(func, time1, time2):
-    print('%s function took %0.3f ms' % (func.func_name, (time2-time1)*1000.0))
+    print('%s function took %0.3f ms' % (func.func_name, (time2 - time1) * 1000.0))
 
 
 def printTimePY3(func, time1, time2):
-    print('{:s} {:s} function took {:.3f} ms'.format(timeFormat(), func.__name__, (time2-time1)*1000.0))
-
+    print('{:s} {:s} function took {:.3f} ms'.format(timeFormat(), func.__name__, (time2 - time1) * 1000.0))
 
 
 def timeFormat():

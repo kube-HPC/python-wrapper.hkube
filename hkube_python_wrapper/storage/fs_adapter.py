@@ -31,7 +31,7 @@ class FSAdapter:
         if not (os.path.exists(filePath)):
             return None
         recursive_files_in_dir = []
-        for r, d, f in os.walk(filePath): # pylint: disable=unused-variable
+        for r, d, f in os.walk(filePath):  # pylint: disable=unused-variable
             files_in_dir = []
             relativePath = r.replace(self.basePath, '')
             for fname in f:
