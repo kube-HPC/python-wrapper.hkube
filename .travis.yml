@@ -1,0 +1,44 @@
+language: python
+stages:
+  - test
+  - Coverage
+  - Github
+  - Deploy
+services:
+  - docker
+branches:
+  only:
+    - master
+jobs:
+  fast_finish: true
+  include:
+    - python: 2.7
+      script: ./tools/ci/tests.sh
+    - python: 3.4
+      script: ./tools/ci/tests.sh
+    - python: 3.5
+      script: ./tools/ci/tests.sh
+    - python: 3.6
+      script: ./tools/ci/tests.sh
+    - python: 3.7
+      script: ./tools/ci/tests.sh
+    - python: 3.8
+      script: ./tools/ci/tests.sh
+
+    - stage: Coverage
+      python: 3.7
+      script: ./tools/ci/coverage.sh
+
+    - stage: Github
+      python: 3.7
+      script: ./tools/ci/github.sh
+
+    - stage: Deploy
+      python: 3.7
+      script: echo "Starting Pypi deploy"
+      deploy:
+        provider: pypi
+        username: ${PYPI_USER}
+        password: ${PYPI_PASSWORD}
+        on:
+          branch: master
