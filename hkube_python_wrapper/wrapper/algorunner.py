@@ -1,4 +1,6 @@
 from __future__ import print_function, division, absolute_import
+from gevent import monkey
+monkey.patch_all()
 import os
 import sys
 import importlib
@@ -12,7 +14,7 @@ from .messages import messages
 from .methods import methods
 from .data_adapter import DataAdapter
 from .wc import WebsocketClient
-
+from ..config import config
 
 class Algorunner:
     def __init__(self):
@@ -28,6 +30,26 @@ class Algorunner:
         self._discovery = None
         self._wsc = None
         self.tracer = None
+        self._storage = None
+
+    @staticmethod
+    def Run(start=None, init=None, stop=None, exit=None, options=None):
+        algorunner = Algorunner()
+        if (start):
+            algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
+        else:
+            algorunner.loadAlgorithm(config)
+        jobs = algorunner.connectToWorker(config)
+        gevent.joinall(jobs)
+
+    @staticmethod
+    def Debug(debug_url, start, init=None, stop=None, exit=None, options=None):
+        algorunner = Algorunner()
+        config.socket['url'] = debug_url
+        config.storage['mode'] = 'v1'
+        algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
+        jobs = algorunner.connectToWorker(config)
+        gevent.joinall(jobs)
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None, options=None):
         try:
@@ -101,9 +123,8 @@ class Algorunner:
 
     def connectToWorker(self, options):
         socket = options.socket
-        storage = options.storage
         encoding = socket.get("encoding")
-        storage = storage.get("mode")
+        self._storage = options.storage.get("mode")
         url = socket.get("url")
 
         if (url is not None):
@@ -112,7 +133,7 @@ class Algorunner:
             self._url = '{protocol}://{host}:{port}'.format(**socket)
 
         self._url += '?storage={storage}&encoding={encoding}'.format(
-            storage=storage, encoding=encoding)
+            storage=self._storage, encoding=encoding)
 
         self._wsc = WebsocketClient(encoding)
         self._initStorage(options)
@@ -125,7 +146,8 @@ class Algorunner:
         return [job1, job2]
 
     def _initStorage(self, options):
-        self._initDataServer(options)
+        if (self._storage != 'v1'):
+            self._initDataServer(options)
         self._initDataAdapter(options)
 
     def _initDataServer(self, options):
@@ -196,35 +218,50 @@ class Algorunner:
             self._input.update({'input': newInput})
             method = self._getMethod('start')
             algorithmData = method(self._input, self._hkubeApi)
-            encodedData = self._dataAdapter.encode(algorithmData)
-
-            data = {
-                'jobId': jobId,
-                'taskId': taskId,
-                'nodeName': nodeName,
-                'data': algorithmData,
-                'encodedData': encodedData,
-                'savePaths': savePaths
-            }
-            storingData = dict()
-            storageInfo = self._dataAdapter.createStorageInfo(data)
-            storingData.update(storageInfo)
-
-            if(self._dataServer and savePaths):
-                self._dataServer.setSendingState(taskId, algorithmData)
-                storingData.update({'discovery': self._discovery, 'taskId': taskId})
-                self._sendCommand(messages.outgoing.storing, storingData)
-                self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
-            else:
-                self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
-                self._sendCommand(messages.outgoing.storing, storingData)
-            Tracer.instance.finish_span(span)
-            self._sendCommand(messages.outgoing.done, None)
+            self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)
 
         except Exception as e:
             traceback.print_exc()
             Tracer.instance.finish_span(span, e)
             self._sendError(e)
+
+    def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
+        if (self._storage == 'v2'):
+            self._handle_responseV2(algorithmData, jobId, taskId, nodeName, savePaths, span)
+        else:
+            self._handle_responseV1(algorithmData, span)
+
+    def _handle_responseV1(self, algorithmData, span):
+        if (span):
+            Tracer.instance.finish_span(span)
+        self._sendCommand(messages.outgoing.done, algorithmData)
+
+    def _handle_responseV2(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
+        encodedData = self._dataAdapter.encode(algorithmData)
+
+        data = {
+            'jobId': jobId,
+            'taskId': taskId,
+            'nodeName': nodeName,
+            'data': algorithmData,
+            'encodedData': encodedData,
+            'savePaths': savePaths
+        }
+        storingData = dict()
+        storageInfo = self._dataAdapter.createStorageInfo(data)
+        storingData.update(storageInfo)
+
+        if(self._dataServer and savePaths):
+            self._dataServer.setSendingState(taskId, algorithmData)
+            storingData.update({'discovery': self._discovery, 'taskId': taskId})
+            self._sendCommand(messages.outgoing.storing, storingData)
+            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+        else:
+            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+            self._sendCommand(messages.outgoing.storing, storingData)
+        if (span):
+            Tracer.instance.finish_span(span)
+        self._sendCommand(messages.outgoing.done, None)
 
     def _stop(self, options):
         try:
