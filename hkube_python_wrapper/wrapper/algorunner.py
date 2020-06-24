@@ -5,7 +5,6 @@ import os
 import sys
 import importlib
 import traceback
-import copy
 import gevent
 from events import Events
 from hkube_python_wrapper.communication.DataServer import DataServer
@@ -31,12 +30,13 @@ class Algorunner:
         self._discovery = None
         self._wsc = None
         self.tracer = None
-    
+        self._storage = None
+
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):
         algorunner = Algorunner()
         if (start):
-            algorunner.loadAlgorithmCallbacks(start,init=init,stop=stop,exit=exit,options=options or config)
+            algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
         else:
             algorunner.loadAlgorithm(config)
         jobs = algorunner.connectToWorker(config)
@@ -47,10 +47,10 @@ class Algorunner:
         algorunner = Algorunner()
         config.socket['url'] = debug_url
         config.storage['mode'] = 'v1'
-        algorunner.loadAlgorithmCallbacks(start,init=init,stop=stop,exit=exit,options=options or config)
+        algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
         jobs = algorunner.connectToWorker(config)
         gevent.joinall(jobs)
-        
+
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None, options=None):
         try:
             print('Initializing algorithm callbacks')
@@ -146,7 +146,7 @@ class Algorunner:
         return [job1, job2]
 
     def _initStorage(self, options):
-        if (self._storage is not 'v1'):
+        if (self._storage != 'v1'):
             self._initDataServer(options)
         self._initDataAdapter(options)
 
@@ -226,7 +226,7 @@ class Algorunner:
             self._sendError(e)
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
-        if (self._storage is 'v2'):
+        if (self._storage == 'v2'):
             self._handle_responseV2(algorithmData, jobId, taskId, nodeName, savePaths, span)
         else:
             self._handle_responseV1(algorithmData, span)
@@ -234,7 +234,7 @@ class Algorunner:
     def _handle_responseV1(self, algorithmData, span):
         if (span):
             Tracer.instance.finish_span(span)
-        self._sendCommand(messages.outgoing.done, algorithmData)        
+        self._sendCommand(messages.outgoing.done, algorithmData)
 
     def _handle_responseV2(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         encodedData = self._dataAdapter.encode(algorithmData)
@@ -261,7 +261,7 @@ class Algorunner:
             self._sendCommand(messages.outgoing.storing, storingData)
         if (span):
             Tracer.instance.finish_span(span)
-        self._sendCommand(messages.outgoing.done, None)        
+        self._sendCommand(messages.outgoing.done, None)
 
     def _stop(self, options):
         try:

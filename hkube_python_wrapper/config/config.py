@@ -42,8 +42,8 @@ storage = {
         "accessKeyId": os.environ.get('AWS_ACCESS_KEY_ID', 'AKIAIOSFODNN7EXAMPLE'),
         "secretAccessKey": os.environ.get('AWS_SECRET_ACCESS_KEY', 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'),
         "endpoint": os.environ.get('AWS_ENDPOINT', 'http://127.0.0.1:9000'),
-        "region": os.environ.get('S3_REGION',''),
-        "bucketName": os.environ.get('S3_BUCKET_NAME',None),
+        "region": os.environ.get('S3_REGION', ''),
+        "bucketName": os.environ.get('S3_BUCKET_NAME', None),
     }
 }
 tracer = {
@@ -60,4 +60,3 @@ tracer = {
     },
     "service_name": os.environ.get('ALGORITHM_TYPE', 'algorithm')
 }
-
