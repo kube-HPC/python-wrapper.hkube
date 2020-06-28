@@ -5,10 +5,11 @@ from .waitFor import WaitForData
 
 
 class HKubeApi:
-    def __init__(self, wc, dataAdapter):
+    def __init__(self, wc, dataAdapter, storage):
         self._wc = wc
         self._dataAdapter = dataAdapter
-        self._algorithmExecutionsMap = {}
+        self._storage = storage
+        self._executions = {}
         self._lastExecId = 0
         self._wc.events.on_algorithmExecutionDone += self.algorithmExecutionDone
         self._wc.events.on_algorithmExecutionError += self.algorithmExecutionDone
@@ -18,31 +19,41 @@ class HKubeApi:
         self._wc.events.on_subPipelineStopped += self.subPipelineDone
 
     def algorithmExecutionDone(self, data):
-        response = data.get('response')
         execId = data.get('execId')
-        result = data
-        if(response):
-            result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
-
-        execution = self._algorithmExecutionsMap.get(execId)
-        execution.waiter.set(result)
+        self._handleExecutionDone(execId, data)
 
     def subPipelineDone(self, data):
-        response = data.get('response')
         subPipelineId = data.get('subPipelineId')
-        result = data
-        if(response):
-            result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
+        self._handleExecutionDone(subPipelineId, data)
 
-        execution = self._algorithmExecutionsMap.get(subPipelineId)
-        execution.waiter.set(result)
+    def _handleExecutionDone(self, execId, data):
+        execution = self._executions.get(execId)
 
-    def start_algorithm(self, algorithmName, input=[], resultAsRaw=False, blocking=False):
+        try:
+            error = data.get('error')
+            if(error):
+                execution.waiter.set(error)
+
+            elif(execution.includeResult):
+                response = data.get('response')
+                result = response
+                if(response is not None and self._storage == 'v2'):
+                    result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
+                execution.waiter.set(result)
+            else:
+                execution.waiter.set(None)
+
+        except Exception as e:
+            execution.waiter.set(e)
+        finally:
+            self._executions.pop(execId)
+
+    def start_algorithm(self, algorithmName, input=[], includeResult=True, blocking=False):
         print('start_algorithm called with {name}'.format(name=algorithmName))
         self._lastExecId += 1
         execId = str(self._lastExecId)
-        execution = AlgorithmExecution(execId, WaitForData(True))
-        self._algorithmExecutionsMap[execId] = execution
+        execution = AlgorithmExecution(execId, includeResult, WaitForData(True))
+        self._executions[execId] = execution
 
         message = {
             "command": messages.outgoing.startAlgorithmExecution,
@@ -50,7 +61,7 @@ class HKubeApi:
                 "execId": execId,
                 "algorithmName": algorithmName,
                 "input": input,
-                "resultAsRaw": resultAsRaw
+                "includeResult": includeResult
             }
         }
         self._wc.send(message)
@@ -59,12 +70,12 @@ class HKubeApi:
             return execution.waiter.get()
         return execution.waiter
 
-    def start_stored_subpipeline(self, name, flowInput={}, blocking=False):
+    def start_stored_subpipeline(self, name, flowInput={}, includeResult=True, blocking=False):
         print('start_stored_subpipeline called with {name}'.format(name=name))
         self._lastExecId += 1
         execId = str(self._lastExecId)
-        execution = AlgorithmExecution(execId, WaitForData(True))
-        self._algorithmExecutionsMap[execId] = execution
+        execution = AlgorithmExecution(execId, includeResult, WaitForData(True))
+        self._executions[execId] = execution
 
         message = {
             "command": messages.outgoing.startStoredSubPipeline,
@@ -73,7 +84,8 @@ class HKubeApi:
                     "name": name,
                     "flowInput": flowInput
                 },
-                "subPipelineId": execId
+                "subPipelineId": execId,
+                "includeResult": includeResult
             }
         }
         self._wc.send(message)
@@ -82,12 +94,12 @@ class HKubeApi:
             return execution.waiter.get()
         return execution.waiter
 
-    def start_raw_subpipeline(self, name, nodes, flowInput, options=None, webhooks=None, blocking=False):
+    def start_raw_subpipeline(self, name, nodes, flowInput, options=None, webhooks=None, includeResult=True, blocking=False):
         print('start_raw_subpipeline called with {name}'.format(name=name))
         self._lastExecId += 1
         execId = str(self._lastExecId)
-        execution = AlgorithmExecution(execId, WaitForData(True))
-        self._algorithmExecutionsMap[execId] = execution
+        execution = AlgorithmExecution(execId, includeResult, WaitForData(True))
+        self._executions[execId] = execution
 
         message = {
             "command": messages.outgoing.startRawSubPipeline,
@@ -99,7 +111,8 @@ class HKubeApi:
                     "webhooks": webhooks,
                     "flowInput": flowInput
                 },
-                "subPipelineId": execId
+                "subPipelineId": execId,
+                "includeResult": includeResult
             }
         }
         self._wc.send(message)

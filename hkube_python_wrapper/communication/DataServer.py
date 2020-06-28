@@ -29,7 +29,7 @@ class DataServer:
             decoded = self._encoding.decode(message, plain_encode=True)
             tasks = decoded.get('tasks')
             taskId = decoded.get('taskId')
-            datapath = decoded.get('path')
+            datapath = decoded.get('dataPath')
             result = self.createData(taskId, tasks, datapath)
 
         except Exception as e:

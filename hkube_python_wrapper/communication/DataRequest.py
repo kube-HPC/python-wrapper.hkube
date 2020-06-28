@@ -11,7 +11,7 @@ class DataRequest:
         options = {
             u'tasks': reqDetails.get('tasks'),
             u'taskId': reqDetails.get('taskId'),
-            u'path': reqDetails.get('dataPath')
+            u'dataPath': reqDetails.get('dataPath')
         }
         self.encoding = Encoding(encoding)
         content = self.encoding.encode(options, plain_encode=True)
