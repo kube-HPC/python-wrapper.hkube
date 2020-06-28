@@ -1,4 +1,5 @@
 from __future__ import print_function, division, absolute_import
+import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.messages import messages
 from .execution import AlgorithmExecution
 from .waitFor import WaitForData
@@ -17,6 +18,10 @@ class HKubeApi:
         self._wc.events.on_subPipelineDone += self.subPipelineDone
         self._wc.events.on_subPipelineError += self.subPipelineDone
         self._wc.events.on_subPipelineStopped += self.subPipelineDone
+
+    def _generateExecId(self):
+        self._lastExecId += 1
+        return str(self._lastExecId)
 
     def algorithmExecutionDone(self, data):
         execId = data.get('execId')
@@ -37,7 +42,7 @@ class HKubeApi:
             elif(execution.includeResult):
                 response = data.get('response')
                 result = response
-                if(response is not None and self._storage == 'v2'):
+                if(typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v2'):
                     result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
                 execution.waiter.set(result)
             else:
@@ -50,8 +55,7 @@ class HKubeApi:
 
     def start_algorithm(self, algorithmName, input=[], includeResult=True, blocking=False):
         print('start_algorithm called with {name}'.format(name=algorithmName))
-        self._lastExecId += 1
-        execId = str(self._lastExecId)
+        execId = self._generateExecId()
         execution = AlgorithmExecution(execId, includeResult, WaitForData(True))
         self._executions[execId] = execution
 
@@ -72,8 +76,7 @@ class HKubeApi:
 
     def start_stored_subpipeline(self, name, flowInput={}, includeResult=True, blocking=False):
         print('start_stored_subpipeline called with {name}'.format(name=name))
-        self._lastExecId += 1
-        execId = str(self._lastExecId)
+        execId = self._generateExecId()
         execution = AlgorithmExecution(execId, includeResult, WaitForData(True))
         self._executions[execId] = execution
 
@@ -96,8 +99,7 @@ class HKubeApi:
 
     def start_raw_subpipeline(self, name, nodes, flowInput, options=None, webhooks=None, includeResult=True, blocking=False):
         print('start_raw_subpipeline called with {name}'.format(name=name))
-        self._lastExecId += 1
-        execId = str(self._lastExecId)
+        execId = self._generateExecId()
         execution = AlgorithmExecution(execId, includeResult, WaitForData(True))
         self._executions[execId] = execution
 

@@ -10,29 +10,27 @@ algorithmName = 'eval-alg'
 subpipelineName = 'simple'
 
 encoding = Encoding(config.storage['encoding'])
+inp1 = [5, 10]
+inp2 = {'d': [6, 'stam']}
 
 
 def start(args, hkubeApi=None):
     # print('start called')
-    waiter1 = hkubeApi.start_algorithm(algorithmName, [5, 10])
-    waiter2 = hkubeApi.start_stored_subpipeline(subpipelineName, {'d': [6, 'stam']})
+    waiter1 = hkubeApi.start_algorithm(algorithmName, inp1)
+    waiter2 = hkubeApi.start_stored_subpipeline(subpipelineName, inp2)
     res = [waiter1.get(), waiter2.get()]
     return res
 
 
 def test_callback():
     sm = StorageManager(config.storage)
-    data = {"data": {"prop": "bla"}}
-    encoded = encoding.encode(data, plain_encode=True)
-    sm.storage.put({"path": "local-hkube/jobId_start_algorithm/taskId_start_algorithm", "data": encoded})
-    config.discovery.update({"port": "9022"})
     algorunner = Algorunner()
     algorunner.loadAlgorithmCallbacks(start, options=config)
     algorunner.connectToWorker(config)
-    time.sleep(2)
+    time.sleep(3)
     res = sm.storage.get({"path": "local-hkube/jobId/taskId"})
     decoded = encoding.decode(res)
-    assert decoded[0] == data
-    assert decoded[1]['subPipeline']['name'] == subpipelineName
+    assert decoded[0] == inp1
+    assert decoded[1] == inp2
     time.sleep(2)
     Tracer.instance.close()
