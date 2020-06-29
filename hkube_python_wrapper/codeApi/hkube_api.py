@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.messages import messages
-from .execution import AlgorithmExecution
+from .execution import Execution
 from .waitFor import WaitForData
 
 
@@ -56,7 +56,7 @@ class HKubeApi:
     def start_algorithm(self, algorithmName, input=[], includeResult=True, blocking=False):
         print('start_algorithm called with {name}'.format(name=algorithmName))
         execId = self._generateExecId()
-        execution = AlgorithmExecution(execId, includeResult, WaitForData(True))
+        execution = Execution(execId, includeResult, WaitForData(True))
         self._executions[execId] = execution
 
         message = {
@@ -77,7 +77,7 @@ class HKubeApi:
     def start_stored_subpipeline(self, name, flowInput={}, includeResult=True, blocking=False):
         print('start_stored_subpipeline called with {name}'.format(name=name))
         execId = self._generateExecId()
-        execution = AlgorithmExecution(execId, includeResult, WaitForData(True))
+        execution = Execution(execId, includeResult, WaitForData(True))
         self._executions[execId] = execution
 
         message = {
@@ -100,7 +100,7 @@ class HKubeApi:
     def start_raw_subpipeline(self, name, nodes, flowInput, options=None, webhooks=None, includeResult=True, blocking=False):
         print('start_raw_subpipeline called with {name}'.format(name=name))
         execId = self._generateExecId()
-        execution = AlgorithmExecution(execId, includeResult, WaitForData(True))
+        execution = Execution(execId, includeResult, WaitForData(True))
         self._executions[execId] = execution
 
         message = {

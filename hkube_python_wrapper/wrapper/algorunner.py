@@ -1,10 +1,11 @@
 from __future__ import print_function, division, absolute_import
+from gevent import monkey
+monkey.patch_all()
 import os
 import sys
 import importlib
 import traceback
 import gevent
-from gevent import monkey
 from events import Events
 from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
@@ -14,7 +15,6 @@ from .methods import methods
 from .data_adapter import DataAdapter
 from .wc import WebsocketClient
 from ..config import config
-monkey.patch_all()
 
 
 class Algorunner:
