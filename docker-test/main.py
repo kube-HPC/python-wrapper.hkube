@@ -9,9 +9,10 @@ socket = {
     "url": os.environ.get('WORKER_SOCKET_URL', None),
 }
 
+
 def start(args, hkubeApi=None):
     print('start called')
-    waiter1 = hkubeApi.start_algorithm('eval-alg', [5, 6], resultAsRaw=True)
+    waiter1 = hkubeApi.start_algorithm('eval-alg', [5, 6], includeResult=True)
     waiter2 = hkubeApi.start_stored_subpipeline('simple', {'d': [6, 'stam']})
     res = [waiter1.get(), waiter2.get()]
     print('got all results')
@@ -26,6 +27,7 @@ def main():
     alg.loadAlgorithmCallbacks(start)
     job = alg.connectToWorker(socket)
     job.join()
+
 
 if __name__ == "__main__":
     main()

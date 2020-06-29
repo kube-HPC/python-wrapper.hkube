@@ -16,6 +16,7 @@ from .data_adapter import DataAdapter
 from .wc import WebsocketClient
 from ..config import config
 
+
 class Algorunner:
     def __init__(self):
         self._url = None
@@ -137,7 +138,7 @@ class Algorunner:
 
         self._wsc = WebsocketClient(encoding)
         self._initStorage(options)
-        self._hkubeApi = HKubeApi(self._wsc, self._dataAdapter)
+        self._hkubeApi = HKubeApi(self._wsc, self._dataAdapter, self._storage)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))

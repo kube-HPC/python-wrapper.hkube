@@ -20,16 +20,15 @@ class WebSocketServerClass:
                 'command': "algorithmExecutionDone",
                 'data': lambda x: {
                     'execId': x.get('execId'),
-                    'response': {
-                        'storageInfo': {
-                            'path': "local-hkube/jobId_start_algorithm/taskId_start_algorithm"
-                            }
-                        }
-                    }
+                    'response': x.get('input')
+                }
             },
             "startStoredSubPipeline": {
                 'command': "subPipelineDone",
-                'data': lambda x: x
+                'data': lambda x: {
+                    'subPipelineId': x.get('subPipelineId'),
+                    'response': x.get('subPipeline').get('flowInput')
+                }
             }
         }
 
