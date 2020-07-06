@@ -139,6 +139,7 @@ class DataAdapter:
         return data
 
     @timing
+    @trace()
     def _getFromPeer(self, options, dataPath):
         tasks = options.get('tasks')
         taskId = options.get('taskId')
@@ -187,6 +188,7 @@ class DataAdapter:
         return data
 
     @timing
+    @trace()
     def _getFromCache(self, path):
         return self._storageCache.get(path)
 
@@ -194,6 +196,7 @@ class DataAdapter:
         self._storageCache[path] = data
 
     @timing
+    @trace()
     def _getFromStorage(self, options):
         response = self._storageManager.storage.get(options)
         return self._encoding.decode(response)
