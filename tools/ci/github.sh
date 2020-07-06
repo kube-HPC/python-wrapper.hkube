@@ -41,7 +41,7 @@ if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PU
       curl --request PUT \
         --url https://api.github.com/repos/kube-hpc/hkube/contents/core/algorithm-builder/environments/python/wrapper/requirements.txt \
         --header 'accept: application/vnd.github.v3+json' \
-        --header 'authorization: token 94e3e4e157dddae9cd5a95a2fb40cf956fd405fd' \
+        --header "authorization: token ${GH_TOKEN}" \
         --data '{
             "message":"update python wrapper in builder to version '"$version"'",
             "content": "'"$content"'",
@@ -52,7 +52,7 @@ if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PU
         curl --request POST \
         --url https://api.github.com/repos/kube-hpc/hkube/pulls \
         --header 'accept: application/vnd.github.v3+json' \
-        --header 'authorization: token 94e3e4e157dddae9cd5a95a2fb40cf956fd405fd' \
+        --header "authorization: token ${GH_TOKEN}" \
         --data '{
             "title":"update python wrapper in builder to version '"$version"'",
             "head": "'"$branch_name"'",
