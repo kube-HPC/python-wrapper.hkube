@@ -103,8 +103,8 @@ class ZMQPublisher(object):
                 if not frames:
                     break
                 if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
-                    responses.append(float(str(frames[1])))
-                    if (responses > RESPONSE_CACHE):
+                    responses.append(float(frames[1]))
+                    if (len(responses) > RESPONSE_CACHE):
                         responses.pop(0)
 
                 address = frames[0]
@@ -120,7 +120,7 @@ class ZMQPublisher(object):
             if (workers.queue and self.messageQueue.queue):
                 if (len(self.messageQueue.queue) % 100 == 0):
                     print(str(len(self.messageQueue.queue)))
-                frames = [self.messageQueue.pop().encode()]
+                frames = [self.messageQueue.pop()]
                 frames.insert(0, workers.next())
                 self._backend.send_multipart(frames)
             print("Publisher loop 4")
