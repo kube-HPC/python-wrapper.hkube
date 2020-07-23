@@ -13,15 +13,15 @@ def test_queue():
     time.sleep(3)
     def doSomething(msg):
         count[0] = count[0] + 1
-        time.sleep(1)
+        time.sleep(0.1)
 
     def doSomething2(msg):
         count[1] = count[1] + 1
-        time.sleep(1)
+        time.sleep(0.1)
 
     def doSomething3(msg):
         count[2] = count[2] + 1
-        time.sleep(1)
+        time.sleep(0.1)
 
     listener1 = ZMQListener.ZMQListener('tcp://localhost:5556', doSomething)
     listener2 = ZMQListener.ZMQListener('tcp://localhost:5556', doSomething2)
@@ -39,7 +39,7 @@ def test_queue():
     publisher.send(b'bb3')
     publisher.send(b'bb4')
     publisher.send(b'bb5')
-    time.sleep(5)
+    time.sleep(1)
     publisher.close()
     listener1.close()
     listener2.close()

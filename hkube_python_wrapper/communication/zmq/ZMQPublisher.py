@@ -6,7 +6,6 @@
 
 from collections import OrderedDict
 import time
-from threading import Thread
 
 import zmq
 
@@ -75,6 +74,7 @@ class ZMQPublisher(object):
         context = zmq.Context(1)
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers
+        self.active = True
 
     def send(self, message):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
@@ -89,7 +89,6 @@ class ZMQPublisher(object):
 
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
         responses = []
-        self.active =  True
         while self.active:
             poller = poll_workers
             socks = dict(poller.poll(HEARTBEAT_INTERVAL * 500))
@@ -115,7 +114,7 @@ class ZMQPublisher(object):
                         msg = [worker, PPP_HEARTBEAT]
                         self._backend.send_multipart(msg)
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-            if (len(workers.queue) > 0 and len(self.messageQueue.queue) > 0):
+            if (workers.queue and self.messageQueue.queue):
                 if (len(self.messageQueue.queue) % 100 == 0):
                     print(str(len(self.messageQueue.queue)))
                 frames = [self.messageQueue.pop().encode()]
