@@ -1,5 +1,3 @@
-
-
 from random import randint
 import time
 import gevent
@@ -28,7 +26,7 @@ class ZMQListener(object):
         """Helper function that returns a new configured socket
            connected to the Paranoid Pirate queue"""
         worker = context.socket(zmq.DEALER)  # DEALER
-        identity = b"%04X-%04X" % (randint(0, 0x10000), randint(0, 0x10000))
+        identity = 'id' + str(randint(0, 0x10000)) + '-' + str(randint(0, 0x10000))
         worker.setsockopt(zmq.IDENTITY, identity)
         poller.register(worker, zmq.POLLIN)
         worker.connect(remoteAddress)
