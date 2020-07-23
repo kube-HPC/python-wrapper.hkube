@@ -6,8 +6,8 @@
 
 from collections import OrderedDict
 import time
-
-import zmq
+import gevent
+import zmq.green as zmq
 
 HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
 HEARTBEAT_INTERVAL = 1.0  # Seconds
@@ -78,11 +78,11 @@ class ZMQPublisher(object):
 
     def send(self, message):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
-            time.sleep(0.1)
+            gevent.sleep(0.1)
         self.messageQueue.append(message)
 
     def start(self):
-
+        print ("Publisher started")
         poll_workers = zmq.Poller()
         poll_workers.register(self._backend, zmq.POLLIN)
         workers = WorkerQueue()
@@ -90,13 +90,17 @@ class ZMQPublisher(object):
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
         responses = []
         while self.active:
+            print("Publisher loop")
+            gevent.sleep()
             poller = poll_workers
-            socks = dict(poller.poll(HEARTBEAT_INTERVAL * 500))
+            socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
 
+            print("Publisher loop 2")
             # Handle worker activity on self._backend
             if socks.get(self._backend) == zmq.POLLIN:
                 # Use worker address for LRU routing
                 frames = self._backend.recv_multipart()
+                print("Publisher loop 3")
                 if not frames:
                     break
                 if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
@@ -114,20 +118,25 @@ class ZMQPublisher(object):
                         msg = [worker, PPP_HEARTBEAT]
                         self._backend.send_multipart(msg)
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
+            else:
+                print ("got nothing")
             if (workers.queue and self.messageQueue.queue):
                 if (len(self.messageQueue.queue) % 100 == 0):
                     print(str(len(self.messageQueue.queue)))
                 frames = [self.messageQueue.pop().encode()]
                 frames.insert(0, workers.next())
                 self._backend.send_multipart(frames)
-
+            print("Publisher loop 4")
             workers.purge()
+            print("Publisher loop 5")
 
     def close(self):
         self.active = False
         self._backend.close()
-# if __name__ == "__main__":
-#     queue = ZMQPublisher(port=5556, maxMemorySize=5000)
+if __name__ == "__main__":
+    queue = ZMQPublisher(port=5556, maxMemorySize=5000)
+    gevent.spawn(queue.start)
+    gevent.sleep(3000)
 #     thread = Thread(target=queue.start)
 #     thread.start()
 #     i = -1

@@ -1,12 +1,11 @@
-#
-##  Paranoid Pirate worker
-#
-#   Author: Daniel Lundin <dln(at)eintr(dot)org>
-#
+
 
 from random import randint
 import time
-import zmq
+import gevent
+import zmq.green as zmq
+
+from hkube_python_wrapper.communication.zmq.ZMQPublisher import ZMQPublisher
 
 HEARTBEAT_LIVENESS = 3
 HEARTBEAT_INTERVAL = 1
@@ -46,6 +45,7 @@ class ZMQListener(object):
         self.worker = self.worker_socket(context, self.remoteAddress, poller)
         cycles = 0
         while self.active:
+            gevent.sleep()
             socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
 
             # Handle worker activity on backend
@@ -84,7 +84,7 @@ class ZMQListener(object):
                 if liveness == 0:
                     print("W: Heartbeat failure, can't reach queue")
                     print("W: Reconnecting in %0.2fs" % interval)
-                    time.sleep(interval)
+                    gevent.sleep(interval)
 
                     if interval < INTERVAL_MAX:
                         interval *= 2
@@ -107,11 +107,15 @@ class ZMQListener(object):
 
 if __name__ == "__main__":
     def doSomething():
-        time.sleep(3)
+        gevent.sleep(3)
 
 
     listener = ZMQListener('tcp://localhost:5556', doSomething)
-    listener.start()
+    gevent.spawn(listener.start)
+    queue = ZMQPublisher(port=5556, maxMemorySize=5000)
+    gevent.spawn(queue.start)
+    gevent.sleep(5)
+
     # thread=Thread(target=listener.start)
     # thread.start()
     # client.start()
