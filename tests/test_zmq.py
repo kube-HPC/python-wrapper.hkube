@@ -1,7 +1,7 @@
 import time
 from threading import Thread
 
-from communication.zmq import ZMQListener, ZMQPublisher
+from hkube_python_wrapper.communication.zmq import ZMQListener, ZMQPublisher
 
 
 def test_queue():
