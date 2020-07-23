@@ -44,7 +44,7 @@ class WorkerQueue(object):
             self.queue.pop(address, None)
 
     def next(self):
-        address, worker = self.queue.popitem(False)
+        address, worker = self.queue.popitem(False)  # pylint: disable=unused-variable
         return address
 
 

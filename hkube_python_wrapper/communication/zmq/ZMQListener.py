@@ -6,7 +6,6 @@
 
 from random import randint
 import time
-import os
 import zmq
 
 HEARTBEAT_LIVENESS = 3
@@ -24,6 +23,7 @@ class ZMQListener(object):
         self.onMessage = onMessage
         self.remoteAddress = remoteAddress
         self.active = True
+        self.worker = None
 
     def worker_socket(self, context, remoteAddress, poller):
         """Helper function that returns a new configured socket
