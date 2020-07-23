@@ -82,7 +82,6 @@ class ZMQPublisher(object):
         self.messageQueue.append(message)
 
     def start(self):
-        print ("Publisher started")
         poll_workers = zmq.Poller()
         poll_workers.register(self._backend, zmq.POLLIN)
         workers = WorkerQueue()
@@ -118,8 +117,6 @@ class ZMQPublisher(object):
                         msg = [worker, PPP_HEARTBEAT]
                         self._backend.send_multipart(msg)
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-            else:
-                print ("got nothing")
             if (workers.queue and self.messageQueue.queue):
                 if (len(self.messageQueue.queue) % 100 == 0):
                     print(str(len(self.messageQueue.queue)))
@@ -133,6 +130,8 @@ class ZMQPublisher(object):
     def close(self):
         self.active = False
         self._backend.close()
+
+
 if __name__ == "__main__":
     queue = ZMQPublisher(port=5556, maxMemorySize=5000)
     gevent.spawn(queue.start)
