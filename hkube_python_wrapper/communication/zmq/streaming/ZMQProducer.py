@@ -98,10 +98,7 @@ class ZMQProducer(object):
                 if not frames:
                     break
                 if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
-                    print ("got reply")
                     self.responseAcumulator(frames[1])
-                else:
-                    print("not a reply")
                 address = frames[0]
                 workers.ready(Worker(address))
 

@@ -20,7 +20,6 @@ class MessageProducer(object):
     def responseAccumulator(self, response):
         decodedResponse = self._encoding.decode(response, plain_encode=True)
         duration = decodedResponse['duration']
-        print ("duration "+ str(duration))
         self.responses.append(float(duration))
         if (len(self.responses) > RESPONSE_CACHE):
             self.responses.pop(0)

@@ -17,7 +17,6 @@ class MessageListener(object):
         decodedMsg = self._encoding.decode(msg, plain_encode=True)
         self.onMessageDelegate(decodedMsg)
         end = time.time()
-        print ("encoding reply")
         return self._encoding.encode({'duration': (end - start)}, plain_encode=True)
 
     def start(self):
