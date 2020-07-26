@@ -5,7 +5,7 @@ from hkube_python_wrapper.communication.zmq.streaming.ZMQListener import ZMQList
 
 def test_queue():
     def doNothing(msg):
-        return b'5'.encode()
+        return b'5'
     count = [0, 0, 0]
     producer = ZMQProducer(port=5556, maxMemorySize=5000,responseAcumulator=doNothing)
     gevent.spawn(producer.start)
@@ -14,17 +14,17 @@ def test_queue():
     def doSomething(msg):
         count[0] = count[0] + 1
         gevent.sleep(0.1)
-        return b'5'.encode()
+        return b'5'
 
     def doSomething2(msg):
         count[1] = count[1] + 1
         gevent.sleep(0.1)
-        return b'5'.encode()
+        return b'5'
 
     def doSomething3(msg):
         count[2] = count[2] + 1
         gevent.sleep(0.1)
-        return b'5'.encode()
+        return b'5'
 
     listener1 = ZMQListener('tcp://localhost:5556', doSomething)
     listener2 = ZMQListener('tcp://localhost:5556', doSomething2)
