@@ -17,7 +17,6 @@ PPP_READY = b"\x01"  # Signals worker is ready
 PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
 
 
-
 class Worker(object):
     def __init__(self, address):
         self.address = address
@@ -67,7 +66,7 @@ class MessageQueue(object):
 
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize,responseAcumulator):
+    def __init__(self, port, maxMemorySize, responseAcumulator):
         self.responseAcumulator = responseAcumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
@@ -124,7 +123,6 @@ class ZMQProducer(object):
     def close(self):
         self.active = False
         self._backend.close()
-
 
 # if __name__ == "__main__":
 #     queue = ZMQPublisher(port=5556, maxMemorySize=5000)

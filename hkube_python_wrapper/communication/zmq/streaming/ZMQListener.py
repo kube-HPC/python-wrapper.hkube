@@ -61,7 +61,7 @@ class ZMQListener(object):
                         print(decoded)
                         print(cycles)
                     liveness = HEARTBEAT_LIVENESS
-                    result =  self.onMessage(frames[0])
+                    result = self.onMessage(frames[0])
                     newFrames = [result]
                     self.worker.send_multipart(newFrames)
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:

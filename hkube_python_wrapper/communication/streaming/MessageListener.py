@@ -8,20 +8,20 @@ class MessageListener(object):
     def __init__(self, options, onMessage):
         self.onMessageDelegate = onMessage
         remoteAddress = options['remoteAddress']
-        self.adapater = ZMQListener(remoteAddress,self.onMessage)
+        self.adapater = ZMQListener(remoteAddress, self.onMessage)
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
 
-    def onMessage(self,msg):
+    def onMessage(self, msg):
         start = time.time()
-        decodedMsg = self._encoding.decode(msg,plain_encode=True)
+        decodedMsg = self._encoding.decode(msg, plain_encode=True)
         self.onMessageDelegate(decodedMsg)
         end = time.time()
         print ("encoding reply")
-        return self._encoding.encode({'duration':(end-start)},plain_encode=True)
+        return self._encoding.encode({'duration': (end - start)}, plain_encode=True)
 
     def start(self):
         self.adapater.start()
+
     def close(self):
         self.adapater.close()
-
