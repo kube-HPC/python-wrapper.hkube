@@ -15,7 +15,7 @@ HEARTBEAT_INTERVAL = 1.0  # Seconds
 #  Paranoid Pirate Protocol constants
 PPP_READY = b"\x01"  # Signals worker is ready
 PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
-RESPONSE_CACHE = 2000
+
 
 
 class Worker(object):
@@ -66,8 +66,9 @@ class MessageQueue(object):
         return self.sizeSum
 
 
-class ZMQPublisher(object):
-    def __init__(self, port, maxMemorySize):
+class ZMQProducer(object):
+    def __init__(self, port, maxMemorySize,responseAcumulator):
+        self.responseAcumulator = responseAcumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
         self.messageQueue = MessageQueue()
@@ -76,7 +77,7 @@ class ZMQPublisher(object):
         self._backend.bind("tcp://*:" + str(port))  # For workers
         self.active = True
 
-    def send(self, message):
+    def produce(self, message):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
             gevent.sleep(0.1)
         self.messageQueue.append(message)
@@ -87,26 +88,21 @@ class ZMQPublisher(object):
         workers = WorkerQueue()
 
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-        responses = []
         while self.active:
-            print("Publisher loop")
             gevent.sleep()
             poller = poll_workers
             socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
-
-            print("Publisher loop 2")
             # Handle worker activity on self._backend
             if socks.get(self._backend) == zmq.POLLIN:
                 # Use worker address for LRU routing
                 frames = self._backend.recv_multipart()
-                print("Publisher loop 3")
                 if not frames:
                     break
                 if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
-                    responses.append(float(frames[1]))
-                    if (len(responses) > RESPONSE_CACHE):
-                        responses.pop(0)
-
+                    print ("got reply")
+                    self.responseAcumulator(frames[1])
+                else:
+                    print("not a reply")
                 address = frames[0]
                 workers.ready(Worker(address))
 
@@ -123,19 +119,17 @@ class ZMQPublisher(object):
                 frames = [self.messageQueue.pop()]
                 frames.insert(0, workers.next())
                 self._backend.send_multipart(frames)
-            print("Publisher loop 4")
             workers.purge()
-            print("Publisher loop 5")
 
     def close(self):
         self.active = False
         self._backend.close()
 
 
-if __name__ == "__main__":
-    queue = ZMQPublisher(port=5556, maxMemorySize=5000)
-    gevent.spawn(queue.start)
-    gevent.sleep(3000)
+# if __name__ == "__main__":
+#     queue = ZMQPublisher(port=5556, maxMemorySize=5000)
+#     gevent.spawn(queue.start)
+#     gevent.sleep(3000)
 #     thread = Thread(target=queue.start)
 #     thread.start()
 #     i = -1

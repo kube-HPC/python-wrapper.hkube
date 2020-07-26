@@ -3,8 +3,6 @@ import time
 import gevent
 import zmq.green as zmq
 
-from hkube_python_wrapper.communication.zmq.ZMQPublisher import ZMQPublisher
-
 HEARTBEAT_LIVENESS = 3
 HEARTBEAT_INTERVAL = 1
 INTERVAL_INIT = 1
@@ -63,10 +61,8 @@ class ZMQListener(object):
                         print(decoded)
                         print(cycles)
                     liveness = HEARTBEAT_LIVENESS
-                    before = time.time()
-                    self.onMessage(frames[0])
-                    after = time.time()
-                    newFrames = [str(after - before).encode()]
+                    result =  self.onMessage(frames[0])
+                    newFrames = [result]
                     self.worker.send_multipart(newFrames)
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
                     print("I: Queue heartbeat")
@@ -102,18 +98,17 @@ class ZMQListener(object):
         self.active = False
         self.worker.close()
 
+# if __name__ == "__main__":
+#     def doSomething():
+#         gevent.sleep(3)
+#
+#
+#     listener = ZMQListener('tcp://localhost:5556', doSomething)
+#     gevent.spawn(listener.start)
+#     queue = ZMQPublisher(port=5556, maxMemorySize=5000)
+#     gevent.spawn(queue.start)
+#     gevent.sleep(5)
 
-if __name__ == "__main__":
-    def doSomething():
-        gevent.sleep(3)
-
-
-    listener = ZMQListener('tcp://localhost:5556', doSomething)
-    gevent.spawn(listener.start)
-    queue = ZMQPublisher(port=5556, maxMemorySize=5000)
-    gevent.spawn(queue.start)
-    gevent.sleep(5)
-
-    # thread=Thread(target=listener.start)
-    # thread.start()
-    # client.start()
+# thread=Thread(target=listener.start)
+# thread.start()
+# client.start()
