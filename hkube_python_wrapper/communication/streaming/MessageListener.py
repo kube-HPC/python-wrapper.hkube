@@ -5,10 +5,10 @@ from hkube_python_wrapper.util.encoding import Encoding
 
 
 class MessageListener(object):
-    def __init__(self, options, onMessage):
+    def __init__(self, options, onMessage, consumerType):
         self.onMessageDelegate = onMessage
         remoteAddress = options['remoteAddress']
-        self.adapater = ZMQListener(remoteAddress, self.onMessage)
+        self.adapater = ZMQListener(remoteAddress, self.onMessage, consumerType)
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
 

@@ -14,8 +14,9 @@ PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
 
 class ZMQListener(object):
 
-    def __init__(self, remoteAddress, onMessage):
+    def __init__(self, remoteAddress, onMessage, consumerType):
         self.onMessage = onMessage
+        self.consumerType = consumerType
         self.remoteAddress = remoteAddress
         self.active = True
         self.worker = None
@@ -28,7 +29,7 @@ class ZMQListener(object):
         worker.setsockopt(zmq.IDENTITY, identity)
         poller.register(worker, zmq.POLLIN)
         worker.connect(remoteAddress)
-        worker.send(PPP_READY)
+        worker.send_multipart([PPP_READY, self.consumerType])
         return worker
 
     def start(self):
@@ -62,7 +63,7 @@ class ZMQListener(object):
                         print(cycles)
                     liveness = HEARTBEAT_LIVENESS
                     result = self.onMessage(frames[0])
-                    newFrames = [result]
+                    newFrames = [result, self.consumerType]
                     self.worker.send_multipart(newFrames)
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
                     print("I: Queue heartbeat")
@@ -92,7 +93,7 @@ class ZMQListener(object):
             if time.time() > heartbeat_at:
                 heartbeat_at = time.time() + HEARTBEAT_INTERVAL
                 print("I: Worker heartbeat")
-                self.worker.send(PPP_HEARTBEAT)
+                self.worker.send(PPP_HEARTBEAT, self.consumerType.encode)
 
     def close(self):
         self.active = False

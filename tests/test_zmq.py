@@ -7,7 +7,7 @@ def test_queue():
     def doNothing(msg):
         return b'5'
     count = [0, 0, 0]
-    producer = ZMQProducer(port=5556, maxMemorySize=5000,responseAcumulator=doNothing)
+    producer = ZMQProducer(port=5556, maxMemorySize=5000, responseAcumulator=doNothing, consumerNames=['a','b'])
     gevent.spawn(producer.start)
 
     gevent.sleep()
@@ -26,9 +26,9 @@ def test_queue():
         gevent.sleep(0.1)
         return b'5'
 
-    listener1 = ZMQListener('tcp://localhost:5556', doSomething)
-    listener2 = ZMQListener('tcp://localhost:5556', doSomething2)
-    listener3 = ZMQListener('tcp://localhost:5556', doSomething3)
+    listener1 = ZMQListener('tcp://localhost:5556', doSomething,'a')
+    listener2 = ZMQListener('tcp://localhost:5556', doSomething2,'b')
+    listener3 = ZMQListener('tcp://localhost:5556', doSomething3,'a')
     gevent.spawn(listener1.start)
     gevent.spawn(listener2.start)
     gevent.spawn(listener3.start)
@@ -44,5 +44,7 @@ def test_queue():
     listener2.close()
     listener3.close()
     gevent.sleep(1)
-    assert count[0] + count[1] + count[2] == 5
+    assert count[0] + count[1] + count[2] == 10
 
+if __name__ == '__main__':
+    test_queue()

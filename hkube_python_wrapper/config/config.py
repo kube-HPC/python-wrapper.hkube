@@ -24,11 +24,17 @@ discovery = {
     "encoding": os.environ.get('DISCOVERY_ENCODING', 'bson'),
     "enable": getBoolEnv('DISCOVERY_ENABLE', 'True'),
     "timeout": getIntEnv('DISCOVERY_TIMEOUT', 15000),
-    "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 500)
+    "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 500),
+    "streaming": {
+        "enable": getBoolEnv('STREAMING_ENABLE', 'True'),
+        "maxBufferSize": getIntEnv('STREAMING_MAX_BUFFER_SIZE', 500)
+    }
+
 }
 algorithm = {
     "path": os.environ.get('ALGORITHM_PATH', "algorithm_unique_folder"),
-    "entryPoint": os.environ.get('ALGORITHM_ENTRY_POINT', "main.py")
+    "entryPoint": os.environ.get('ALGORITHM_ENTRY_POINT', "main.py"),
+    "isStatefull": os.environ.get('IS_STATEFULL')
 }
 storage = {
     "clusterName": os.environ.get('CLUSTER_NAME', 'local'),

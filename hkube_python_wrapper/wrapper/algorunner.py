@@ -217,6 +217,7 @@ class Algorunner:
 
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
+            # TODO: if streaming start streaming communication
             method = self._getMethod('start')
             algorithmData = method(self._input, self._hkubeApi)
             self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)

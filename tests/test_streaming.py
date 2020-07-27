@@ -7,15 +7,15 @@ listenr_config = {'remoteAddress': 'tcp://localhost:5556', 'encoding': 'msgpack'
 
 
 def test_Messaging():
-    messageProducer = MessageProducer(producer_config)
+    messageProducer = MessageProducer(producer_config,['a'])
     asserts = {}
-
+    gevent.sleep(3)
     def onMessage(msg):
         asserts['field1'] = msg['field1']
         gevent.sleep(1)
 
     gevent.spawn(messageProducer.start)
-    messageListener = MessageListener(listenr_config, onMessage=onMessage)
+    messageListener = MessageListener(listenr_config, onMessage=onMessage,consumerType='a')
     gevent.spawn(messageListener.start)
     gevent.spawn(messageProducer.start)
     messageProducer.produce({'field1': 'value1'})
