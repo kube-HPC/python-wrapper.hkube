@@ -2,8 +2,8 @@ from hkube_python_wrapper.communication.streaming.MessageListener import Message
 from hkube_python_wrapper.communication.streaming.MessageProducer import MessageProducer
 import gevent
 
-producer_config = {'port': 5556, 'messageMemoryBuff': 5000, 'encoding': 'msgpack'}
-listenr_config = {'remoteAddress': 'tcp://localhost:5556', 'encoding': 'msgpack'}
+producer_config = {'port': 5557, 'messageMemoryBuff': 5000, 'encoding': 'msgpack'}
+listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack'}
 
 
 def test_Messaging():
