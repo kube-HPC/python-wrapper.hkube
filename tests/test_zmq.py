@@ -4,7 +4,7 @@ from hkube_python_wrapper.communication.zmq.streaming.ZMQProducer import  ZMQPro
 from hkube_python_wrapper.communication.zmq.streaming.ZMQListener import ZMQListener
 
 def test_queue():
-    def doNothing(msg):
+    def doNothing(msg,customerType):
         return b'5'
     count = [0, 0, 0]
     producer = ZMQProducer(port=5556, maxMemorySize=5000, responseAcumulator=doNothing, consumerNames=['a','b'])

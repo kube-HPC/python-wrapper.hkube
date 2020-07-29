@@ -58,6 +58,7 @@ class MessageQueue(object):
         for consumerType in consumerTypes:
             self.indexPerConsumer[consumerType] = 0
         self.sizeSum = 0
+        self.sentToAll = 0
         self.queue = []
 
     def hasItems(self, consumerType):
@@ -76,6 +77,7 @@ class MessageQueue(object):
                     break
             if not (anyZero):
                 self.queue.pop(0)
+                self.sentToAll += 1
                 self.sizeSum -= len(out)
                 for key in self.indexPerConsumer.keys():
                     self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
@@ -85,8 +87,15 @@ class MessageQueue(object):
         self.sizeSum -= len(msg)
         return self.queue.append(msg)
 
-    def sumByteSize(self):
-        return self.sizeSum
+    def size(self, consumerType):
+        index = self.indexPerConsumer[consumerType]
+        size = len(self.queue) - index
+        return size
+
+    def sent(self, consumerType):
+        index = self.indexPerConsumer[consumerType]
+        sent = self.sentToAll + index
+        return sent
 
 
 class ZMQProducer(object):
@@ -122,10 +131,11 @@ class ZMQProducer(object):
                 frames = self._backend.recv_multipart()
                 if not frames:
                     break
-                if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
-                    self.responseAcumulator(frames[1])
                 address = frames[0]
                 consumerType = frames[2]
+                if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
+                    self.responseAcumulator(frames[1], consumerType)
+                    print ("\n10\n")
                 workers.ready(Worker(address), consumerType)
 
                 # Validate control message, or return reply to client
@@ -144,6 +154,12 @@ class ZMQProducer(object):
                     frames.insert(0, workers.next(type))
                     self._backend.send_multipart(frames)
             workers.purge()
+
+    def queueSize(self, consumerSize):
+        return self.messageQueue.size(consumerSize)
+
+    def sent(self, consumerSize):
+        return self.messageQueue.sent(consumerSize)
 
     def close(self):
         self.active = False

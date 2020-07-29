@@ -9,6 +9,7 @@ class Outgoing(object):
         self.progress = "progress"
         self.error = "errorMessage"
         self.storing = "storing"
+        self.streamingStatistics = "streamingStatistics"
         self.done = "done"
         self.startAlgorithmExecution = "startAlgorithmExecution"
         self.stopAlgorithmExecution = "stopAlgorithmExecution"

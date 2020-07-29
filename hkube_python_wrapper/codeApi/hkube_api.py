@@ -1,8 +1,13 @@
 from __future__ import print_function, division, absolute_import
+
+import gevent
+
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.messages import messages
 from .execution import Execution
 from .waitFor import WaitForData
+from ..communication.streaming.MessageListener import MessageListener
+from ..communication.streaming.MessageProducer import MessageProducer
 
 
 class HKubeApi:
@@ -18,6 +23,35 @@ class HKubeApi:
         self._wc.events.on_subPipelineDone += self.subPipelineDone
         self._wc.events.on_subPipelineError += self.subPipelineDone
         self._wc.events.on_subPipelineStopped += self.subPipelineDone
+        self._messageProducer = None
+        self._messageListeners = []
+
+    def setupStreaming(self, stremaing, onStatistics, producerConfig, listenerConfig):
+        self._messageProducer = MessageProducer(producerConfig, stremaing['next'])
+        self._messageProducer.registerStatisticsListener(onStatistics)
+        for predecessor in stremaing.predecessors:
+            options = {}
+            options.update(listenerConfig)
+            options['remoteAddress'] = 'tcp://' + predecessor['host'] + ':' + predecessor['port']
+            listenr = MessageListener(options, predecessor['nodeName'])
+            self._messageListeners.append(listenr)
+
+    def registerMessageListener(self, onMessage):
+        for listener in self._messageListeners:
+            listener.registerMessageListener(onMessage)
+
+    def startStreaming(self):
+        gevent.spawn(self._messageProducer.start)
+        for listener in self._messageListeners:
+            gevent.spawn(listener.start)
+
+    def sendMessage(self, msg):
+        self._messageProducer.produce(msg)
+
+    def stopStreaming(self):
+        for listener in self._messageListeners:
+            listener.close()
+        self._messageProducer.close()
 
     def _generateExecId(self):
         self._lastExecId += 1
@@ -36,13 +70,13 @@ class HKubeApi:
 
         try:
             error = data.get('error')
-            if(error):
+            if (error):
                 execution.waiter.set(error)
 
-            elif(execution.includeResult):
+            elif (execution.includeResult):
                 response = data.get('response')
                 result = response
-                if(typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v2'):
+                if (typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v2'):
                     result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
                 execution.waiter.set(result)
             else:
@@ -97,7 +131,8 @@ class HKubeApi:
             return execution.waiter.get()
         return execution.waiter
 
-    def start_raw_subpipeline(self, name, nodes, flowInput, options=None, webhooks=None, includeResult=True, blocking=False):
+    def start_raw_subpipeline(self, name, nodes, flowInput, options=None, webhooks=None, includeResult=True,
+                              blocking=False):
         print('start_raw_subpipeline called with {name}'.format(name=name))
         execId = self._generateExecId()
         execution = Execution(execId, includeResult, WaitForData(True))

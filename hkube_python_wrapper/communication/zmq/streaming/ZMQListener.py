@@ -93,7 +93,7 @@ class ZMQListener(object):
             if time.time() > heartbeat_at:
                 heartbeat_at = time.time() + HEARTBEAT_INTERVAL
                 print("I: Worker heartbeat")
-                self.worker.send(PPP_HEARTBEAT, self.consumerType.encode)
+                self.worker.send_multipart([PPP_HEARTBEAT, self.consumerType])
 
     def close(self):
         self.active = False

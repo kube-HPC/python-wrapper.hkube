@@ -133,7 +133,7 @@ class Algorunner:
         else:
             self._url = '{protocol}://{host}:{port}'.format(**socket)
 
-        self._url += '?storage={storage}&encoding={encoding}'.format(
+        self._url += '?storage={storage}&encoding={encoding}&kind=stream'.format(
             storage=self._storage, encoding=encoding)
 
         self._wsc = WebsocketClient(encoding)
@@ -195,7 +195,20 @@ class Algorunner:
                 method = self._getMethod('init')
                 if (method is not None):
                     method(options)
+                streaming = {"predecessors": [{"host": "127.0.0.1", "port": "5523"}], "next": ["node1", "node2"]}
 
+                # if(options.has_key('streaming')):
+                #     streaming = options['streaming]
+                def onStatistics(statistics):
+                    self._sendCommand(messages.outgoing.streamingStatistics, statistics)
+
+                producerConfig = {}
+                producerConfig["port"] = config.discovery['streaming']['port'],
+                producerConfig['messageMemoryBuff'] = config.discovery['streaming']['messageMemoryBuff'],
+                producerConfig['encoding'] = config.discovery['encoding'],
+                producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
+                messageListenrConfig = {producerConfig['encoding']: config.discovery['encoding']}
+                self._hkubeApi.setupStreaming(streaming, onStatistics, producerConfig, messageListenrConfig)
                 self._sendCommand(messages.outgoing.initialized, None)
 
         except Exception as e:
@@ -217,7 +230,6 @@ class Algorunner:
 
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
-            # TODO: if streaming start streaming communication
             method = self._getMethod('start')
             algorithmData = method(self._input, self._hkubeApi)
             self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)

@@ -26,10 +26,10 @@ discovery = {
     "timeout": getIntEnv('DISCOVERY_TIMEOUT', 15000),
     "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 500),
     "streaming": {
-        "enable": getBoolEnv('STREAMING_ENABLE', 'True'),
-        "maxBufferSize": getIntEnv('STREAMING_MAX_BUFFER_SIZE', 500)
+        "maxBufferSize": getIntEnv('STREAMING_MAX_BUFFER_SIZE', 500),
+        "port": os.environ.get('STREAMING_PORT', 9021),
+        "statisticsInterval":os.environ.get('STREAMING_STATISTICS_INTERVAL', 9021),
     }
-
 }
 algorithm = {
     "path": os.environ.get('ALGORITHM_PATH', "algorithm_unique_folder"),
