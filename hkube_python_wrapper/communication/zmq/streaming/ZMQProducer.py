@@ -135,7 +135,6 @@ class ZMQProducer(object):
                 consumerType = frames[2]
                 if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
                     self.responseAcumulator(frames[1], consumerType)
-                    print ("\n10\n")
                 workers.ready(Worker(address), consumerType)
 
                 # Validate control message, or return reply to client

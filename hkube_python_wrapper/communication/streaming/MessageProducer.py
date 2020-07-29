@@ -33,7 +33,6 @@ class MessageProducer(object):
         self.adapter.produce(encodedMessage)
 
     def responseAccumulator(self, response, consumerType):
-        print ("********************\n")
         decodedResponse = self._encoding.decode(response, plain_encode=True)
         duration = decodedResponse['duration']
         self.responses[consumerType].append(float(duration))
