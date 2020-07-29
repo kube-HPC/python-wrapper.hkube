@@ -2,6 +2,7 @@ from random import randint
 import time
 import gevent
 import zmq.green as zmq
+import msgpack
 
 HEARTBEAT_LIVENESS = 3
 HEARTBEAT_INTERVAL = 1
@@ -29,7 +30,7 @@ class ZMQListener(object):
         worker.setsockopt(zmq.IDENTITY, identity)
         poller.register(worker, zmq.POLLIN)
         worker.connect(remoteAddress)
-        worker.send_multipart([PPP_READY, self.consumerType])
+        worker.send_multipart([PPP_READY, msgpack.packb(self.consumerType)])
         return worker
 
     def start(self):
@@ -63,7 +64,7 @@ class ZMQListener(object):
                         print(cycles)
                     liveness = HEARTBEAT_LIVENESS
                     result = self.onMessage(frames[0])
-                    newFrames = [result, self.consumerType]
+                    newFrames = [result, msgpack.packb(self.consumerType)]
                     self.worker.send_multipart(newFrames)
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
                     print("I: Queue heartbeat")
@@ -93,7 +94,7 @@ class ZMQListener(object):
             if time.time() > heartbeat_at:
                 heartbeat_at = time.time() + HEARTBEAT_INTERVAL
                 print("I: Worker heartbeat")
-                self.worker.send_multipart([PPP_HEARTBEAT, self.consumerType])
+                self.worker.send_multipart([PPP_HEARTBEAT, msgpack.packb(self.consumerType)])
 
     def close(self):
         self.active = False

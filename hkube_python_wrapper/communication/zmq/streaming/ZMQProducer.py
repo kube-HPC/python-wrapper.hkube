@@ -9,6 +9,7 @@ from collections import OrderedDict
 
 import gevent
 import zmq.green as zmq
+import msgpack
 
 HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
 HEARTBEAT_INTERVAL = 1.0  # Seconds
@@ -132,7 +133,7 @@ class ZMQProducer(object):
                 if not frames:
                     break
                 address = frames[0]
-                consumerType = frames[2]
+                consumerType = msgpack.unpackb(frames[2])
                 if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
                     self.responseAcumulator(frames[1], consumerType)
                 workers.ready(Worker(address), consumerType)
