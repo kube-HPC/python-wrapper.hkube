@@ -1,5 +1,5 @@
 #
-##  Paranoid Pirate queue
+# Paranoid Pirate queue
 #
 #   Author: Daniel Lundin <dln(at)eintr(dot)org>
 #
@@ -134,6 +134,10 @@ class ZMQProducer(object):
                     break
                 address = frames[0]
                 consumerType = msgpack.unpackb(frames[2])
+                if not consumerType in self.consumerNames:
+                    print("Producer got message from unknown consumer: " + consumerType + ", dropping the message")
+                    continue
+                print("Producer got message from " + consumerType)
                 if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
                     self.responseAcumulator(frames[1], consumerType)
                 workers.ready(Worker(address), consumerType)

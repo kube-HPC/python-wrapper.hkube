@@ -26,14 +26,14 @@ class HKubeApi:
         self._messageProducer = None
         self._messageListeners = []
 
-    def setupStreaming(self, stremaing, onStatistics, producerConfig, listenerConfig):
+    def setupStreaming(self, stremaing, onStatistics, producerConfig, listenerConfig, nodeName):
         self._messageProducer = MessageProducer(producerConfig, stremaing['next'])
         self._messageProducer.registerStatisticsListener(onStatistics)
-        for predecessor in stremaing.predecessors:
+        for predecessor in stremaing['predecessors']:
             options = {}
             options.update(listenerConfig)
             options['remoteAddress'] = 'tcp://' + predecessor['host'] + ':' + predecessor['port']
-            listenr = MessageListener(options, predecessor['nodeName'])
+            listenr = MessageListener(options, nodeName)
             self._messageListeners.append(listenr)
 
     def registerMessageListener(self, onMessage):

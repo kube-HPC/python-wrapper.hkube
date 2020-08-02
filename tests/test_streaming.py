@@ -2,7 +2,7 @@ from hkube_python_wrapper.communication.streaming.MessageListener import Message
 from hkube_python_wrapper.communication.streaming.MessageProducer import MessageProducer
 import gevent
 
-producer_config = {'port': 5557, 'messageMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 0.1}
+producer_config = {'port': 5557, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 0.1}
 listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack'}
 
 
@@ -18,7 +18,6 @@ def test_Messaging():
     gevent.sleep(3)
 
     def onMessage(msg):
-        print("\n In onMessage\n")
         asserts['field1'] = msg['field1']
         gevent.sleep(1)
     gevent.spawn(messageProducer.start)

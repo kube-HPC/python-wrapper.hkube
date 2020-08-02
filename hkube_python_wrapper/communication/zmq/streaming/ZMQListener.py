@@ -30,6 +30,7 @@ class ZMQListener(object):
         worker.setsockopt(zmq.IDENTITY, identity)
         poller.register(worker, zmq.POLLIN)
         worker.connect(remoteAddress)
+        print("zmq listener connecting to " + remoteAddress)
         worker.send_multipart([PPP_READY, msgpack.packb(self.consumerType)])
         return worker
 

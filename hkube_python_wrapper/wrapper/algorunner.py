@@ -1,21 +1,21 @@
 from __future__ import print_function, division, absolute_import
+from ..config import config
+from .wc import WebsocketClient
+from .data_adapter import DataAdapter
+from .methods import methods
+from .messages import messages
+from hkube_python_wrapper.tracing import Tracer
+from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
+from hkube_python_wrapper.communication.DataServer import DataServer
+from events import Events
+import gevent
+import traceback
+import importlib
+import sys
+import os
 from gevent import monkey
 
 monkey.patch_all()
-import os
-import sys
-import importlib
-import traceback
-import gevent
-from events import Events
-from hkube_python_wrapper.communication.DataServer import DataServer
-from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
-from hkube_python_wrapper.tracing import Tracer
-from .messages import messages
-from .methods import methods
-from .data_adapter import DataAdapter
-from .wc import WebsocketClient
-from ..config import config
 
 
 class Algorunner:
@@ -134,7 +134,7 @@ class Algorunner:
         else:
             self._url = '{protocol}://{host}:{port}'.format(**socket)
 
-        self._url += '?storage={storage}&encoding={encoding}&kind=stream'.format(
+        self._url += '?storage={storage}&encoding={encoding}'.format(
             storage=self._storage, encoding=encoding)
 
         self._wsc = WebsocketClient(encoding)
@@ -196,7 +196,7 @@ class Algorunner:
                 method = self._getMethod('init')
                 if (method is not None):
                     method(options)
-                streaming = {"predecessors": [{"host": "127.0.0.1", "port": "5523"}], "next": ["node1", "node2"]}
+                streaming = {"predecessors": [{"host": "127.0.0.1", "port": "5523"}], "next": ["golan5", "node1"]}
 
                 # if(options.has_key('streaming')):
                 #     streaming = options['streaming]
@@ -205,11 +205,11 @@ class Algorunner:
 
                 producerConfig = {}
                 producerConfig["port"] = config.discovery['streaming']['port']
-                producerConfig['messageMemoryBuff'] = config.discovery['streaming']['messageMemoryBuff']
+                producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
                 producerConfig['encoding'] = config.discovery['encoding']
                 producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
-                messageListenrConfig = {producerConfig['encoding']: config.discovery['encoding']}
-                self._hkubeApi.setupStreaming(streaming, onStatistics, producerConfig, messageListenrConfig)
+                messageListenrConfig = {'encoding': config.discovery['encoding']}
+                self._hkubeApi.setupStreaming(streaming, onStatistics, producerConfig, messageListenrConfig, options.get('nodeName'))
                 self._sendCommand(messages.outgoing.initialized, None)
 
         except Exception as e:
@@ -231,6 +231,8 @@ class Algorunner:
 
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
+            self._hkubeApi.startStreaming()
+
             method = self._getMethod('start')
             algorithmData = method(self._input, self._hkubeApi)
             self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)
@@ -249,6 +251,7 @@ class Algorunner:
     def _handle_responseV1(self, algorithmData, span):
         if (span):
             Tracer.instance.finish_span(span)
+        self._hkubeApi.stopStreaming()
         self._sendCommand(messages.outgoing.done, algorithmData)
 
     def _handle_responseV2(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
@@ -276,6 +279,7 @@ class Algorunner:
             self._sendCommand(messages.outgoing.storing, storingData)
         if (span):
             Tracer.instance.finish_span(span)
+        self._hkubeApi.stopStreaming()
         self._sendCommand(messages.outgoing.done, None)
 
     def _stop(self, options):
@@ -292,6 +296,7 @@ class Algorunner:
     def _exit(self, options):
         try:
             self._dataServer and self._dataServer.shutDown()
+            self._wsc.shutDown()
             self._wsc.shutDown()
             method = self._getMethod('exit')
             if (method is not None):
@@ -321,6 +326,7 @@ class Algorunner:
                     'message': self._errorMsg(error)
                 }
             })
+            self._hkubeApi.stopStreaming()
         except Exception as e:
             print(e)
 

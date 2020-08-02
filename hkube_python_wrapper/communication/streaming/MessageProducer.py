@@ -10,7 +10,7 @@ class MessageProducer(object):
     def __init__(self, options, consumerNames):
         self.consumerNames = consumerNames
         port = options['port']
-        maxMemorySize = options['messageMemoryBuff']
+        maxMemorySize = options['messagesMemoryBuff']
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
@@ -59,6 +59,7 @@ class MessageProducer(object):
             singleNodeStatistics = {"nodeName": nodeName, "sent": sent, "queueSize": queueSize,
                                     "durationList": self.responses[nodeName]}
             statistics.append(singleNodeStatistics)
+        print("statistics " + str(statistics))
         for listener in self.listeners:
             listener(statistics)
 
