@@ -7,17 +7,17 @@ RESPONSE_CACHE = 2000
 
 
 class MessageProducer(object):
-    def __init__(self, options, consumerNames):
-        self.consumerNames = consumerNames
+    def __init__(self, options, nodeNames):
+        self.nodeNames = nodeNames
         port = options['port']
         maxMemorySize = options['messagesMemoryBuff']
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
-        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerNames=consumerNames)
+        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=nodeNames)
         self.responses = {}
         self.active = True
-        for nodeName in consumerNames:
+        for nodeName in nodeNames:
             self.responses[nodeName] = []
         self.listeners = []
 
@@ -53,7 +53,7 @@ class MessageProducer(object):
 
     def sendStatistics(self):
         statistics = []
-        for nodeName in self.consumerNames:
+        for nodeName in self.nodeNames:
             queueSize = self.adapter.queueSize(nodeName)
             sent = self.adapter.sent(nodeName)
             singleNodeStatistics = {"nodeName": nodeName, "sent": sent, "queueSize": queueSize,

@@ -54,7 +54,7 @@ class WorkerQueue(object):
 
 class MessageQueue(object):
     def __init__(self, consumerTypes):
-        self.consumerNames = consumerTypes
+        self.consumerTypes = consumerTypes
         self.indexPerConsumer = OrderedDict()
         for consumerType in consumerTypes:
             self.indexPerConsumer[consumerType] = 0
@@ -100,12 +100,12 @@ class MessageQueue(object):
 
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize, responseAcumulator, consumerNames):
+    def __init__(self, port, maxMemorySize, responseAcumulator, consumerTypes):
         self.responseAcumulator = responseAcumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
-        self.messageQueue = MessageQueue(consumerNames)
-        self.consumerNames = consumerNames
+        self.messageQueue = MessageQueue(consumerTypes)
+        self.consumerTypes = consumerTypes
         context = zmq.Context(1)
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers
@@ -119,7 +119,7 @@ class ZMQProducer(object):
     def start(self):
         poll_workers = zmq.Poller()
         poll_workers.register(self._backend, zmq.POLLIN)
-        workers = WorkerQueue(self.consumerNames)
+        workers = WorkerQueue(self.consumerTypes)
 
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
         while self.active:
@@ -134,7 +134,7 @@ class ZMQProducer(object):
                     break
                 address = frames[0]
                 consumerType = msgpack.unpackb(frames[2])
-                if not consumerType in self.consumerNames:
+                if not consumerType in self.consumerTypes:
                     print("Producer got message from unknown consumer: " + consumerType + ", dropping the message")
                     continue
                 print("Producer got message from " + consumerType)

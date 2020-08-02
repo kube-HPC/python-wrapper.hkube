@@ -29,7 +29,7 @@ def test_Messaging():
     assert asserts['stats'][0]['queueSize'] == 3
     assert asserts['stats'][0]['sent'] == 0
     assert len(asserts['stats'][0]['durationList']) == 0
-    messageListener = MessageListener(listenr_config, consumerType='a')
+    messageListener = MessageListener(listenr_config, nodeName='a')
     messageListener.registerMessageListener(onMessage)
     gevent.spawn(messageListener.start)
     gevent.sleep(4.2)
