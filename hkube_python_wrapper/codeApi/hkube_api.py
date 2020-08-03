@@ -25,20 +25,27 @@ class HKubeApi:
         self._wc.events.on_subPipelineStopped += self.subPipelineDone
         self._messageProducer = None
         self._messageListeners = []
+        self._inputListener = []
 
-    def setupStreaming(self, stremaing, onStatistics, producerConfig, listenerConfig, nodeName):
-        self._messageProducer = MessageProducer(producerConfig, stremaing['next'])
+    def setupStreaming(self,  onStatistics, producerConfig,nextNodes):
+        self._messageProducer = MessageProducer(producerConfig, nextNodes)
         self._messageProducer.registerStatisticsListener(onStatistics)
-        for predecessor in stremaing['predecessors']:
+
+    def setupStreamingListeners(self,listenerConfig,parents,nodeName):
+        for predecessor in parents:
             options = {}
             options.update(listenerConfig)
             options['remoteAddress'] = 'tcp://' + predecessor['host'] + ':' + predecessor['port']
             listenr = MessageListener(options, nodeName)
+            listenr.registerMessageListener(self._onMessage)
             self._messageListeners.append(listenr)
 
-    def registerMessageListener(self, onMessage):
-        for listener in self._messageListeners:
-            listener.registerMessageListener(onMessage)
+    def registerInputListener(self, onMessage):
+        self._inputListener.append(onMessage)
+
+    def _onMessage(self,msg):
+        for listener in self._inputListener:
+            listener(msg)
 
     def startStreaming(self):
         gevent.spawn(self._messageProducer.start)

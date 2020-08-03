@@ -26,7 +26,8 @@ class WebsocketClient:
             messages.incoming.subPipelineDone: self.subPipelineDone,
             messages.incoming.subPipelineStarted: self.subPipelineStarted,
             messages.incoming.subPipelineError: self.subPipelineError,
-            messages.incoming.subPipelineStopped: self.subPipelineStopped
+            messages.incoming.subPipelineStopped: self.subPipelineStopped,
+            messages.incoming.serviceDiscoveryUpdate: self.discoveryUpdate
         }
         self._firstConnect = False
         self._encoding = Encoding(encoding)
@@ -44,6 +45,8 @@ class WebsocketClient:
 
     def exit(self, data):
         self.events.on_exit(data)
+    def discoveryUpdate(self,data):
+        self.events.on_disovery_update(self,data)
 
     def algorithmExecutionDone(self, data):
         self.events.on_algorithmExecutionDone(data)

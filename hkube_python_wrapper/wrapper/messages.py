@@ -30,6 +30,7 @@ class Incoming(object):
         self.subPipelineError = "subPipelineError"
         self.subPipelineDone = "subPipelineDone"
         self.subPipelineStopped = "subPipelineStopped"
+        self.serviceDiscoveryUpdate = "serviceDiscoveryUpdate"
 
 
 class Messages(object):

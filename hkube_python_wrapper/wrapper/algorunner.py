@@ -33,6 +33,7 @@ class Algorunner:
         self._wsc = None
         self.tracer = None
         self._storage = None
+        self._nodeName = None
 
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):
@@ -174,6 +175,7 @@ class Algorunner:
         self._wsc.events.on_start += self._start
         self._wsc.events.on_stop += self._stop
         self._wsc.events.on_exit += self._exit
+        self._wsc.events.on_disovery_update += self._discovery_update
 
     def _connection(self):
         self._connected = True
@@ -193,6 +195,7 @@ class Algorunner:
                 self._sendError(self._loadAlgorithmError)
             else:
                 self._input = options
+                self._nodeName = options.get('nodeName')
                 method = self._getMethod('init')
                 if (method is not None):
                     method(options)
@@ -208,12 +211,16 @@ class Algorunner:
                 producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
                 producerConfig['encoding'] = config.discovery['encoding']
                 producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
-                messageListenrConfig = {'encoding': config.discovery['encoding']}
-                self._hkubeApi.setupStreaming(streaming, onStatistics, producerConfig, messageListenrConfig, options.get('nodeName'))
+                self._hkubeApi.setupStreaming( onStatistics, producerConfig, options['childs'])
+                self._discovery_update(options.get('parents'))
                 self._sendCommand(messages.outgoing.initialized, None)
 
         except Exception as e:
             self._sendError(e)
+
+    def _discovery_update(self,discovery):
+        messageListenrConfig = {'encoding': config.discovery['encoding']}
+        self._hkubeApi.setupStreamingListeners(messageListenrConfig, discovery, self._nodeName)
 
     def _start(self, options):
         # pylint: disable=unused-argument
