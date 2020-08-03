@@ -8,7 +8,6 @@ from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.storage.storage_manager import StorageManager
 from hkube_python_wrapper.communication.DataRequest import DataRequest
 
-
 class DataAdapter:
     def __init__(self, options, dataServer=None):
         self._dataServer = dataServer
@@ -18,6 +17,7 @@ class DataAdapter:
         self._requestEncoding = options.discovery['encoding']
         self._requestTimeout = options.discovery['timeout']
         self._maxWorkers = min(32, (multiprocessing.cpu_count() or 1) + 4)
+        print('using {workers} for DataAdapter'.format(workers=self._maxWorkers))
 
     def encode(self, value):
         return self._encoding.encode(value)
@@ -88,7 +88,6 @@ class DataAdapter:
             storageResult = self._getFromCacheOrStorage(storageInfo, dataPath)
             batchResponse.append(storageResult)
             return batchResponse
-
         peerResponse = self._getFromPeer(options, dataPath)
         peerError = self._getPeerError(peerResponse)
 
@@ -138,8 +137,8 @@ class DataAdapter:
 
         return data
 
+    @trace(name='getFromPeer')
     @timing
-    @trace()
     def _getFromPeer(self, options, dataPath):
         tasks = options.get('tasks')
         taskId = options.get('taskId')
@@ -187,16 +186,16 @@ class DataAdapter:
 
         return data
 
+    @trace(name='getFromCache')
     @timing
-    @trace()
     def _getFromCache(self, path):
         return self._storageCache.get(path)
 
     def _setToCache(self, path, data):
         self._storageCache[path] = data
 
+    @trace(name='getFromStorage')
     @timing
-    @trace()
     def _getFromStorage(self, options):
         response = self._storageManager.storage.get(options)
         return self._encoding.decode(response)

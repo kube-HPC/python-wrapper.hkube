@@ -21,6 +21,7 @@ class DataRequest:
 
     def invoke(self):
         try:
+            print('tcp://' + self.request['host'] + ':' + str(self.request['port']))
             adapter = ZMQRequest(self.request)
             response = adapter.invokeAdapter()
             return self.encoding.decode(response)
