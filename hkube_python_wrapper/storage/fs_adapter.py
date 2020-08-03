@@ -61,10 +61,11 @@ class FSAdapter:
     @staticmethod
     def ensure_dir(dirName):
         return FSAdapter.ensure_dir_py3(dirName) if PY3 else FSAdapter.ensure_dir_py27(dirName)
-        
+
     @staticmethod
     def ensure_dir_py3(dirName):
         d = os.path.dirname(dirName)
+        # pylint: disable=unexpected-keyword-arg
         os.makedirs(d, exist_ok=True)
         return os.path.exists(dirName)
 
@@ -77,6 +78,7 @@ class FSAdapter:
             if e.errno != errno.EEXIST:
                 raise
         return os.path.exists(dirName)
+
     @staticmethod
     def getPath(base, dirName):
         return base + os.path.sep + dirName
