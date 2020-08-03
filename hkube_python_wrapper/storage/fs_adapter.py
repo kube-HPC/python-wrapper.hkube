@@ -1,4 +1,7 @@
 import os
+import sys
+import errno
+PY3 = sys.version_info[0] == 3
 
 
 class FSAdapter:
@@ -57,11 +60,23 @@ class FSAdapter:
 
     @staticmethod
     def ensure_dir(dirName):
+        return FSAdapter.ensure_dir_py3(dirName) if PY3 else FSAdapter.ensure_dir_py27(dirName)
+        
+    @staticmethod
+    def ensure_dir_py3(dirName):
         d = os.path.dirname(dirName)
-        if not os.path.exists(d):
-            os.makedirs(d, exist_ok=True)
+        os.makedirs(d, exist_ok=True)
         return os.path.exists(dirName)
 
+    @staticmethod
+    def ensure_dir_py27(dirName):
+        d = os.path.dirname(dirName)
+        try:
+            os.makedirs(d)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        return os.path.exists(dirName)
     @staticmethod
     def getPath(base, dirName):
         return base + os.path.sep + dirName
