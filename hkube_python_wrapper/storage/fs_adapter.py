@@ -59,7 +59,7 @@ class FSAdapter:
     def ensure_dir(dirName):
         d = os.path.dirname(dirName)
         if not os.path.exists(d):
-            os.makedirs(d)
+            os.makedirs(d,exist_ok=True)
         return os.path.exists(dirName)
 
     @staticmethod
