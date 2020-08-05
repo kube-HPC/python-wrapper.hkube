@@ -23,7 +23,7 @@ discovery = {
     "port": os.environ.get('DISCOVERY_PORT', 9020),
     "encoding": os.environ.get('DISCOVERY_ENCODING', 'bson'),
     "enable": getBoolEnv('DISCOVERY_ENABLE', 'True'),
-    "timeout": getIntEnv('DISCOVERY_TIMEOUT', 15000),
+    "timeout": getIntEnv('DISCOVERY_TIMEOUT', 1000),
     "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 500),
     "streaming": {
         "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_SIZE', 500),
