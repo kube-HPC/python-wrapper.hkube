@@ -302,7 +302,7 @@ class Algorunner:
             self._sendCommand(messages.outgoing.storing, storingData)
         if (span):
             Tracer.instance.finish_span(span)
-        if(self._input.get('kind')=='stream'):
+        if (self._input.get('kind') == 'stream'):
             self._hkubeApi.stopStreaming()
         self._sendCommand(messages.outgoing.done, None)
 
