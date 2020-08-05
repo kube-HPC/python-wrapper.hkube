@@ -27,15 +27,17 @@ class HKubeApi:
         self._messageListeners = []
         self._inputListener = []
 
-    def setupStreaming(self,  onStatistics, producerConfig,nextNodes):
+    def setupStreaming(self, onStatistics, producerConfig, nextNodes):
         self._messageProducer = MessageProducer(producerConfig, nextNodes)
         self._messageProducer.registerStatisticsListener(onStatistics)
+        gevent.spawn(self._messageProducer.start)
 
-    def setupStreamingListeners(self,listenerConfig,parents,nodeName):
+    def setupStreamingListeners(self, listenerConfig, parents, nodeName):
         for predecessor in parents:
             options = {}
             options.update(listenerConfig)
-            options['remoteAddress'] = 'tcp://' + predecessor['host'] + ':' + predecessor['port']
+            options['remoteAddress'] = 'tcp://' + \
+                                       predecessor['host'] + ':' + str(predecessor['port'])
             listenr = MessageListener(options, nodeName)
             listenr.registerMessageListener(self._onMessage)
             self._messageListeners.append(listenr)
@@ -43,12 +45,11 @@ class HKubeApi:
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
 
-    def _onMessage(self,msg):
+    def _onMessage(self, msg):
         for listener in self._inputListener:
             listener(msg)
 
-    def startStreaming(self):
-        gevent.spawn(self._messageProducer.start)
+    def startMessageListening(self):
         for listener in self._messageListeners:
             gevent.spawn(listener.start)
 
@@ -84,7 +85,8 @@ class HKubeApi:
                 response = data.get('response')
                 result = response
                 if (typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v2'):
-                    result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
+                    result = self._dataAdapter.tryGetDataFromPeerOrStorage(
+                        response)
                 execution.waiter.set(result)
             else:
                 execution.waiter.set(None)

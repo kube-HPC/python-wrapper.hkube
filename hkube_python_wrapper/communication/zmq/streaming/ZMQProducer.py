@@ -109,6 +109,7 @@ class ZMQProducer(object):
         context = zmq.Context(1)
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers
+        print("Producer listening on " + "tcp://*:" + str(port))
         self.active = True
 
     def produce(self, message):

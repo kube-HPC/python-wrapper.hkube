@@ -1,4 +1,6 @@
 from __future__ import print_function, division, absolute_import
+
+from .statelessAlgoWrapper import statelessALgoWrapper
 from ..config import config
 from .wc import WebsocketClient
 from .data_adapter import DataAdapter
@@ -61,6 +63,14 @@ class Algorunner:
             self._algorithm['init'] = init
             self._algorithm['stop'] = stop
             self._algorithm['exit'] = exit
+            if not (config.discovery.get('streaming').get('stateful')):
+                wrapper = statelessALgoWrapper(self._algorithm)
+                self._algorithm = dict()
+                self._algorithm['start'] = wrapper.start
+                self._algorithm['init'] = wrapper.init
+                self._algorithm['stop'] = wrapper.stop
+                self._algorithm['exit'] = wrapper.exit
+
             for k, v in methods.items():
                 methodName = k
                 method = v
@@ -199,10 +209,11 @@ class Algorunner:
                 method = self._getMethod('init')
                 if (method is not None):
                     method(options)
-                streaming = {"predecessors": [{"host": "127.0.0.1", "port": "5523"}], "next": ["golan5", "node1"]}
+                # streaming = {"predecessors": [{"host": "127.0.0.1", "port": "5523"}], "next": ["golan5", "node1"]}
+                #
+                # # if(options.has_key('streaming')):
+                # #     streaming = options['streaming]
 
-                # if(options.has_key('streaming')):
-                #     streaming = options['streaming]
                 def onStatistics(statistics):
                     self._sendCommand(messages.outgoing.streamingStatistics, statistics)
 
@@ -211,14 +222,14 @@ class Algorunner:
                 producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
                 producerConfig['encoding'] = config.discovery['encoding']
                 producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
-                self._hkubeApi.setupStreaming( onStatistics, producerConfig, options['childs'])
+                self._hkubeApi.setupStreaming(onStatistics, producerConfig, options['childs'])
                 self._discovery_update(options.get('parents'))
                 self._sendCommand(messages.outgoing.initialized, None)
 
         except Exception as e:
             self._sendError(e)
 
-    def _discovery_update(self,discovery):
+    def _discovery_update(self, discovery):
         messageListenrConfig = {'encoding': config.discovery['encoding']}
         self._hkubeApi.setupStreamingListeners(messageListenrConfig, discovery, self._nodeName)
 
@@ -238,8 +249,6 @@ class Algorunner:
 
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
-            self._hkubeApi.startStreaming()
-
             method = self._getMethod('start')
             algorithmData = method(self._input, self._hkubeApi)
             self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)

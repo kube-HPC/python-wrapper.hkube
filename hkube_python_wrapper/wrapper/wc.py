@@ -7,6 +7,7 @@ import gevent
 from gevent import monkey
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.wrapper.messages import messages
+
 monkey.patch_all()
 
 
@@ -45,8 +46,9 @@ class WebsocketClient:
 
     def exit(self, data):
         self.events.on_exit(data)
-    def discoveryUpdate(self,data):
-        self.events.on_disovery_update(self,data)
+
+    def discoveryUpdate(self, data):
+        self.events.on_disovery_update(self, data)
 
     def algorithmExecutionDone(self, data):
         self.events.on_algorithmExecutionDone(data)

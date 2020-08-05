@@ -52,7 +52,7 @@ class MessageProducer(object):
         responsePerNode = self.responsesCache[consumerType]
         self.responsesCache[consumerType] = []
         return responsePerNode
-    
+
     def getResponseCount(self, consumerType):
         return self.responseCount[consumerType]
 
