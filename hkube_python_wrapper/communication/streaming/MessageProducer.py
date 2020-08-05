@@ -42,12 +42,6 @@ class MessageProducer(object):
         if (len(self.responsesCache) > RESPONSE_CACHE):
             self.responsesCache.pop(0)
 
-    def getMessageProcessTime(self, consumerType):
-        timeSum = 0
-        for proccessTime in self.responsesCache[consumerType]:
-            timeSum += proccessTime
-        return timeSum / len(self.responsesCache[consumerType])
-
     def resetResponseCache(self, consumerType):
         responsePerNode = self.responsesCache[consumerType]
         self.responsesCache[consumerType] = []

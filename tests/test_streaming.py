@@ -8,11 +8,12 @@ listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack'
 
 def test_Messaging():
     asserts = {}
+    asserts['durationCount'] = 0
     messageProducer = MessageProducer(producer_config, ['a'])
-
 
     def onStatistics(statistics):
         asserts['stats'] = statistics
+        asserts['durationCount'] += len(statistics[0]['durationList'])
 
     messageProducer.registerStatisticsListener(onStatistics)
     gevent.sleep(3)
@@ -20,6 +21,7 @@ def test_Messaging():
     def onMessage(msg):
         asserts['field1'] = msg['field1']
         gevent.sleep(1)
+
     gevent.spawn(messageProducer.start)
     gevent.spawn(messageProducer.start)
     messageProducer.produce({'field1': 'value1'})
@@ -36,8 +38,7 @@ def test_Messaging():
     assert asserts['field1'] == 'value1'
     assert asserts['stats'][0]['queueSize'] == 0
     assert asserts['stats'][0]['sent'] == 3
-    assert len(asserts['stats'][0]['durationList']) == 3
-    assert messageProducer.getMessageProcessTime('a') >= 1
+    assert asserts['durationCount'] == 3
     gevent.sleep()
     messageProducer.close()
     messageListener.close()
