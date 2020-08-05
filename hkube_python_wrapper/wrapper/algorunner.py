@@ -63,7 +63,7 @@ class Algorunner:
             self._algorithm['init'] = init
             self._algorithm['stop'] = stop
             self._algorithm['exit'] = exit
-            if (self._input.get('kind') == 'stream'):
+            if (self._input is not None and self._input.get('kind') == 'strloadAlgorithmCallbacksloadAlgorithmCallbackseam'):
                 if not (config.discovery.get('streaming').get('stateful')):
                     wrapper = statelessALgoWrapper(self._algorithm)
                     self._algorithm = dict()
