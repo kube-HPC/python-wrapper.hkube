@@ -185,7 +185,7 @@ class Algorunner:
         self._wsc.events.on_start += self._start
         self._wsc.events.on_stop += self._stop
         self._wsc.events.on_exit += self._exit
-        self._wsc.events.on_disovery_update += self._discovery_update
+        self._wsc.events.on_discovery_update += self._discovery_update
 
     def _connection(self):
         self._connected = True
@@ -222,8 +222,7 @@ class Algorunner:
                 producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
                 producerConfig['encoding'] = config.discovery['encoding']
                 producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
-                self._hkubeApi.setupStreaming(onStatistics, producerConfig, options['childs'])
-                self._discovery_update(options.get('parents'))
+                self._hkubeApi.setupStreamingProducer(onStatistics, producerConfig, options['childs'])
                 self._sendCommand(messages.outgoing.initialized, None)
 
         except Exception as e:

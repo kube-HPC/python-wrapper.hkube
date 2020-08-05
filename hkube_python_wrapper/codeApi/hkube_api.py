@@ -24,23 +24,32 @@ class HKubeApi:
         self._wc.events.on_subPipelineError += self.subPipelineDone
         self._wc.events.on_subPipelineStopped += self.subPipelineDone
         self._messageProducer = None
-        self._messageListeners = []
+        self._messageListeners = dict()
         self._inputListener = []
+        self.listeningToMessages = False
 
-    def setupStreaming(self, onStatistics, producerConfig, nextNodes):
+    def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes):
         self._messageProducer = MessageProducer(producerConfig, nextNodes)
         self._messageProducer.registerStatisticsListener(onStatistics)
         gevent.spawn(self._messageProducer.start)
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
         for predecessor in parents:
-            options = {}
-            options.update(listenerConfig)
-            options['remoteAddress'] = 'tcp://' + \
-                                       predecessor['host'] + ':' + str(predecessor['port'])
-            listenr = MessageListener(options, nodeName)
-            listenr.registerMessageListener(self._onMessage)
-            self._messageListeners.append(listenr)
+            remoteAddress = 'tcp://' + \
+                            predecessor['address']['host'] + ':' + str(predecessor['address']['port'])
+            if (predecessor['type'] == 'Add'):
+                options = {}
+                options.update(listenerConfig)
+                options['remoteAddress'] = remoteAddress
+                listenr = MessageListener(options, nodeName)
+                listenr.registerMessageListener(self._onMessage)
+                self._messageListeners[remoteAddress] = listenr
+                if (self.listeningToMessages):
+                    listenr.start()
+            if (predecessor['type'] == 'Del'):
+                if (self.listeningToMessages):
+                    self._messageListeners[remoteAddress].close()
+                del self._messageListeners[remoteAddress]
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
@@ -50,14 +59,16 @@ class HKubeApi:
             listener(msg)
 
     def startMessageListening(self):
-        for listener in self._messageListeners:
+        self.listeningToMessages = True
+        for listener in self._messageListeners.values():
             gevent.spawn(listener.start)
 
     def sendMessage(self, msg):
         self._messageProducer.produce(msg)
 
     def stopStreaming(self):
-        for listener in self._messageListeners:
+        self.listeningToMessages = False
+        for listener in self._messageListeners.values():
             listener.close()
         self._messageProducer.close()
 

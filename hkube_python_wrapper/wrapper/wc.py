@@ -33,7 +33,8 @@ class WebsocketClient:
         self._firstConnect = False
         self._encoding = Encoding(encoding)
         self._ws_opcode = ABNF.OPCODE_BINARY if self._encoding.isBinary else ABNF.OPCODE_TEXT
-        print('Initialized socket with {encoding} encoding'.format(encoding=encoding))
+        print('Initialized socket with {encoding} encoding'.format(
+            encoding=encoding))
 
     def init(self, data):
         self.events.on_init(data)
@@ -48,7 +49,7 @@ class WebsocketClient:
         self.events.on_exit(data)
 
     def discoveryUpdate(self, data):
-        self.events.on_disovery_update(self, data)
+        self.events.on_discovery_update(data)
 
     def algorithmExecutionDone(self, data):
         self.events.on_algorithmExecutionDone(data)
@@ -89,7 +90,8 @@ class WebsocketClient:
 
     def send(self, message):
         print('sending message to worker: {command}'.format(**message))
-        self._ws.send(self._encoding.encode(message, plain_encode=True), opcode=self._ws_opcode)
+        self._ws.send(self._encoding.encode(
+            message, plain_encode=True), opcode=self._ws_opcode)
 
     def startWS(self, url):
         self._ws = websocket.WebSocketApp(
