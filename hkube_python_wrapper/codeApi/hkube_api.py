@@ -34,13 +34,16 @@ class HKubeApi:
         gevent.spawn(self._messageProducer.start)
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
+        print("parents" + str(parents))
         for predecessor in parents:
             remoteAddress = 'tcp://' + \
-                            predecessor['address']['host'] + ':' + str(predecessor['address']['port'])
+                            predecessor['address']['host'] + ':' + \
+                str(predecessor['address']['port'])
             if (predecessor['type'] == 'Add'):
                 options = {}
                 options.update(listenerConfig)
                 options['remoteAddress'] = remoteAddress
+                options['messageOriginNodeName'] = predecessor['nodeName']
                 listenr = MessageListener(options, nodeName)
                 listenr.registerMessageListener(self._onMessage)
                 self._messageListeners[remoteAddress] = listenr
@@ -54,9 +57,12 @@ class HKubeApi:
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
 
-    def _onMessage(self, msg):
+    def _onMessage(self, msg, origin):
         for listener in self._inputListener:
-            listener(msg)
+            try:
+                listener(msg, origin)
+            except Exception as e:
+                print(e)
 
     def startMessageListening(self):
         self.listeningToMessages = True
@@ -68,8 +74,10 @@ class HKubeApi:
 
     def stopStreaming(self):
         self.listeningToMessages = False
-        for listener in self._messageListeners.values():
-            listener.close()
+        if (self.listeningToMessages):
+            for listener in self._messageListeners.values():
+                listener.close()
+        self.listeningToMessages = False
         self._messageProducer.close()
 
     def _generateExecId(self):

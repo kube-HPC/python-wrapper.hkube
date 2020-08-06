@@ -41,7 +41,8 @@ class Algorunner:
     def Run(start=None, init=None, stop=None, exit=None, options=None):
         algorunner = Algorunner()
         if (start):
-            algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
+            algorunner.loadAlgorithmCallbacks(
+                start, init=init, stop=stop, exit=exit, options=options or config)
         else:
             algorunner.loadAlgorithm(config)
         jobs = algorunner.connectToWorker(config)
@@ -52,7 +53,8 @@ class Algorunner:
         algorunner = Algorunner()
         config.socket['url'] = debug_url
         config.storage['mode'] = 'v1'
-        algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
+        algorunner.loadAlgorithmCallbacks(
+            start, init=init, stop=stop, exit=exit, options=options or config)
         jobs = algorunner.connectToWorker(config)
         gevent.joinall(jobs)
 
@@ -76,7 +78,8 @@ class Algorunner:
                 method = v
                 isMandatory = method["mandatory"]
                 if self._algorithm[methodName] is not None:
-                    print('found method {methodName}'.format(methodName=methodName))
+                    print('found method {methodName}'.format(
+                        methodName=methodName))
                 else:
                     mandatory = "mandatory" if isMandatory else "optional"
                     error = 'unable to find {mandatory} method {methodName}'.format(
@@ -227,6 +230,7 @@ class Algorunner:
             self._sendError(e)
 
     def _discovery_update(self, discovery):
+        print('Got discovery update' + str(discovery))
         messageListenrConfig = {'encoding': config.discovery['encoding']}
         self._hkubeApi.setupStreamingListeners(
             messageListenrConfig, discovery, self._nodeName)
@@ -310,7 +314,8 @@ class Algorunner:
             method = self._getMethod('stop')
             if (method is not None):
                 method(options)
-
+            if (self._input.get('kind') == 'stream'):
+                self._hkubeApi.stopStreaming()
             self._sendCommand(messages.outgoing.stopped, None)
 
         except Exception as e:

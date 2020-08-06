@@ -98,8 +98,11 @@ class ZMQListener(object):
                 self.worker.send_multipart([PPP_HEARTBEAT, msgpack.packb(self.consumerType)])
 
     def close(self):
-        self.active = False
-        self.worker.close()
+        if not (self.active):
+            print("Attempting to close inactive ZMQListener")
+        else:
+            self.active = False
+            self.worker.close()
 
 # if __name__ == "__main__":
 #     def doSomething():

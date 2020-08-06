@@ -18,7 +18,8 @@ def test_Messaging():
     messageProducer.registerStatisticsListener(onStatistics)
     gevent.sleep(3)
 
-    def onMessage(msg):
+    def onMessage(msg,origin):
+        # pylint: disable=unused-argument
         asserts['field1'] = msg['field1']
         gevent.sleep(1)
 
@@ -31,7 +32,7 @@ def test_Messaging():
     assert asserts['stats'][0]['queueSize'] == 3
     assert asserts['stats'][0]['sent'] == 0
     assert len(asserts['stats'][0]['durationList']) == 0
-    messageListener = MessageListener(listenr_config, nodeName='a')
+    messageListener = MessageListener(listenr_config, receiverNode='a')
     messageListener.registerMessageListener(onMessage)
     gevent.spawn(messageListener.start)
     gevent.sleep(4.2)

@@ -69,5 +69,8 @@ class MessageProducer(object):
         self.adapter.start()
 
     def close(self):
-        self.active = False
-        self.adapter.close()
+        if not (self.active):
+            print("Attempting to close inactive MessageProducer")
+        else:
+            self.active = False
+            self.adapter.close()
