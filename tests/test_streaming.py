@@ -3,7 +3,7 @@ from hkube_python_wrapper.communication.streaming.MessageProducer import Message
 import gevent
 
 producer_config = {'port': 5557, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 0.1}
-listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack'}
+listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack','messageOriginNodeName':'b'}
 
 
 def test_Messaging():
