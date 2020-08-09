@@ -70,7 +70,8 @@ class HKubeApi:
             gevent.spawn(listener.start)
 
     def sendMessage(self, msg):
-        self._messageProducer.produce(msg)
+        if (self._messageProducer is not None):
+            self._messageProducer.produce(msg)
 
     def stopStreaming(self):
         self.listeningToMessages = False
@@ -78,7 +79,8 @@ class HKubeApi:
             for listener in self._messageListeners.values():
                 listener.close()
         self.listeningToMessages = False
-        self._messageProducer.close()
+        if (self._messageProducer is not None):
+            self._messageProducer.close()
 
     def _generateExecId(self):
         self._lastExecId += 1
