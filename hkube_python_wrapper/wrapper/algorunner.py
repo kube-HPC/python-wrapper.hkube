@@ -224,7 +224,7 @@ class Algorunner:
             messageListenrConfig, discovery, self._nodeName)
 
     def _start(self, options):
-        if (self._input.get('kind') == 'stream' and len(self._input['childs']) > 0):
+        if (self._input.get('kind') == 'stream' and self._input['childs']):
             def onStatistics(statistics):
                 self._sendCommand(
                     messages.outgoing.streamingStatistics, statistics)
