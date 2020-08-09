@@ -154,7 +154,7 @@ class ZMQProducer(object):
             for type, workerQueu in workers.queues.items():
                 if (workerQueu and self.messageQueue.hasItems(type)):
                     if (len(self.messageQueue.queue) % 100 == 0):
-                        print(str(len(self.messageQueue.queues[type])))
+                        print(str(len(self.messageQueue.queue)))
                     frames = [self.messageQueue.pop(type)]
                     frames.insert(0, workers.next(type))
                     self._backend.send_multipart(frames)

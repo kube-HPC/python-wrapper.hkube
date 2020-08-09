@@ -212,18 +212,6 @@ class Algorunner:
                 method = self._getMethod('init')
                 if (method is not None):
                     method(options)
-                if (self._input.get('kind') == 'stream'):
-                    def onStatistics(statistics):
-                        self._sendCommand(
-                            messages.outgoing.streamingStatistics, statistics)
-
-                    producerConfig = {}
-                    producerConfig["port"] = config.discovery['streaming']['port']
-                    producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
-                    producerConfig['encoding'] = config.discovery['encoding']
-                    producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
-                    self._hkubeApi.setupStreamingProducer(
-                        onStatistics, producerConfig, options['childs'])
                 self._sendCommand(messages.outgoing.initialized, None)
 
         except Exception as e:
@@ -236,6 +224,18 @@ class Algorunner:
             messageListenrConfig, discovery, self._nodeName)
 
     def _start(self, options):
+        if (self._input.get('kind') == 'stream'):
+            def onStatistics(statistics):
+                self._sendCommand(
+                    messages.outgoing.streamingStatistics, statistics)
+
+            producerConfig = {}
+            producerConfig["port"] = config.discovery['streaming']['port']
+            producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
+            producerConfig['encoding'] = config.discovery['encoding']
+            producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
+            self._hkubeApi.setupStreamingProducer(
+                onStatistics, producerConfig, self._input['childs'])
         # pylint: disable=unused-argument
         span = None
         try:
