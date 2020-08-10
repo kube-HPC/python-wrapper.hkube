@@ -74,7 +74,6 @@ class HKubeApi:
             self._messageProducer.produce(msg)
 
     def stopStreaming(self):
-        self.listeningToMessages = False
         if (self.listeningToMessages):
             for listener in self._messageListeners.values():
                 listener.close()
