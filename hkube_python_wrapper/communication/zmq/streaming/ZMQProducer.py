@@ -117,7 +117,7 @@ class ZMQProducer(object):
             gevent.sleep(0.1)
         self.messageQueue.append(message)
 
-    def start(self):
+    def start(self):  # pylint: disable=too-many-branches
         poll_workers = zmq.Poller()
         poll_workers.register(self._backend, zmq.POLLIN)
         workers = WorkerQueue(self.consumerTypes)
@@ -138,7 +138,6 @@ class ZMQProducer(object):
                 if not consumerType in self.consumerTypes:
                     print("Producer got message from unknown consumer: " + consumerType + ", dropping the message")
                     continue
-                print("Producer got message from " + consumerType)
                 if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
                     self.responseAcumulator(frames[1], consumerType)
                 workers.ready(Worker(address), consumerType)
@@ -157,7 +156,11 @@ class ZMQProducer(object):
                         print(str(len(self.messageQueue.queue)))
                     frames = [self.messageQueue.pop(type)]
                     frames.insert(0, workers.next(type))
-                    self._backend.send_multipart(frames)
+                    try:
+                        self._backend.send_multipart(frames)
+                    except Exception as e:
+                        if (self.active):
+                            print(e)
             workers.purge()
 
     def queueSize(self, consumerSize):

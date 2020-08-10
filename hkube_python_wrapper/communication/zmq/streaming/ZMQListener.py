@@ -34,7 +34,7 @@ class ZMQListener(object):
         worker.send_multipart([PPP_READY, msgpack.packb(self.consumerType)])
         return worker
 
-    def start(self):
+    def start(self): # pylint: disable=too-many-branches
         context = zmq.Context(1)
         poller = zmq.Poller()
         liveness = HEARTBEAT_LIVENESS
@@ -95,7 +95,11 @@ class ZMQListener(object):
             if time.time() > heartbeat_at:
                 heartbeat_at = time.time() + HEARTBEAT_INTERVAL
                 print("I: Worker heartbeat")
-                self.worker.send_multipart([PPP_HEARTBEAT, msgpack.packb(self.consumerType)])
+                try:
+                    self.worker.send_multipart([PPP_HEARTBEAT, msgpack.packb(self.consumerType)])
+                except Exception as e:
+                    if (self.active):
+                        print(e)
 
     def close(self):
         if not (self.active):

@@ -59,7 +59,7 @@ class MessageProducer(object):
             queueSize = self.adapter.queueSize(nodeName)
             sent = self.adapter.sent(nodeName)
             singleNodeStatistics = {"nodeName": nodeName, "sent": sent, "queueSize": queueSize,
-                                    "durationList": self.resetResponseCache(nodeName), "responses":self.getResponseCount(nodeName)}
+                                    "responses": self.getResponseCount(nodeName)}
             statistics.append(singleNodeStatistics)
         print("statistics " + str(statistics))
         for listener in self.listeners:
