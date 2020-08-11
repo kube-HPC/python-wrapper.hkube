@@ -57,7 +57,7 @@ class HKubeApi:
     def start_algorithm(self, algorithmName, input=[], includeResult=True, blocking=False):
         """Starts algorithm execution.
 
-    starts an invocation of algorithm with input, and optionally waits for results 
+    starts an invocation of algorithm with input, and optionally waits for results
 
     Args:
         algorithmName (string): The name of the algorithm to start.
@@ -91,7 +91,7 @@ class HKubeApi:
     def start_stored_subpipeline(self, name, flowInput={}, includeResult=True, blocking=False):
         """Starts pipeline execution.
 
-    starts an invocation of a sub-pipeline with input, and optionally waits for results 
+    starts an invocation of a sub-pipeline with input, and optionally waits for results
 
     Args:
         name (string): The name of the pipeline to start.
@@ -129,7 +129,7 @@ class HKubeApi:
     def start_raw_subpipeline(self, name, nodes, flowInput, options={}, webhooks={}, includeResult=True, blocking=False):
         """Starts pipeline execution.
 
-    starts an invocation of a sub-pipeline with input, nodes, options, and optionally waits for results 
+    starts an invocation of a sub-pipeline with input, nodes, options, and optionally waits for results
 
     Args:
         name (string): The name of the pipeline to start.

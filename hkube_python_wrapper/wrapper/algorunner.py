@@ -38,7 +38,7 @@ class Algorunner:
         """Starts the algorunner wrapper.
 
     Convenience method to start the algorithm. Pass the algorithm methods
-    This method blocks forever 
+    This method blocks forever
 
     Args:
         start (function): The entry point of the algorithm. Called for every invocation.
