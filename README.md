@@ -32,7 +32,7 @@ def start(args: Dict, hkubeApi: HKubeApi):
 ```
 build the algorithm with `hkubectl`
 ```bash
-hkubectl algorithm apply algorithm_name  --codePath ./folder_of_alg_py --codeEntryPoint alg.py --env python --setCurrent
+hkubectl algorithm apply algorithm-name  --codePath ./folder_of_alg_py --codeEntryPoint alg.py --env python --setCurrent
 ```
 
 ## Basic Usage (manual build)
