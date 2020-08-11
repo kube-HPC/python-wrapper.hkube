@@ -66,9 +66,13 @@ class ZMQListener(object):
                     liveness = HEARTBEAT_LIVENESS
                     result = self.onMessage(frames[0])
                     newFrames = [result, msgpack.packb(self.consumerType)]
-                    self.worker.send_multipart(newFrames)
+                    try:
+                        self.worker.send_multipart(newFrames)
+                    except Exception as e:
+                        if(self.active):
+                            print(e)
+
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
-                    print("I: Queue heartbeat")
                     liveness = HEARTBEAT_LIVENESS
                 else:
                     print("E: Invalid message: %s" % frames)
@@ -94,7 +98,6 @@ class ZMQListener(object):
 
             if time.time() > heartbeat_at:
                 heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-                print("I: Worker heartbeat")
                 try:
                     self.worker.send_multipart([PPP_HEARTBEAT, msgpack.packb(self.consumerType)])
                 except Exception as e:

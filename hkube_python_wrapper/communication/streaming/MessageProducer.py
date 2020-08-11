@@ -10,7 +10,7 @@ class MessageProducer(object):
     def __init__(self, options, nodeNames):
         self.nodeNames = nodeNames
         port = options['port']
-        maxMemorySize = options['messagesMemoryBuff']
+        maxMemorySize = options['messagesMemoryBuff']*1024*1024
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
@@ -27,8 +27,8 @@ class MessageProducer(object):
             while (self.active):
                 self.sendStatistics()
                 gevent.sleep(interval)
-
-        gevent.spawn(sendStatisticsEvery, statisticsInterval)
+        if(self.nodeNames):
+            gevent.spawn(sendStatisticsEvery, statisticsInterval)
 
     def produce(self, obj):
         encodedMessage = self._encoding.encode(obj, plain_encode=True)

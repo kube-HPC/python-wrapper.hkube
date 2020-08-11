@@ -26,7 +26,7 @@ discovery = {
     "timeout": getIntEnv('DISCOVERY_TIMEOUT', 1000),
     "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 500),
     "streaming": {
-        "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_SIZE', 500),
+        "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_MB', 1500),
         "port": os.environ.get('STREAMING_DISCOVERY_PORT', 9021),
         "statisticsInterval":os.environ.get('STREAMING_STATISTICS_INTERVAL', 1),
         "stateful":getBoolEnv('STREAMING_STATEFUL', 'True')

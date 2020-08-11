@@ -31,14 +31,15 @@ class HKubeApi:
     def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes):
         self._messageProducer = MessageProducer(producerConfig, nextNodes)
         self._messageProducer.registerStatisticsListener(onStatistics)
-        gevent.spawn(self._messageProducer.start)
+        if (nextNodes):
+            gevent.spawn(self._messageProducer.start)
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
         print("parents" + str(parents))
         for predecessor in parents:
             remoteAddress = 'tcp://' + \
                             predecessor['address']['host'] + ':' + \
-                str(predecessor['address']['port'])
+                            str(predecessor['address']['port'])
             if (predecessor['type'] == 'Add'):
                 options = {}
                 options.update(listenerConfig)
@@ -70,7 +71,9 @@ class HKubeApi:
             gevent.spawn(listener.start)
 
     def sendMessage(self, msg):
-        if (self._messageProducer is not None):
+        if (self._messageProducer is None):
+            raise Exception('Trying to send message after close or from a none stream pipeline')
+        if (self._messageProducer.nodeNames):
             self._messageProducer.produce(msg)
 
     def stopStreaming(self):

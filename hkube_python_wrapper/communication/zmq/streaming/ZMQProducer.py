@@ -84,8 +84,12 @@ class MessageQueue(object):
                     self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
         return out
 
+    def looseMessage(self):
+        out = self.queue.pop(0)
+        self.sizeSum -= len(out)
+
     def append(self, msg):
-        self.sizeSum -= len(msg)
+        self.sizeSum += len(msg)
         return self.queue.append(msg)
 
     def size(self, consumerType):
@@ -114,7 +118,8 @@ class ZMQProducer(object):
 
     def produce(self, message):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
-            gevent.sleep(0.1)
+            print('Loosing a message, queue filled up ')
+            self.messageQueue.looseMessage()
         self.messageQueue.append(message)
 
     def start(self):  # pylint: disable=too-many-branches
@@ -126,7 +131,11 @@ class ZMQProducer(object):
         while self.active:
             gevent.sleep()
             poller = poll_workers
-            socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
+            try:
+                socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
+            except Exception as e:
+                if (self.active):
+                    print(e)
             # Handle worker activity on self._backend
             if socks.get(self._backend) == zmq.POLLIN:
                 # Use worker address for LRU routing
