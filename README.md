@@ -31,12 +31,13 @@ The `start` method accepts two arguments:
 | parentNodeName | string | For child (code-api) algorithm. The name of the invoking node |
 | info.rootJobId | string | for sub-pipeline, the jobId of the invoking pipeline          |
 **hkubeApi**: instance of HKubeApi for code-api operations
-Has 3 methods:
-start_algorithm: starts execution of algorithm, and optionally awaits the results
-start_stored_subpipeline: starts execution of sub-pipeline by name (stored), and optionally awaits the results
-start_raw_subpipeline: starts execution of sub-pipeline by providing the descriptor (raw), and optionally awaits the results
 
-#### Method `start_algorithm`
+
+## Class HKubeApi
+---
+
+Method `start_algorithm`
+----
 >     def start_algorithm(
 >         self,
 >         algorithmName,
@@ -46,8 +47,7 @@ start_raw_subpipeline: starts execution of sub-pipeline by providing the descrip
 >     )
 Starts an invocation of algorithm with input, and optionally waits for results
 
-Args
------
+#### Args
 **```algorithmName```**: `string`
 :   The name of the algorithm to start.
 
@@ -63,17 +63,16 @@ Args
     If False, returns an awaiter object, that can be awaited (blocking) at a later time  
     default: False
     
-Returns
------
+#### Returns
 if blocking==False, returns an awaiter. If true, returns the result of the algorithm
 
-Example:
------
+#### Example:
 ```python
 hkubeApi.start_algorithm('some_algorithm',input=[3], blocking=True)
 ```
 
-#### Method `start_stored_subpipeline`
+Method `start_stored_subpipeline`
+----
 >     def start_stored_subpipeline(
 >         self,
 >         name,
@@ -83,10 +82,7 @@ hkubeApi.start_algorithm('some_algorithm',input=[3], blocking=True)
 >     )
 Starts an invocation of a sub-pipeline with input, and optionally waits for results 
 
-
-
-Args
------
+#### Args
 **```name```** : `string` 
 :   The name of the pipeline to start.
 
@@ -106,18 +102,16 @@ Args
     default: False
 
 
-
-Returns
------
+#### Returns
 if blocking==False, returns an awaiter. If true, returns the result of the pipeline
 
-Example:
------
+#### Example:
 ```python
 hkubeApi.start_stored_subpipeline('simple',flowInput={'foo':3},blocking=True)
 ```
 
-#### Method `start_raw_subpipeline`
+Method `start_raw_subpipeline`
+----
 >     def start_raw_subpipeline(
 >         self,
 >         name,
@@ -130,9 +124,7 @@ hkubeApi.start_stored_subpipeline('simple',flowInput={'foo':3},blocking=True)
 >     )
 Starts an invocation of a sub-pipeline with input, nodes, options, and optionally waits for results 
 
-
-Args
------
+#### Args
 **```name```** : `string` 
 :   The name of the pipeline to start.
 
@@ -157,12 +149,10 @@ Args
     If False, returns an awaiter object, that can be awaited (blocking) at a later time  
     default: False
 
-Returns
------
+#### Returns
 if blocking==False, returns an awaiter. If true, returns the result of the pipeline
 
-Example:
------
+#### Example:
 ```python
 nodes=[{'nodeName': 'd1', 'algorithmName': 'green-alg', 'input': ['@flowInput.foo']}]
 flowInput={'foo':3}
