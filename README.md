@@ -30,6 +30,7 @@ The `start` method accepts two arguments:
 | batchIndex     | int    | For batch instance, the index in the batch array              |
 | parentNodeName | string | For child (code-api) algorithm. The name of the invoking node |
 | info.rootJobId | string | for sub-pipeline, the jobId of the invoking pipeline          |
+
 **hkubeApi**: instance of HKubeApi for code-api operations
 
 
