@@ -25,8 +25,9 @@ hkubectl config # and follow the prompts
 ## Basic Usage (auto build)
 create a file for the algorithm entry-points (alg.py)
 ```python
-from hkube_python_wrapper import Algorunner
-def start(args, hkubeApi):
+from typing import Dict
+from hkube_python_wrapper import Algorunner, HKubeApi
+def start(args: Dict, hkubeApi: HKubeApi):
     return 1
 ```
 build the algorithm with `hkubectl`
@@ -36,8 +37,9 @@ hkubectl algorithm apply algorithm_name  --codePath ./folder_of_alg_py --codeEnt
 
 ## Basic Usage (manual build)
 ```python
-from hkube_python_wrapper import Algorunner
-def start(args, hkubeApi):
+from typing import Dict
+from hkube_python_wrapper import Algorunner, HKubeApi
+def start(args: Dict, hkubeApi: HKubeApi):
     return 1
 if __name__ == "__main__":
     Algorunner.Run(start=start)
