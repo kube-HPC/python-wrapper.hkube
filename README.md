@@ -8,7 +8,33 @@ For general information on HKube see [hkube.io](http://hkube.io/)
 ```shell
 pip install hkube-python-wrapper
 ```
-## Basic Usage
+Download `hkubectl` [latest version](https://github.com/kube-HPC/hkubectl/releases).
+```bash
+curl -Lo hkubectl https://github.com/kube-HPC/hkubectl/releases/download/$(curl -s https://api.github.com/repos/kube-HPC/hkubectl/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')/hkubectl-linux \
+&& chmod +x hkubectl \
+&& sudo mv hkubectl /usr/local/bin/
+```
+> For mac replace with hkubectl-macos  
+> For Windows download hkubectl-win.exe  
+
+Config `hkubectl` with your running Kubernetes.
+
+```bash
+hkubectl config # and follow the prompts
+```
+## Basic Usage (auto build)
+create a file for the algorithm entry-points (alg.py)
+```python
+from hkube_python_wrapper import Algorunner
+def start(args, hkubeApi):
+    return 1
+```
+build the algorithm with `hkubectl`
+```bash
+hkubectl algorithm apply algorithm_name  --codePath ./folder_of_alg_py --codeEntryPoint alg.py --env python --setCurrent
+```
+
+## Basic Usage (manual build)
 ```python
 from hkube_python_wrapper import Algorunner
 def start(args, hkubeApi):
