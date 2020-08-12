@@ -27,7 +27,7 @@ class MessageListener(object):
                 print('Error during MessageListener onMessage' + e)
 
         end = time.time()
-        duration = int(end - start)
+        duration = int((end - start)*1000)
         return self._encoding.encode({'duration': duration}, plain_encode=True)
 
     def start(self):
