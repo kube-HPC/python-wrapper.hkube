@@ -60,6 +60,7 @@ class MessageQueue(object):
             self.indexPerConsumer[consumerType] = 0
         self.sizeSum = 0
         self.sentToAll = 0
+        self.lostMessages = 0
         self.queue = []
 
     def hasItems(self, consumerType):
@@ -87,6 +88,7 @@ class MessageQueue(object):
     def looseMessage(self):
         out = self.queue.pop(0)
         self.sizeSum -= len(out)
+        self.lostMessages += 1
 
     def append(self, msg):
         self.sizeSum += len(msg)

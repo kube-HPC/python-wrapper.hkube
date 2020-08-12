@@ -10,7 +10,7 @@ class MessageProducer(object):
     def __init__(self, options, nodeNames):
         self.nodeNames = nodeNames
         port = options['port']
-        maxMemorySize = options['messagesMemoryBuff']*1024*1024
+        maxMemorySize = options['messagesMemoryBuff'] * 1024 * 1024
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
@@ -27,7 +27,8 @@ class MessageProducer(object):
             while (self.active):
                 self.sendStatistics()
                 gevent.sleep(interval)
-        if(self.nodeNames):
+
+        if (self.nodeNames):
             gevent.spawn(sendStatisticsEvery, statisticsInterval)
 
     def produce(self, obj):
@@ -59,7 +60,9 @@ class MessageProducer(object):
             queueSize = self.adapter.queueSize(nodeName)
             sent = self.adapter.sent(nodeName)
             singleNodeStatistics = {"nodeName": nodeName, "sent": sent, "queueSize": queueSize,
-                                    "durations": self.resetResponseCache(nodeName), "responses":self.getResponseCount(nodeName)}
+                                    "durations": self.resetResponseCache(nodeName),
+                                    "responses": self.getResponseCount(nodeName),
+                                    "dropped": self.adapter.messageQueue.lostMessages}
             statistics.append(singleNodeStatistics)
         print("statistics " + str(statistics))
         for listener in self.listeners:

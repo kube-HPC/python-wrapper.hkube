@@ -72,7 +72,7 @@ class HKubeApi:
 
     def sendMessage(self, msg):
         if (self._messageProducer is None):
-            raise Exception('Trying to send message after close or from a none stream pipeline')
+            raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
         if (self._messageProducer.nodeNames):
             self._messageProducer.produce(msg)
 
@@ -83,6 +83,7 @@ class HKubeApi:
         self.listeningToMessages = False
         if (self._messageProducer is not None):
             self._messageProducer.close()
+            self._messageProducer = None
 
     def _generateExecId(self):
         self._lastExecId += 1

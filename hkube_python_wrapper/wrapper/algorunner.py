@@ -1,5 +1,7 @@
 from __future__ import print_function, division, absolute_import
 
+from random import randint
+
 from .statelessAlgoWrapper import statelessALgoWrapper
 from ..config import config
 from .wc import WebsocketClient
@@ -36,6 +38,7 @@ class Algorunner:
         self.tracer = None
         self._storage = None
         self._nodeName = None
+        self.startCurrentlyRunning = None
 
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):
@@ -238,6 +241,7 @@ class Algorunner:
                 onStatistics, producerConfig, self._input['childs'])
         # pylint: disable=unused-argument
         span = None
+        threadId = randint(0, 0x10000)
         try:
             self._sendCommand(messages.outgoing.started, None)
             # TODO: add parent span from worker
@@ -254,14 +258,18 @@ class Algorunner:
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
             method = self._getMethod('start')
+            self.startCurrentlyRunning = threadId
             algorithmData = method(self._input, self._hkubeApi)
             self._handle_response(algorithmData, jobId,
                                   taskId, nodeName, savePaths, span)
-
+            self.startCurrentlyRunning = None
         except Exception as e:
             traceback.print_exc()
             Tracer.instance.finish_span(span, e)
-            self._sendError(e)
+            if(self.startCurrentlyRunning == threadId):
+                self._sendError(e)
+            else:
+                print('Exception from old algorithm run: ' + str(e))
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         if (self._storage == 'v2'):
@@ -312,12 +320,13 @@ class Algorunner:
     def _stop(self, options):
         try:
             method = self._getMethod('stop')
+            gevent.sleep()
             if (method is not None):
                 method(options)
             if (self._input.get('kind') == 'stream'):
                 self._hkubeApi.stopStreaming()
             self._sendCommand(messages.outgoing.stopped, None)
-
+            self.startCurrentlyRunning = None
         except Exception as e:
             self._sendError(e)
 
