@@ -45,7 +45,11 @@ class ZMQListener(object):
         cycles = 0
         while self.active:
             gevent.sleep()
-            socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
+            try:
+                socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
+            except Exception as e:
+                if (self.active):
+                    print(e)
 
             # Handle worker activity on backend
             if socks.get(self.worker) == zmq.POLLIN:
@@ -81,7 +85,6 @@ class ZMQListener(object):
                 interval = INTERVAL_INIT
             else:
                 liveness -= 1
-                print("reduce -1")
                 if liveness == 0:
                     print("W: Heartbeat failure, can't reach queue")
                     print("W: Reconnecting in %0.2fs" % interval)
