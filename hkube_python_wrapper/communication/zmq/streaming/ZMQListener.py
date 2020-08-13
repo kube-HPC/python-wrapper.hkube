@@ -67,10 +67,6 @@ class ZMQListener(object):
                 if len(frames) == 1 and not frames[0] == PPP_HEARTBEAT:
                     # Simulate various problems, after a few cycles
                     cycles += 1
-                    if (cycles % 100 == 0):
-                        decoded = str(frames[0])
-                        print(decoded)
-                        print(cycles)
                     liveness = HEARTBEAT_LIVENESS
                     result = self.onMessage(frames[0])
                     newFrames = [result, msgpack.packb(self.consumerType)]
@@ -119,7 +115,8 @@ class ZMQListener(object):
             print("Attempting to close inactive ZMQListener")
         else:
             self.active = False
-            self.worker.close()
+            if(self.worker is not  None):
+                self.worker.close()
 
 # if __name__ == "__main__":
 #     def doSomething():

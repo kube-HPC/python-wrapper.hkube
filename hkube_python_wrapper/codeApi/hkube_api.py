@@ -63,7 +63,7 @@ class HKubeApi:
             try:
                 listener(msg, origin)
             except Exception as e:
-                print(e)
+                print("hkube_api message listener through exception: " +str(e))
 
     def startMessageListening(self):
         self.listeningToMessages = True

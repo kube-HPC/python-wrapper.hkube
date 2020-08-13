@@ -227,7 +227,7 @@ class Algorunner:
             messageListenrConfig, discovery, self._nodeName)
 
     def _start(self, options):
-        if (self._input.get('kind') == 'stream'):
+        if (self.isPipeLineStreaming()):
             def onStatistics(statistics):
                 self._sendCommand(
                     messages.outgoing.streamingStatistics, statistics)
@@ -281,7 +281,7 @@ class Algorunner:
     def _handle_responseV1(self, algorithmData, span):
         if (span):
             Tracer.instance.finish_span(span)
-        if (self._input.get('kind') == 'stream'):
+        if (self.isPipeLineStreaming()):
             self._hkubeApi.stopStreaming()
         self._sendCommand(messages.outgoing.done, algorithmData)
 
@@ -313,7 +313,7 @@ class Algorunner:
             self._sendCommand(messages.outgoing.storing, storingData)
         if (span):
             Tracer.instance.finish_span(span)
-        if (self._input.get('kind') == 'stream'):
+        if (self.isPipeLineStreaming()):
             self._hkubeApi.stopStreaming()
         self._sendCommand(messages.outgoing.done, None)
 
@@ -323,7 +323,7 @@ class Algorunner:
             gevent.sleep()
             if (method is not None):
                 method(options)
-            if (self._input.get('kind') == 'stream'):
+            if (self.isPipeLineStreaming()):
                 self._hkubeApi.stopStreaming()
             self._sendCommand(messages.outgoing.stopped, None)
             self.startCurrentlyRunning = None
@@ -363,10 +363,17 @@ class Algorunner:
                     'message': self._errorMsg(error)
                 }
             })
-            if (self._input.get('kind') == 'stream'):
+            if (self.isPipeLineStreaming()):
                 self._hkubeApi.stopStreaming()
         except Exception as e:
             print(e)
 
     def _errorMsg(self, error):
         return str(error)
+
+    def isPipeLineStreaming(self):
+        if (self._input.get('kind') == 'stream'):
+            return True
+        else:
+            return False
+
