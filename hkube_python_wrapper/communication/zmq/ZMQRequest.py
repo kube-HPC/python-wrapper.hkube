@@ -25,8 +25,7 @@ class ZMQRequest(object):
                 if (result):
                     message = self.socket.recv()
                     return message
-                else:
-                    raise Exception('Timed out:' + str(self.timeout))
+                raise Exception('Timed out:' + str(self.timeout))
         raise Exception('No server on other side ' + self.connStr)
 
     def close(self):
