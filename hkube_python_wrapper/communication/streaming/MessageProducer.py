@@ -64,9 +64,11 @@ class MessageProducer(object):
                                     "responses": self.getResponseCount(nodeName),
                                     "dropped": self.adapter.messageQueue.lostMessages}
             statistics.append(singleNodeStatistics)
-        print("statistics " + str(statistics))
         for listener in self.listeners:
             listener(statistics)
+        for singleNodeStatisticsForPrint in statistics:
+            singleNodeStatisticsForPrint['durations'] = singleNodeStatisticsForPrint['durations'][:10]
+        print("statistics " + str(statistics))
 
     def start(self):
         self.adapter.start()

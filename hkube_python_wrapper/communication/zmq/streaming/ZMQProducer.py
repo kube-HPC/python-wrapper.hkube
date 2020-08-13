@@ -141,7 +141,11 @@ class ZMQProducer(object):
             # Handle worker activity on self._backend
             if socks.get(self._backend) == zmq.POLLIN:
                 # Use worker address for LRU routing
-                frames = self._backend.recv_multipart()
+                try:
+                    frames = self._backend.recv_multipart()
+                except Exception as e:
+                    if(self.active):
+                        print(e)
                 if not frames:
                     break
                 address = frames[0]
@@ -159,7 +163,11 @@ class ZMQProducer(object):
                     for type, workersOfType in workers.queues.items():
                         for worker in workersOfType:
                             msg = [worker, PPP_HEARTBEAT]
-                            self._backend.send_multipart(msg)
+                            try:
+                                self._backend.send_multipart(msg)
+                            except Exception as e:
+                                if(self.active):
+                                    print(e)
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
             for type, workerQueu in workers.queues.items():
                 if (workerQueu and self.messageQueue.hasItems(type)):

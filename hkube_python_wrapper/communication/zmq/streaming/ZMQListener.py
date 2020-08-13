@@ -56,7 +56,11 @@ class ZMQListener(object):
                 #  Get message
                 #  - 3-part envelope + content -> request
                 #  - 1-part HEARTBEAT -> heartbeat
-                frames = self.worker.recv_multipart()
+                try:
+                    frames = self.worker.recv_multipart()
+                except Exception as e:
+                    if(self.active):
+                        print(e)
                 if not frames:
                     break  # Interrupted
 
@@ -93,9 +97,12 @@ class ZMQListener(object):
                     if interval < INTERVAL_MAX:
                         interval *= 2
                     poller.unregister(self.worker)
-                    self.worker.setsockopt(zmq.LINGER, 0)
-                    self.worker.close()
-
+                    try:
+                        self.worker.setsockopt(zmq.LINGER, 0)
+                        self.worker.close()
+                    except Exception as e:
+                        if(self.active):
+                            print(e)
                     self.worker = self.worker_socket(context, self.remoteAddress, poller)
                     liveness = HEARTBEAT_LIVENESS
 
