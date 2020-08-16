@@ -24,6 +24,7 @@ discovery = {
     "encoding": os.environ.get('DISCOVERY_ENCODING', 'bson'),
     "enable": getBoolEnv('DISCOVERY_ENABLE', 'True'),
     "timeout": getIntEnv('DISCOVERY_TIMEOUT', 1000),
+    "networkTimeout": getIntEnv('DISCOVERY_NETWORK_TIMEOUT', 1000),
     "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 500)
 }
 algorithm = {

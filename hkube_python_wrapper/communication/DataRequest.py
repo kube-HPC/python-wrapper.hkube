@@ -8,6 +8,7 @@ class DataRequest:
         encoding = reqDetails.get('encoding')
         address = reqDetails.get('address')
         timeout = reqDetails.get('timeout')
+        networkTimeout = reqDetails.get('networkTimeout')
         options = {
             u'tasks': reqDetails.get('tasks'),
             u'taskId': reqDetails.get('taskId'),
@@ -17,7 +18,7 @@ class DataRequest:
         content = self.encoding.encode(options, plain_encode=True)
         self.request = dict()
         self.request.update(address)
-        self.request.update({"content": content, "timeout": timeout})
+        self.request.update({"content": content, "timeout": timeout,"networkTimeout":networkTimeout})
 
     def invoke(self):
         try:
