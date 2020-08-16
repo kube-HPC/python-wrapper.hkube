@@ -18,7 +18,7 @@ class DataRequest:
         content = self.encoding.encode(options, plain_encode=True)
         self.request = dict()
         self.request.update(address)
-        self.request.update({"content": content, "timeout": timeout,"networkTimeout":networkTimeout})
+        self.request.update({"content": content, "timeout": timeout, "networkTimeout": networkTimeout})
 
     def invoke(self):
         try:
