@@ -23,6 +23,7 @@ monkey.patch_all()
 
 
 class Algorunner:
+    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self._url = None
         self._algorithm = dict()
