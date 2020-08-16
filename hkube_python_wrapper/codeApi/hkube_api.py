@@ -49,7 +49,7 @@ class HKubeApi:
                 listenr.registerMessageListener(self._onMessage)
                 self._messageListeners[remoteAddress] = listenr
                 if (self.listeningToMessages):
-                    listenr.start()
+                    gevent.spawn(listenr.start)
             if (predecessor['type'] == 'Del'):
                 if (self.listeningToMessages):
                     self._messageListeners[remoteAddress].close()

@@ -31,6 +31,7 @@ class MessageListener(object):
         return self._encoding.encode({'duration': duration}, plain_encode=True)
 
     def start(self):
+        print("start receiving from " + self.messageOriginNodeName)
         self.adapater.start()
 
     def close(self):
