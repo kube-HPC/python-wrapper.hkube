@@ -39,6 +39,7 @@ class Algorunner:
         self._storage = None
         self._nodeName = None
         self.startCurrentlyRunning = None
+        self.wrapper = None
 
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):
@@ -68,14 +69,6 @@ class Algorunner:
             self._algorithm['init'] = init
             self._algorithm['stop'] = stop
             self._algorithm['exit'] = exit
-            if not (config.discovery.get('streaming').get('stateful')):
-                wrapper = statelessALgoWrapper(self._algorithm)
-                self._algorithm = dict()
-                self._algorithm['start'] = wrapper.start
-                self._algorithm['init'] = wrapper.init
-                self._algorithm['stop'] = wrapper.stop
-                self._algorithm['exit'] = wrapper.exit
-
             for k, v in methods.items():
                 methodName = k
                 method = v
@@ -210,6 +203,13 @@ class Algorunner:
             if (self._loadAlgorithmError):
                 self._sendError(self._loadAlgorithmError)
             else:
+                if (options['stateType'] == 'stateless' and self.wrapper is None):
+                    self.wrapper = statelessALgoWrapper(self._algorithm)
+                    self._algorithm = dict()
+                    self._algorithm['start'] = self.wrapper.start
+                    self._algorithm['init'] = self.wrapper.init
+                    self._algorithm['stop'] = self.wrapper.stop
+                    self._algorithm['exit'] = self.wrapper.exit
                 self._input = options
                 self._nodeName = options.get('nodeName')
                 method = self._getMethod('init')
