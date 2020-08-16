@@ -30,7 +30,7 @@ class statelessALgoWrapper(object):
         self._hkubeApi.startMessageListening()
         while (self.active):
             if(self.error is not None):
-                raise self.error
+                raise self.error  # pylint: disable=raising-bad-type
             gevent.sleep(1)
 
     def init(self, options):
@@ -47,4 +47,3 @@ class statelessALgoWrapper(object):
         self.active = False
         if not (self.algo.get('stop') is None):
             self.algo['stop'](data)
-

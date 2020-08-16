@@ -374,6 +374,4 @@ class Algorunner:
     def isPipeLineStreaming(self):
         if (self._input.get('kind') == 'stream'):
             return True
-        else:
-            return False
-
+        return False

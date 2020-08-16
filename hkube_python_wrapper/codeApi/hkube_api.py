@@ -81,6 +81,7 @@ class HKubeApi:
             for listener in self._messageListeners.values():
                 listener.close()
         self.listeningToMessages = False
+        self._inputListener = []
         if (self._messageProducer is not None):
             self._messageProducer.close()
             self._messageProducer = None
