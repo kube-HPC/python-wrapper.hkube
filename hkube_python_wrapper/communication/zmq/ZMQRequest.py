@@ -13,10 +13,11 @@ class ZMQRequest(object):
         self.poller.register(self.socket, zmq.POLLIN)
         self.content = reqDetails['content']
         self.timeout = int(reqDetails['timeout'])
+        self.networkTimeout = int(reqDetails['networkTimeout'])
 
     def invokeAdapter(self):
         self.socket.send(b'Are you there')
-        result = self.poller.poll(500)
+        result = self.poller.poll(self.networkTimeout)
         if (result):
             there = self.socket.recv()
             if (there == b'Yes'):

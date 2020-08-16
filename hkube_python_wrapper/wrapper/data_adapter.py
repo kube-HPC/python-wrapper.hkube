@@ -8,6 +8,7 @@ from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.storage.storage_manager import StorageManager
 from hkube_python_wrapper.communication.DataRequest import DataRequest
 
+
 class DataAdapter:
     def __init__(self, options, dataServer=None):
         self._dataServer = dataServer
@@ -16,6 +17,7 @@ class DataAdapter:
         self._storageManager = StorageManager(options.storage)
         self._requestEncoding = options.discovery['encoding']
         self._requestTimeout = options.discovery['timeout']
+        self._networkTimeout = options.discovery['networkTimeout']
         self._maxWorkers = min(32, (multiprocessing.cpu_count() or 1) + 4)
         print('using {workers} for DataAdapter'.format(workers=self._maxWorkers))
 
@@ -46,7 +48,7 @@ class DataAdapter:
                 if (link is None):
                     raise Exception('unable to find storage key')
 
-                if(typeCheck.isList(link)):
+                if (typeCheck.isList(link)):
                     data = self.batchRequest(link, jobId)
                 else:
                     data = self.tryGetDataFromPeerOrStorage(link)
@@ -91,7 +93,7 @@ class DataAdapter:
         peerResponse = self._getFromPeer(options, dataPath)
         peerError = self._getPeerError(peerResponse)
 
-        if(peerError):
+        if (peerError):
             message = peerError.get('message')
             print('batch request has failed with {message}, using storage fallback'.format(message=message))
             for t in tasks:
@@ -101,10 +103,10 @@ class DataAdapter:
             errors = peerResponse.get('errors')
             items = peerResponse.get('items')
 
-            if(errors):
+            if (errors):
                 for i, t in enumerate(items):
                     peerError = self._getPeerError(t)
-                    if(peerError):
+                    if (peerError):
                         taskId = tasks[i]
                         storageData = self._getDataForTask(jobId, taskId, dataPath)
                         batchResponse.append(storageData)
@@ -147,7 +149,7 @@ class DataAdapter:
         host = discovery.get('host')
 
         response = None
-        if(self._dataServer and self._dataServer.isLocal(host, port)):
+        if (self._dataServer and self._dataServer.isLocal(host, port)):
             response = self._dataServer.createData(taskId, tasks, dataPath)
 
         else:
@@ -160,7 +162,9 @@ class DataAdapter:
                 'taskId': taskId,
                 'dataPath': dataPath,
                 'encoding': self._requestEncoding,
-                'timeout': self._requestTimeout
+                'timeout': self._requestTimeout,
+                'networkTimeout': self._networkTimeout
+
             }
             dataRequest = DataRequest(request)
             response = dataRequest.invoke()
@@ -169,7 +173,7 @@ class DataAdapter:
 
     def _getPeerError(self, options):
         error = None
-        if(typeCheck.isDict(options)):
+        if (typeCheck.isDict(options)):
             error = options.get('hkube_error')
 
         return error
@@ -181,7 +185,7 @@ class DataAdapter:
             data = self._getFromStorage(options)
             self._setToCache(path, data)
 
-        if(dataPath):
+        if (dataPath):
             data = getPath(data, dataPath)
 
         return data
@@ -237,9 +241,9 @@ class DataAdapter:
         return metadata
 
     def _getMetadata(self, value):
-        if(typeCheck.isDict(value)):
+        if (typeCheck.isDict(value)):
             meta = {'type': 'object'}
-        elif(typeCheck.isList(value)):
+        elif (typeCheck.isList(value)):
             meta = {'type': 'array', 'size': len(value)}
         else:
             meta = {'type': str(type(value).__name__)}
