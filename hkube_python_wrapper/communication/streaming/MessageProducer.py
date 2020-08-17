@@ -18,6 +18,7 @@ class MessageProducer(object):
         self.responsesCache = {}
         self.responseCount = {}
         self.active = True
+        self.printStatistics = 0
         for nodeName in nodeNames:
             self.responsesCache[nodeName] = []
             self.responseCount[nodeName] = 0
@@ -68,7 +69,9 @@ class MessageProducer(object):
             listener(statistics)
         for singleNodeStatisticsForPrint in statistics:
             singleNodeStatisticsForPrint['durations'] = singleNodeStatisticsForPrint['durations'][:10]
-        print("statistics " + str(statistics))
+        if(self.printStatistics % 10 == 0):
+            print("statistics " + str(statistics))
+        self.printStatistics += 1
 
     def start(self):
         self.adapter.start()

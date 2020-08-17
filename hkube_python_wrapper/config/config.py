@@ -28,7 +28,7 @@ discovery = {
     "streaming": {
         "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_MB', 1500),
         "port": os.environ.get('STREAMING_DISCOVERY_PORT', 9021),
-        "statisticsInterval":os.environ.get('STREAMING_STATISTICS_INTERVAL', 1),
+        "statisticsInterval":os.environ.get('STREAMING_STATISTICS_INTERVAL', 2),
         "stateful":getBoolEnv('STREAMING_STATEFUL', 'True')
     }
 }
