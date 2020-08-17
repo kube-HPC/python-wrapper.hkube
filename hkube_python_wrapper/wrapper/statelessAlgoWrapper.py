@@ -14,14 +14,18 @@ class statelessALgoWrapper(object):
         if not (self.algo['init'] is None):
             self.algo['init'](msg)
         input = copy.copy(self.options['input'])
-        input.append({origin: msg})
+
+        for index, item in enumerate(input):
+            if (item == '@' + origin):
+                input[index] = msg
+        options = {}
+        options.update(self.options)
+        options['input'] = input
         try:
             result = self.algo['start'](self.options, self._hkubeApi)
             self._hkubeApi.sendMessage(result)
         except Exception as e:
             self.error = e
-
-
 
     def start(self, options, hkube_api):
         # pylint: disable=unused-argument
@@ -29,7 +33,7 @@ class statelessALgoWrapper(object):
         self._hkubeApi.registerInputListener(onMessage=self._invokeAlgorithm)
         self._hkubeApi.startMessageListening()
         while (self.active):
-            if(self.error is not None):
+            if (self.error is not None):
                 raise self.error  # pylint: disable=raising-bad-type
             gevent.sleep(1)
 
@@ -40,8 +44,6 @@ class statelessALgoWrapper(object):
         self.active = False
         if not (self.algo.get('exit') is None):
             self.algo['exit'](data)
-
-
 
     def stop(self, data):
         self.active = False
