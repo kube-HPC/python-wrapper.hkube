@@ -24,6 +24,7 @@ discovery = {
     "encoding": os.environ.get('DISCOVERY_ENCODING', 'bson'),
     "enable": getBoolEnv('DISCOVERY_ENABLE', 'True'),
     "timeout": getIntEnv('DISCOVERY_TIMEOUT', 1000),
+    "networkTimeout": getIntEnv('DISCOVERY_NETWORK_TIMEOUT', 1000),
     "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 500),
     "streaming": {
         "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_MB', 1500),
@@ -48,7 +49,7 @@ storage = {
     "s3": {
         "accessKeyId": os.environ.get('AWS_ACCESS_KEY_ID', 'AKIAIOSFODNN7EXAMPLE'),
         "secretAccessKey": os.environ.get('AWS_SECRET_ACCESS_KEY', 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'),
-        "endpoint": os.environ.get('AWS_ENDPOINT', 'http://127.0.0.1:9000'),
+        "endpoint": os.environ.get('S3_ENDPOINT_URL', 'http://127.0.0.1:9000'),
         "region": os.environ.get('S3_REGION', ''),
         "bucketName": os.environ.get('S3_BUCKET_NAME', None),
     }

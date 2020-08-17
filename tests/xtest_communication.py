@@ -18,6 +18,7 @@ address1 = {'port': "9024", 'host': discovery['host']}
 
 encoding = Encoding(discovery['encoding'])
 timeout = 5000
+networkTimeout = 1000
 
 ds = DataServer(discovery)
 ds.setSendingState(mockdata.taskId1, data1)
@@ -29,15 +30,17 @@ thread = threading.Thread(target=ds.listen)
 thread.start()
 gevent.sleep(2)
 
-def test_get_data_bytes():
 
+def test_get_data_bytes():
     dr = DataRequest({
         'address': address1,
         'taskId': mockdata.taskId2,
         'encoding': discovery['encoding'],
-        'timeout': timeout
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
     })
     reply = dr.invoke()
+    print ("reply:"+str(reply))
     assert reply == data2_original
 
 
@@ -47,7 +50,8 @@ def test_get_data_by_path():
         'taskId': taskId1,
         'dataPath': 'level1',
         'encoding': discovery['encoding'],
-        'timeout': timeout
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
     })
     reply = dr.invoke()
     assert reply == data1['level1']
@@ -56,7 +60,8 @@ def test_get_data_by_path():
         'taskId': taskId1,
         'dataPath': 'value1',
         'encoding': discovery['encoding'],
-        'timeout': timeout
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
     })
     reply = dr.invoke()
     assert reply == data1['value1']
@@ -64,12 +69,13 @@ def test_get_data_by_path():
 
 def test_path_not_exist():
     dr = DataRequest({
-            'address': address1,
-            'taskId': taskId1,
-            'dataPath': 'notExist',
-            'encoding': discovery['encoding'],
-            'timeout': timeout
-        })
+        'address': address1,
+        'taskId': taskId1,
+        'dataPath': 'notExist',
+        'encoding': discovery['encoding'],
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
+    })
     reply = dr.invoke()
     assert reply == {'hkube_error': {'code': 'noSuchDataPath', 'message': "notExist does not exist in data"}}
 
@@ -80,7 +86,8 @@ def test_get_complete_data():
         'taskId': taskId1,
         'dataPath': '',
         'encoding': discovery['encoding'],
-        'timeout': timeout
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
     })
     reply = dr.invoke()
     assert reply == data1
@@ -92,7 +99,8 @@ def test_data_after_taskid_changed():
         'taskId': taskId1,
         'dataPath': '',
         'encoding': discovery['encoding'],
-        'timeout': timeout
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
     })
     reply = dr.invoke()
     assert reply == data1
@@ -101,7 +109,8 @@ def test_data_after_taskid_changed():
         'taskId': taskId1,
         'dataPath': '',
         'encoding': discovery['encoding'],
-        'timeout': timeout
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
     })
     reply = dr.invoke()
     assert reply == data1
@@ -113,7 +122,8 @@ def test_success_to_get_data_old_task_id():
         'taskId': taskId1,
         'dataPath': '',
         'encoding': discovery['encoding'],
-        'timeout': timeout
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
     })
     reply = dr.invoke()
     assert reply == mockdata.dataTask1
@@ -122,7 +132,8 @@ def test_success_to_get_data_old_task_id():
         'taskId': taskId2,
         'dataPath': '',
         'encoding': discovery['encoding'],
-        'timeout': timeout
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
     })
     reply = dr.invoke()
     assert reply == mockdata.dataTask2_original
@@ -135,7 +146,8 @@ def test_failing_no_such_taskid():
         'taskId': taskId,
         'dataPath': '',
         'encoding': discovery['encoding'],
-        'timeout': timeout
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
     })
     reply = dr.invoke()
     assert reply == {'hkube_error': {'code': 'notAvailable', 'message': 'taskId notAvailable'}}
@@ -160,10 +172,12 @@ def xtest_waitTillServingEnds():
     def sleepNow(message):
         gevent.sleep(3)
         return ds._createReply(message)
+
     ds._adapter.getReplyFunc = sleepNow
     dr = DataRequest(
         {'address': address1, 'taskId': taskId1, 'dataPath': 'level1',
-         'encoding': 'bson', 'timeout': timeout})
+         'encoding': 'bson', 'timeout': timeout,
+         'networkTimeout': networkTimeout})
     gevent.spawn(dr.invoke)
     gevent.sleep(1)
     assert ds.isServing() == True
@@ -177,7 +191,12 @@ def test_fail_on_timeout():
         'taskId': taskId1,
         'dataPath': '',
         'encoding': discovery['encoding'],
-        'timeout': timeout
+        'timeout': timeout,
+        'networkTimeout': networkTimeout
     })
     reply = dr.invoke()
     assert reply == {'hkube_error': {'code': 'unknown', 'message': 'Timed out:5000'}}
+
+
+if __name__ == '__main__':
+    test_get_data_bytes()
