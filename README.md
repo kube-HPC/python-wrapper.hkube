@@ -22,7 +22,7 @@ Config `hkubectl` with your running Kubernetes.
 ```bash
 hkubectl config # and follow the prompts
 ```
-## Basic Usage (auto build)
+## Basic Usage (using hkube build feature)
 create a file for the algorithm entry-points (alg.py)
 ```python
 from typing import Dict
