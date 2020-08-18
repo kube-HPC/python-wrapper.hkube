@@ -11,7 +11,7 @@ class statelessALgoWrapper(object):
         self.error = None
 
     def _invokeAlgorithm(self, msg, origin):
-        if not (self.originalAlgorithm['init'] is None):
+        if not (self.originalAlgorithm.get('init') is None):
             self.originalAlgorithm['init'](msg)
         input = copy.copy(self.options['input'])
 
