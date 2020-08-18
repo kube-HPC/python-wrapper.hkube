@@ -6,7 +6,7 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = '2.0.11'
+VERSION = '2.0.12'
 
 packages = setuptools.find_packages()
 
