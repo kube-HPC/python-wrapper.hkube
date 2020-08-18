@@ -88,7 +88,7 @@ Starts an invocation of algorithm with input, and optionally waits for results
     default: True
     
 **```blocking```** :`bool`
-:   if True, blocks until the algorithm finises, and returns the results.
+:   if True, blocks until the algorithm finishes, and returns the results.
     If False, returns an awaiter object, that can be awaited (blocking) at a later time  
     default: False
     
@@ -126,7 +126,7 @@ Starts an invocation of a sub-pipeline with input, and optionally waits for resu
 
 
 **```blocking```** :&ensp;<code>bool</code>
-:   if True, blocks until the pipeline finises, and returns the results.
+:   if True, blocks until the pipeline finishes, and returns the results.
     If False, returns an awaiter object, that can be awaited (blocking) at a later time  
     default: False
 
@@ -174,7 +174,7 @@ Starts an invocation of a sub-pipeline with input, nodes, options, and optionall
     default: True
 
 **```blocking```** :&ensp;<code>bool</code>
-:   if True, blocks until the pipeline finises, and returns the results.
+:   if True, blocks until the pipeline finishes, and returns the results.
     If False, returns an awaiter object, that can be awaited (blocking) at a later time  
     default: False
 
