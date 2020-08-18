@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from gevent import monkey
+
 monkey.patch_all()
 import os
 import sys
@@ -168,7 +169,7 @@ class Algorunner:
 
     def _initDataServer(self, options):
         enable = options.discovery.get("enable")
-        if(enable):
+        if (enable):
             self._discovery = {
                 'host': options.discovery.get("host"),
                 'port': options.discovery.get("port")
@@ -267,7 +268,7 @@ class Algorunner:
         storageInfo = self._dataAdapter.createStorageInfo(data)
         storingData.update(storageInfo)
 
-        if(self._dataServer and savePaths):
+        if (self._dataServer and savePaths):
             self._dataServer.setSendingState(taskId, algorithmData)
             storingData.update({'discovery': self._discovery, 'taskId': taskId})
             self._sendCommand(messages.outgoing.storing, storingData)
