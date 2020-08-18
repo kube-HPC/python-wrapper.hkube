@@ -5,14 +5,14 @@ import copy
 class statelessALgoWrapper(object):
     def __init__(self, algo):
         self._hkubeApi = None
-        self.algo = algo
+        self.originalAlgorithm = algo
         self.options = None
         self.active = True
         self.error = None
 
     def _invokeAlgorithm(self, msg, origin):
-        if not (self.algo['init'] is None):
-            self.algo['init'](msg)
+        if not (self.originalAlgorithm['init'] is None):
+            self.originalAlgorithm['init'](msg)
         input = copy.copy(self.options['input'])
 
         for index, item in enumerate(input):
@@ -22,7 +22,7 @@ class statelessALgoWrapper(object):
         options.update(self.options)
         options['input'] = input
         try:
-            result = self.algo['start'](self.options, self._hkubeApi)
+            result = self.originalAlgorithm['start'](self.options, self._hkubeApi)
             self._hkubeApi.sendMessage(result)
         except Exception as e:
             self.error = e
@@ -42,10 +42,10 @@ class statelessALgoWrapper(object):
 
     def exit(self, data):
         self.active = False
-        if not (self.algo.get('exit') is None):
-            self.algo['exit'](data)
+        if not (self.originalAlgorithm.get('exit') is None):
+            self.originalAlgorithm['exit'](data)
 
     def stop(self, data):
         self.active = False
-        if not (self.algo.get('stop') is None):
-            self.algo['stop'](data)
+        if not (self.originalAlgorithm.get('stop') is None):
+            self.originalAlgorithm['stop'](data)
