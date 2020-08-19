@@ -13,7 +13,7 @@ class CustomCache:
         if (key in self._cache):
             return None
         while (self.sumSize + size) >= self._maxCacheSize * 1000 * 1000:
-            if (len(self._cache.keys()) == 0):
+            if (self._cache.keys()):
                 print("Trying to insert a value of size " + str(size) + " bytes, larger than " + str(
                     self._maxCacheSize) + "MB")
                 return None
