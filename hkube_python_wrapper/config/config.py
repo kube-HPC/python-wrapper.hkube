@@ -36,6 +36,7 @@ storage = {
     "type": os.environ.get('DEFAULT_STORAGE', 'fs'),
     "mode": os.environ.get('STORAGE_PROTOCOL', 'v2'),
     "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
+    "maxCacheSize": getIntEnv('STORAGE_MAX_CACHE_SIZE_MB', 1500),
     "fs": {
         "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', '/var/tmp/fs/storage')
     },

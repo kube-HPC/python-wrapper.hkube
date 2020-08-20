@@ -1,6 +1,6 @@
 import datetime
 import msgpack
-
+import hkube_python_wrapper.util.type_check as typeCheck
 
 class CustomCache:
     def __init__(self, config):
@@ -8,8 +8,12 @@ class CustomCache:
         self._maxCacheSize = config.get('maxCacheSize')
         self.sumSize = 0
 
-    def update(self, key, value):
-        size = len(msgpack.packb(value))
+    def update(self, key, value, size=None):
+        if (size is None):
+            if(typeCheck.isBytearray(value)):
+                size = len(value)
+            else:
+                size = len(msgpack.packb(value))
         if (key in self._cache):
             return None
         while (self.sumSize + size) >= self._maxCacheSize * 1000 * 1000:
@@ -36,5 +40,7 @@ class CustomCache:
         self._cache.pop(oldest)
 
     def get(self, key):
-        item = self._cache[key]
-        return item.get('value')
+        item = self._cache.get(key)
+        if(item is not None):
+            return item.get('value')
+        return None

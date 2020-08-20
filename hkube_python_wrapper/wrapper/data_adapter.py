@@ -7,12 +7,14 @@ from hkube_python_wrapper.util.object_path import getPath, setPath
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.storage.storage_manager import StorageManager
 from hkube_python_wrapper.communication.DataRequest import DataRequest
+from hkube_python_wrapper.cache.caching import CustomCache
+from ..config import config
 
 
 class DataAdapter:
     def __init__(self, options, dataServer=None):
         self._dataServer = dataServer
-        self._storageCache = dict()
+        self._storageCache = CustomCache(config.storage)
         self._encoding = Encoding(options.storage['encoding'])
         self._storageManager = StorageManager(options.storage)
         self._requestEncoding = options.discovery['encoding']
@@ -39,7 +41,7 @@ class DataAdapter:
             return inputArgs
 
         if (useCache is False):
-            self._storageCache = dict()
+            self._storageCache = CustomCache(config.storage)
 
         for k, v in flatInput.items():
             if self._isStorage(v):
@@ -182,12 +184,10 @@ class DataAdapter:
         path = options.get('path')
         data = self._getFromCache(path)
         if (data is None):
-            data = self._getFromStorage(options)
-            self._setToCache(path, data)
-
+            size, data = self._getFromStorage(options)
+            self._setToCache(path, data, size)
         if (dataPath):
             data = getPath(data, dataPath)
-
         return data
 
     @trace(name='getFromCache')
@@ -195,14 +195,15 @@ class DataAdapter:
     def _getFromCache(self, path):
         return self._storageCache.get(path)
 
-    def _setToCache(self, path, data):
-        self._storageCache[path] = data
+    def _setToCache(self, path, data, size):
+        self._storageCache.update(path, data, size)
 
     @trace(name='getFromStorage')
     @timing
     def _getFromStorage(self, options):
         response = self._storageManager.storage.get(options)
-        return self._encoding.decode(response)
+        size = len(response)
+        return (size, self._encoding.decode(response))
 
     def createStorageInfo(self, options):
         jobId = options.get('jobId')
