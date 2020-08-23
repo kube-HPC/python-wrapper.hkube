@@ -204,7 +204,7 @@ class Algorunner:
             if (self._loadAlgorithmError):
                 self._sendError(self._loadAlgorithmError)
             else:
-                if (options['stateType'] == 'stateless' and self.wrapper is None):
+                if (options.get('stateType') == 'stateless' and self.wrapper is None):
                     self.wrapper = statelessALgoWrapper(self._algorithm)
                     self._algorithm = dict()
                     self._algorithm['start'] = self.wrapper.start
@@ -273,8 +273,8 @@ class Algorunner:
                 print('Exception from old algorithm run: ' + str(e))
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
-        if (self._storage == 'v2'):
-            self._handle_responseV2(
+        if (self._storage == 'v3'):
+            self._handle_responseV2_V3(
                 algorithmData, jobId, taskId, nodeName, savePaths, span)
         else:
             self._handle_responseV1(algorithmData, span)
@@ -286,7 +286,7 @@ class Algorunner:
             self._hkubeApi.stopStreaming()
         self._sendCommand(messages.outgoing.done, algorithmData)
 
-    def _handle_responseV2(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
+    def _handle_responseV2_V3(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         encodedData = self._dataAdapter.encode(algorithmData)
 
         data = {
