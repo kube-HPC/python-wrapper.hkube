@@ -109,7 +109,7 @@ class HKubeApi:
             elif (execution.includeResult):
                 response = data.get('response')
                 result = response
-                if (typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v2'):
+                if (typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v3'):
                     result = self._dataAdapter.tryGetDataFromPeerOrStorage(
                         response)
                 execution.waiter.set(result)

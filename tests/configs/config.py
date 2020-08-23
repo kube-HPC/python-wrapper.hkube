@@ -28,7 +28,7 @@ algorithm = {
 storage = {
     "clusterName": os.environ.get('CLUSTER_NAME', 'local'),
     "type": os.environ.get('STORAGE_TYPE', 'fs'),
-    "mode": os.environ.get('STORAGE_PROTOCOL', 'v2'),
+    "mode": os.environ.get('STORAGE_PROTOCOL', 'v3'),
     "encoding": os.environ.get('STORAGE_ENCODING', 'msgpack'),
     "fs": {
         "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', 'var/tmp/fs/storage')
