@@ -16,7 +16,7 @@ class Cache:
             if(typeCheck.isBytearray(value)):
                 size = len(value)
             else:
-                size = asizeof(value)
+                size = asizeof.asizeof(value)
         if (key in self._cache):
             return None
         while (self.sumSize + size) >= self._maxCacheSize * 1000 * 1000:
