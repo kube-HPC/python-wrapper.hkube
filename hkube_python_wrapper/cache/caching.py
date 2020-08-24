@@ -1,5 +1,5 @@
 import datetime
-import msgpack
+from pympler import asizeof
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.util.decorators import timing
 
@@ -16,7 +16,7 @@ class Cache:
             if(typeCheck.isBytearray(value)):
                 size = len(value)
             else:
-                size = len(msgpack.packb(value))
+                size = asizeof(value)
         if (key in self._cache):
             return None
         while (self.sumSize + size) >= self._maxCacheSize * 1000 * 1000:
