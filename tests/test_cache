@@ -1,0 +1,30 @@
+from hkube_python_wrapper.cache.caching import Cache
+
+
+def test_reaching_limit():
+    cache = Cache({"maxCacheSize": 4})
+    value1 = {"bytes": bytearray(1000000)}
+    cache.update("task1",value1)
+    assert  len(cache._cache) == 1
+    cache.update("task2", value1)
+    cache.update("task3", value1)
+    assert len(cache._cache) == 3
+    cache.update("task4", value1)
+    assert len(cache._cache) == 3
+    assert "task4"  in cache
+    assert "task1" not in cache
+
+def test_too_large_message():
+    cache = Cache({"maxCacheSize": 5})
+    value1 = {"bytes": bytearray(1000000)}
+    value2 = {"bytes": bytearray(5000000)}
+    result = cache.update("task1",value1)
+    assert result == "task1"
+    assert  len(cache._cache) == 1
+    result = cache.update("task2", value2)
+    assert result == None
+    assert len(cache._cache) == 0
+
+
+if __name__ == '__main__':
+    test_too_large_message()

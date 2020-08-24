@@ -25,7 +25,7 @@ discovery = {
     "enable": getBoolEnv('DISCOVERY_ENABLE', 'True'),
     "timeout": getIntEnv('DISCOVERY_TIMEOUT', 10000),
     "networkTimeout": getIntEnv('DISCOVERY_NETWORK_TIMEOUT', 1000),
-    "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 500)
+    "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE_MB', 400)
 }
 algorithm = {
     "path": os.environ.get('ALGORITHM_PATH', "algorithm_unique_folder"),
@@ -36,6 +36,7 @@ storage = {
     "type": os.environ.get('DEFAULT_STORAGE', 'fs'),
     "mode": os.environ.get('STORAGE_PROTOCOL', 'v2'),
     "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
+    "maxCacheSize": getIntEnv('STORAGE_MAX_CACHE_SIZE_MB', 400),
     "fs": {
         "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', '/var/tmp/fs/storage')
     },
