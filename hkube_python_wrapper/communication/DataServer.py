@@ -5,13 +5,13 @@ from hkube_python_wrapper.util.encoding import Encoding
 import hkube_python_wrapper.util.object_path as objectPath
 from hkube_python_wrapper.util.decorators import timing
 import hkube_python_wrapper.util.type_check as typeCheck
-from hkube_python_wrapper.cache.caching import CustomCache
+from hkube_python_wrapper.cache.caching import Cache
 
 
 class DataServer:
 
     def __init__(self, config):
-        self._cache = CustomCache(config)
+        self._cache = Cache(config)
         self._host = config['host']
         self._port = config['port']
         self._encodingType = config['encoding']

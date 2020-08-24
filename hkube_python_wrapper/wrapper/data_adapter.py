@@ -7,14 +7,14 @@ from hkube_python_wrapper.util.object_path import getPath, setPath
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.storage.storage_manager import StorageManager
 from hkube_python_wrapper.communication.DataRequest import DataRequest
-from hkube_python_wrapper.cache.caching import CustomCache
+from hkube_python_wrapper.cache.caching import Cache
 from ..config import config
 
 
 class DataAdapter:
     def __init__(self, options, dataServer=None):
         self._dataServer = dataServer
-        self._storageCache = CustomCache(config.storage)
+        self._storageCache = Cache(config.storage)
         self._encoding = Encoding(options.storage['encoding'])
         self._storageManager = StorageManager(options.storage)
         self._requestEncoding = options.discovery['encoding']
@@ -41,7 +41,7 @@ class DataAdapter:
             return inputArgs
 
         if (useCache is False):
-            self._storageCache = CustomCache(config.storage)
+            self._storageCache = Cache(config.storage)
 
         for k, v in flatInput.items():
             if self._isStorage(v):

@@ -1,13 +1,16 @@
 import datetime
 import msgpack
 import hkube_python_wrapper.util.type_check as typeCheck
+from hkube_python_wrapper.util.decorators import timing
 
-class CustomCache:
+
+class Cache:
     def __init__(self, config):
         self._cache = dict()
         self._maxCacheSize = config.get('maxCacheSize')
         self.sumSize = 0
 
+    @timing
     def update(self, key, value, size=None):
         if (size is None):
             if(typeCheck.isBytearray(value)):
@@ -17,7 +20,7 @@ class CustomCache:
         if (key in self._cache):
             return None
         while (self.sumSize + size) >= self._maxCacheSize * 1000 * 1000:
-            if (self._cache.keys()):
+            if not (self._cache.keys()):
                 print("Trying to insert a value of size " + str(size) + " bytes, larger than " + str(
                     self._maxCacheSize) + "MB")
                 return None

@@ -1,8 +1,8 @@
-from hkube_python_wrapper.cache.caching import CustomCache
+from hkube_python_wrapper.cache.caching import Cache
 
 
 def test_reaching_limit():
-    cache = CustomCache({"maxCacheSize": 4})
+    cache = Cache({"maxCacheSize": 4})
     value1 = {"bytes": bytearray(1000000)}
     cache.update("task1",value1)
     assert  len(cache._cache) == 1
@@ -15,7 +15,7 @@ def test_reaching_limit():
     assert "task1" not in cache
 
 def test_too_large_message():
-    cache = CustomCache({"maxCacheSize": 5})
+    cache = Cache({"maxCacheSize": 5})
     value1 = {"bytes": bytearray(1000000)}
     value2 = {"bytes": bytearray(5000000)}
     result = cache.update("task1",value1)
@@ -27,4 +27,4 @@ def test_too_large_message():
 
 
 if __name__ == '__main__':
-    test_to_large_message()
+    test_too_large_message()
