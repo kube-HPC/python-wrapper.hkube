@@ -36,6 +36,21 @@ class Algorunner:
 
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):
+        """Starts the algorunner wrapper.
+
+    Convenience method to start the algorithm. Pass the algorithm methods
+    This method blocks forever
+
+    Args:
+        start (function): The entry point of the algorithm. Called for every invocation.
+        init (function): Optional init method. Called for every invocation before the start.
+        stop (function): Optional stop method. Called when the parent pipeline is stopped.
+        exit (function): Optional exit handler. Called before the algorithm is forced to exit.
+                Can be used to clean up resources.
+
+    Returns:
+        Never returns.
+    """
         algorunner = Algorunner()
         if (start):
             algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)

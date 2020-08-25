@@ -4,6 +4,7 @@ from hkube_python_wrapper.cache.caching import Cache
 def test_reaching_limit():
     cache = Cache({"maxCacheSize": 4})
     value1 = {"bytes": bytearray(1000000)}
+
     cache.update("task1",value1,1000000)
     assert  len(cache._cache) == 1
     cache.update("task2", value1,1000000)
@@ -28,3 +29,4 @@ def test_too_large_message():
 
 if __name__ == '__main__':
     test_reaching_limit()
+
