@@ -267,7 +267,7 @@ class Algorunner:
         storingData = dict()
         storageInfo = self._dataAdapter.createStorageInfo(data)
         storingData.update(storageInfo)
-
+        incache = None
         if (self._dataServer and savePaths):
             incache = self._dataServer.setSendingState(taskId, algorithmData, len(encodedData))
         if(incache):
