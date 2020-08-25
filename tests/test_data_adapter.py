@@ -66,10 +66,10 @@ discovery = dict(config.discovery)
 discovery.update({"port": 9025})
 ds = DataServer(discovery)
 gevent.spawn(ds.listen)
-ds.setSendingState(taskId1, obj1)
-ds.setSendingState(taskId2, obj2)
-ds.setSendingState(taskId3, obj3)
-ds.setSendingState(taskId4, obj4)
+ds.setSendingState(taskId1, obj1,10)
+ds.setSendingState(taskId2, obj2,10)
+ds.setSendingState(taskId3, obj3,10)
+ds.setSendingState(taskId4, obj4,10)
 
 
 def test_get_data_no_storage():

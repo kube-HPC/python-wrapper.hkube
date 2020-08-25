@@ -267,9 +267,10 @@ class Algorunner:
         storingData = dict()
         storageInfo = self._dataAdapter.createStorageInfo(data)
         storingData.update(storageInfo)
-
+        incache = None
         if (self._dataServer and savePaths):
-            self._dataServer.setSendingState(taskId, algorithmData)
+            incache = self._dataServer.setSendingState(taskId, algorithmData, len(encodedData))
+        if(incache):
             storingData.update({'discovery': self._discovery, 'taskId': taskId})
             self._sendCommand(messages.outgoing.storing, storingData)
             self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
