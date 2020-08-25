@@ -41,9 +41,8 @@ def test_put_get():
 
 def test_fail_to_get():
     options = {'path': dir1 + os.path.sep + 'no_such_path.txt', 'data': encoded}
-    a = sm.storage.get(options)
-    assert a == None
-
+    with pytest.raises(Exception, match='Failed to read data from storage'):
+        sm.storage.get(options)
 
 def test_list():
     options = {'path': dir1 + os.path.sep + 'a.txt', 'data': encoded}

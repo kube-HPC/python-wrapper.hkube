@@ -29,7 +29,7 @@ def test_put_get():
 def test_fail_to_get():
     options = {'path': bucket + os.path.sep + 'no_such_key', 'data': encoded}
 
-    with pytest.raises(Exception, match='The specified key does not exist'):
+    with pytest.raises(Exception, match='Failed to read data from storage'):
         sm.storage.get(options)
 
 
