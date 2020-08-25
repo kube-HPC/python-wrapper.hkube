@@ -27,7 +27,7 @@ class DataRequest:
             response = adapter.invokeAdapter()
             return (len(response), self.encoding.decode(response))
         except Exception as e:
-            return self._createError('unknown', str(e))
+            return 0,self._createError('unknown', str(e))
         finally:
             adapter.close()
 
