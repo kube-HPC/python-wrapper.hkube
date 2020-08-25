@@ -1,7 +1,4 @@
 import datetime
-from pympler import asizeof
-import hkube_python_wrapper.util.type_check as typeCheck
-from hkube_python_wrapper.util.decorators import timing
 
 
 class Cache:
@@ -10,13 +7,8 @@ class Cache:
         self._maxCacheSize = config.get('maxCacheSize')
         self.sumSize = 0
 
-    @timing
-    def update(self, key, value, size=None):
-        if (size is None):
-            if(typeCheck.isBytearray(value)):
-                size = len(value)
-            else:
-                size = asizeof.asizeof(value)
+
+    def update(self, key, value, size):
         if (key in self._cache):
             return None
         while (self.sumSize + size) >= self._maxCacheSize * 1000 * 1000:

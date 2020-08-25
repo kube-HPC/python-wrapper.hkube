@@ -1,4 +1,3 @@
-
 from gevent import sleep
 from hkube_python_wrapper.communication.zmq.ZMQServers import ZMQServers
 from hkube_python_wrapper.util.encoding import Encoding
@@ -39,7 +38,7 @@ class DataServer:
 
     @timing
     def createData(self, taskId, tasks, datapath):
-        if(taskId is not None):
+        if (taskId is not None):
             return self._getDataByTaskId(taskId, datapath)
 
         errors = False
@@ -47,7 +46,7 @@ class DataServer:
 
         for task in tasks:
             result = self._getDataByTaskId(task, datapath)
-            if(typeCheck.isDict(result) and 'hkube_error' in result):
+            if (typeCheck.isDict(result) and 'hkube_error' in result):
                 errors = True
 
             items.append(result)
@@ -56,7 +55,7 @@ class DataServer:
 
     def _getDataByTaskId(self, taskId, datapath):
         result = None
-        if(taskId not in self._cache):
+        if (taskId not in self._cache):
             result = self._createError('notAvailable', 'taskId notAvailable')
         else:
             data = self._cache.get(taskId)
@@ -64,15 +63,16 @@ class DataServer:
         return result
 
     def _createDataByPath(self, data, datapath):
-        if(datapath):
+        if (datapath):
             data = objectPath.getPath(data, datapath)
-            if(data == 'DEFAULT'):
-                data = self._createError('noSuchDataPath', '{datapath} does not exist in data'.format(datapath=datapath))
+            if (data == 'DEFAULT'):
+                data = self._createError('noSuchDataPath',
+                                         '{datapath} does not exist in data'.format(datapath=datapath))
 
         return data
 
-    def setSendingState(self, taskId, data):
-        self._cache.update(taskId, data)
+    def setSendingState(self, taskId, data, size):
+        self._cache.update(taskId, data, size)
 
     def _createError(self, code, message):
         return {'hkube_error': {'code': code, 'message': message}}
@@ -84,6 +84,6 @@ class DataServer:
         return self._adapter.isServing()
 
     def shutDown(self):
-        while(self.isServing()):
+        while (self.isServing()):
             sleep(1)
         self._adapter.close()
