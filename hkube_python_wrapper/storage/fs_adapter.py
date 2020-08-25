@@ -21,9 +21,6 @@ class FSAdapter:
 
     def get(self, options):
         filePath = self.getPath(self.basePath, options['path'])
-        if not (os.path.exists(filePath)):
-            return None
-
         result = None
         with open(filePath, 'rb') as f:
             result = f.read()

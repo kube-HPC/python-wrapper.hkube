@@ -4,19 +4,35 @@ class BaseStorageManager(object):
         self.adapter = adpter
 
     def put(self, options):
-        return self.adapter.put(options)
+        try:
+            return self.adapter.put(options)
+        except Exception:
+            raise Exception('Failed to write data to storage')
 
     def get(self, options):
-        data = self.adapter.get(options)
-        if(data is None):
-            return None
-        return data
+        try:
+            data = self.adapter.get(options)
+            if(data is None):
+                return None
+            return data
+        except Exception:
+            raise Exception('Failed to read data from storage')
+
 
     def list(self, options):
-        return self.adapter.list(options)
+        try:
+            return self.adapter.list(options)
+        except Exception:
+            raise Exception('Failed to list storage data')
 
     def listPrefix(self, options):
-        return self.adapter.listPrefix(options)
+        try:
+            return self.adapter.listPrefix(options)
+        except Exception:
+            raise Exception('Failed to listPrefix storage data')
 
     def delete(self, options):
-        self.adapter.delete(options)
+        try:
+            self.adapter.delete(options)
+        except Exception:
+            raise Exception('Failed to delete storage data')
