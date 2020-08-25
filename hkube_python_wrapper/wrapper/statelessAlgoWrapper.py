@@ -1,6 +1,6 @@
 import gevent
 import copy
-
+from hkube_python_wrapper.util.object_path import setPath
 
 class statelessALgoWrapper(object):
     def __init__(self, algo):
@@ -15,14 +15,15 @@ class statelessALgoWrapper(object):
             self.originalAlgorithm['init'](msg)
         input = copy.copy(self.options['input'])
 
-        for index, item in enumerate(input):
-            if (item == '@' + origin):
-                input[index] = msg
+        flatInput = self.options.get('flatInput')
+        for k, v in flatInput.items():
+            if (v == '@' + origin):
+                setPath(input, k, msg)
         options = {}
         options.update(self.options)
         options['input'] = input
         try:
-            result = self.originalAlgorithm['start'](self.options, self._hkubeApi)
+            result = self.originalAlgorithm['start'](options, self._hkubeApi)
             self._hkubeApi.sendMessage(result)
         except Exception as e:
             self.error = e
