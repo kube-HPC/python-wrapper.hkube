@@ -10,7 +10,7 @@ class Cache:
 
     def update(self, key, value, size):
         if (key in self._cache):
-            return None
+            return key
         while (self.sumSize + size) >= self._maxCacheSize * 1000 * 1000:
             if not (self._cache.keys()):
                 print("Trying to insert a value of size " + str(size) + " bytes, larger than " + str(

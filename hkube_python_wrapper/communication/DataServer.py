@@ -72,7 +72,7 @@ class DataServer:
         return data
 
     def setSendingState(self, taskId, data, size):
-        self._cache.update(taskId, data, size)
+        return self._cache.update(taskId, data, size)
 
     def _createError(self, code, message):
         return {'hkube_error': {'code': code, 'message': message}}
