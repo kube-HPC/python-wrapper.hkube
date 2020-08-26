@@ -7,7 +7,7 @@ class statelessALgoWrapper(object):
         self._hkubeApi = None
         self.originalAlgorithm = algo
         self.options = None
-        self.active = True
+        self.active = False
         self.error = None
 
     def _invokeAlgorithm(self, msg, origin):
@@ -33,6 +33,7 @@ class statelessALgoWrapper(object):
         self._hkubeApi = hkube_api
         self._hkubeApi.registerInputListener(onMessage=self._invokeAlgorithm)
         self._hkubeApi.startMessageListening()
+        self.active = True
         while (self.active):
             if (self.error is not None):
                 raise self.error  # pylint: disable=raising-bad-type
