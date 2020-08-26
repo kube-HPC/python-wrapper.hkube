@@ -156,7 +156,7 @@ class DataAdapter:
                 peerError = self._getPeerError(data)
                 hasResponse = not peerError
                 data = None if peerError else data
-                if (data and not dataPath):
+                if (data and not dataPath and size > 0):
                     self._setToCache(cacheId, data, size)
             if (not hasResponse and storageInfo):
                 data = self._getFromCacheOrStorage(
@@ -175,7 +175,7 @@ class DataAdapter:
 
         if (self._dataServer and self._dataServer.isLocal(host, port)):
             response = self._dataServer.createData(taskId, tasks, dataPath)
-            size = 0
+            size = -1
 
         else:
             request = {
