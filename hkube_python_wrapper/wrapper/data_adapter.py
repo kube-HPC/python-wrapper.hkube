@@ -120,19 +120,21 @@ class DataAdapter:
                 if (errors):
                     for i, t in enumerate(items):
                         peerError = self._getPeerError(t)
+                        taskId = tasksNotInCache[i]
                         if (peerError):
-                            taskId = tasks[i]
                             storageData = self._getDataForTask(
                                 jobId, taskId, dataPath)
                             batchResponse.append(storageData)
                         else:
                             batchResponse.append(t)
                             if not (dataPath):
-                                self._storageCache.update(taskId, storageData)
-
+                                self._storageCache.update(taskId, t)
                 else:
                     batchResponse += items
-
+                    if not (dataPath):
+                        for i, t in enumerate(items):
+                            taskId = tasksNotInCache[i]
+                            self._storageCache.update(taskId, t)
         return batchResponse
 
     def _getDataForTask(self, jobId, taskId, dataPath):
