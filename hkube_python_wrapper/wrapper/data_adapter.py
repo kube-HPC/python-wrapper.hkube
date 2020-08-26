@@ -173,9 +173,9 @@ class DataAdapter:
         port = discovery.get('port')
         host = discovery.get('host')
 
-        size = None
         if (self._dataServer and self._dataServer.isLocal(host, port)):
             response = self._dataServer.createData(taskId, tasks, dataPath)
+            size = 0
 
         else:
             request = {
