@@ -110,7 +110,7 @@ class DataAdapter:
                 message = peerError.get('message')
                 print('batch request has failed with {message}, using storage fallback'.format(
                     message=message))
-                for t in tasks:
+                for t in tasksNotInCache:
                     storageData = self._getDataForTask(jobId, t, dataPath)
                     batchResponse.append(storageData)
             else:
