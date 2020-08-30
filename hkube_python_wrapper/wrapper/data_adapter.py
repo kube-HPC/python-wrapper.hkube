@@ -83,7 +83,7 @@ class DataAdapter:
 
         return batchResponse
 
-    def _batchRequest(self, options):  # pylint: disable=too-many-branches
+    def _batchRequest(self, options):
         batchResponse = []
         jobId = options.get('jobId')
         tasks = options.get('tasks')
@@ -94,14 +94,8 @@ class DataAdapter:
                 storageInfo, dataPath, storageInfo.get("path"))
             batchResponse.append(storageResult)
             return batchResponse
-        tasksNotInCache = []
-        for task in tasks:
-            storageResult = self._storageCache.get(task)
-            if (storageResult):
-                batchResponse.append(storageResult)
-            else:
-                tasksNotInCache.append(task)
-        if (tasksNotInCache):  # pylint: disable=too-many-nested-blocks
+        tasksNotInCache, batchResponse = self._storageCache.getAll(tasks)
+        if (tasksNotInCache):
             options['tasks'] = tasksNotInCache
             size, peerResponse = self._getFromPeer(options, dataPath)  # pylint: disable=unused-variable
             peerError = self._getPeerError(peerResponse)
@@ -114,26 +108,17 @@ class DataAdapter:
                     storageData = self._getDataForTask(jobId, t, dataPath)
                     batchResponse.append(storageData)
             else:
-                errors = peerResponse.get('errors')
                 items = peerResponse.get('items')
-
-                if (errors):
-                    for i, t in enumerate(items):
-                        peerError = self._getPeerError(t)
-                        taskId = tasksNotInCache[i]
-                        if (peerError):
-                            storageData = self._getDataForTask(
-                                jobId, taskId, dataPath)
-                            batchResponse.append(storageData)
-                        else:
-                            batchResponse.append(t)
-                            if not (dataPath):
-                                self._storageCache.update(taskId, t)
-                else:
-                    batchResponse += items
-                    if not (dataPath):
-                        for i, t in enumerate(items):
-                            taskId = tasksNotInCache[i]
+                for i, t in enumerate(items):
+                    peerError = self._getPeerError(t)
+                    taskId = tasksNotInCache[i]
+                    if (peerError):
+                        storageData = self._getDataForTask(
+                            jobId, taskId, dataPath)
+                        batchResponse.append(storageData)
+                    else:
+                        batchResponse.append(t)
+                        if not (dataPath):
                             self._storageCache.update(taskId, t)
         return batchResponse
 

@@ -13,7 +13,7 @@ class Cache:
     @timing
     def update(self, key, value, size=None):
         if (size is None):
-            if(typeCheck.isBytearray(value)):
+            if (typeCheck.isBytearray(value)):
                 size = len(value)
             else:
                 size = asizeof.asizeof(value)
@@ -44,6 +44,17 @@ class Cache:
 
     def get(self, key):
         item = self._cache.get(key)
-        if(item is not None):
+        if (item is not None):
             return item.get('value')
         return None
+
+    def getAll(self, keys):
+        tasksNotInCache = []
+        valuesInCache = []
+        for key in keys:
+            cacheRecord = self._cache.get(key)
+            if (cacheRecord):
+                valuesInCache.append(cacheRecord.get('value'))
+            else:
+                tasksNotInCache.append(key)
+        return tasksNotInCache, valuesInCache
