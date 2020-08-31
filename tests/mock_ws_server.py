@@ -1,7 +1,7 @@
 from websocket_server import WebsocketServer
 from hkube_python_wrapper.util.encoding import Encoding
 from tests.mocks import mockdata
-from tests.config import config
+from tests.configs import config
 
 
 class WebSocketServerClass:

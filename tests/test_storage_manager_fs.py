@@ -3,7 +3,7 @@ import shutil
 import pytest
 from hkube_python_wrapper.storage.storage_manager import StorageManager
 from hkube_python_wrapper.util.encoding import Encoding
-from tests.config import config
+from tests.configs import config
 
 def ensure_dir(dirName):
     if not os.path.exists(dirName):

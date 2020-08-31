@@ -4,7 +4,7 @@ import gevent
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.data_adapter import DataAdapter
 from hkube_python_wrapper.communication.DataServer import DataServer
-from tests.config import config
+from tests.configs import config
 
 dataAdapter = DataAdapter(config)
 

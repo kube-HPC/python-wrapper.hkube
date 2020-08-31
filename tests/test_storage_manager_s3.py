@@ -2,7 +2,7 @@ import os
 import pytest
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.storage.storage_manager import StorageManager
-from tests.config import config
+from tests.configs import config
 
 config = config.storage.copy()
 config['type'] = 's3'

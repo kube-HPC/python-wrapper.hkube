@@ -3,7 +3,7 @@ import time
 from hkube_python_wrapper.storage.storage_manager import StorageManager
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper import Algorunner
-from tests.config import config
+from tests.configs import config
 from hkube_python_wrapper.tracing.tracer import Tracer
 
 algorithmName = 'eval-alg'
