@@ -3,7 +3,7 @@ import time
 # from mock import patch
 from gevent import spawn, sleep
 from hkube_python_wrapper import Algorunner
-from hkube_python_wrapper.config import config
+from tests.configs import config
 from tests.mocks import mockdata
 
 def startCallback(args):

@@ -2,7 +2,7 @@ import os
 import random
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.storage.storage_manager import StorageManager
-from hkube_python_wrapper.config import config
+from tests.config import config
 from hkube_python_wrapper.util.decorators import timing
 
 

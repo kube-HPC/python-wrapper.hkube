@@ -1,6 +1,6 @@
 import pytest
 from hkube_python_wrapper.tracing import Tracer
-from hkube_python_wrapper.config import config
+from tests.config import config
 import logging
 import time
 import requests
