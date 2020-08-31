@@ -5,6 +5,7 @@ monkey.patch_all()
 import os
 import sys
 import importlib
+import threading
 import traceback
 import gevent
 from events import Events
@@ -38,19 +39,19 @@ class Algorunner:
     def Run(start=None, init=None, stop=None, exit=None, options=None):
         """Starts the algorunner wrapper.
 
-    Convenience method to start the algorithm. Pass the algorithm methods
-    This method blocks forever
+        Convenience method to start the algorithm. Pass the algorithm methods
+        This method blocks forever
 
-    Args:
-        start (function): The entry point of the algorithm. Called for every invocation.
-        init (function): Optional init method. Called for every invocation before the start.
-        stop (function): Optional stop method. Called when the parent pipeline is stopped.
-        exit (function): Optional exit handler. Called before the algorithm is forced to exit.
-                Can be used to clean up resources.
+        Args:
+            start (function): The entry point of the algorithm. Called for every invocation.
+            init (function): Optional init method. Called for every invocation before the start.
+            stop (function): Optional stop method. Called when the parent pipeline is stopped.
+            exit (function): Optional exit handler. Called before the algorithm is forced to exit.
+                    Can be used to clean up resources.
 
-    Returns:
-        Never returns.
-    """
+        Returns:
+            Never returns.
+        """
         algorunner = Algorunner()
         if (start):
             algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
@@ -64,6 +65,7 @@ class Algorunner:
         algorunner = Algorunner()
         config.socket['url'] = debug_url
         config.storage['mode'] = 'v1'
+        config.discovery["enable"] = False
         algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
         jobs = algorunner.connectToWorker(config)
         gevent.joinall(jobs)
@@ -175,6 +177,7 @@ class Algorunner:
                 'port': options.discovery.get("port")
             }
             self._dataServer = DataServer(options.discovery)
+            self._reportServing(interval=config.discovery.get("servingReportInterval"))
 
     def _initDataAdapter(self, options):
         self._dataAdapter = DataAdapter(options, self._dataServer)
@@ -280,6 +283,21 @@ class Algorunner:
         if (span):
             Tracer.instance.finish_span(span)
         self._sendCommand(messages.outgoing.done, None)
+
+    def _reportServing(self, interval=None):
+        if(interval is None):
+            return
+
+        def reportInterval(interval, event):
+            while not event.wait(interval):
+                isServing = self._dataServer.isServing()
+                if(isServing):
+                    self._sendCommand(messages.outgoing.servingStatus, True)
+
+        event = threading.Event()
+        thread = threading.Thread(target=reportInterval, args=(interval/1000, event))
+        thread.setDaemon(True)
+        thread.start()
 
     def _stop(self, options):
         try:

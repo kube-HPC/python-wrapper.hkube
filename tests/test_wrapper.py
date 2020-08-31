@@ -3,7 +3,7 @@ import time
 # from mock import patch
 from gevent import spawn, sleep
 from hkube_python_wrapper import Algorunner
-from tests.configs import config
+from hkube_python_wrapper.config import config
 from tests.mocks import mockdata
 
 oneMB = 1024 * 1024
