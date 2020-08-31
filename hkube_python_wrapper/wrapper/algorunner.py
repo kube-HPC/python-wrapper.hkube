@@ -261,13 +261,14 @@ class Algorunner:
             method = self._getMethod('start')
             self.startCurrentlyRunning = threadId
             algorithmData = method(self._input, self._hkubeApi)
-            self._handle_response(algorithmData, jobId,
-                                  taskId, nodeName, savePaths, span)
-            self.startCurrentlyRunning = None
+            if (self.startCurrentlyRunning is not None):
+                self._handle_response(algorithmData, jobId,
+                                      taskId, nodeName, savePaths, span)
+                self.startCurrentlyRunning = None
         except Exception as e:
             traceback.print_exc()
             Tracer.instance.finish_span(span, e)
-            if(self.startCurrentlyRunning == threadId):
+            if (self.startCurrentlyRunning == threadId):
                 self._sendError(e)
             else:
                 print('Exception from old algorithm run: ' + str(e))

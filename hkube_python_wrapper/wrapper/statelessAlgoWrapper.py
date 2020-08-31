@@ -34,6 +34,7 @@ class statelessALgoWrapper(object):
         self._hkubeApi.registerInputListener(onMessage=self._invokeAlgorithm)
         self._hkubeApi.startMessageListening()
         self.active = True
+        self.error = None
         while (self.active):
             if (self.error is not None):
                 raise self.error  # pylint: disable=raising-bad-type

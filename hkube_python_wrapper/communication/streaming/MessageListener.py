@@ -35,4 +35,5 @@ class MessageListener(object):
         self.adapater.start()
 
     def close(self):
+        self.messageListeners = []
         self.adapater.close()
