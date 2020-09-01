@@ -287,17 +287,18 @@ class Algorunner:
     def _reportServing(self, interval=None):
         if(interval is None):
             return
+        interval = interval / 1000
 
-        def reportInterval(interval, event):
-            while not event.wait(interval):
-                isServing = self._dataServer.isServing()
-                if(isServing):
-                    self._sendCommand(messages.outgoing.servingStatus, True)
+        def reportInterval():
+            while (True):
+                self._reportServingStatus()
+                gevent.sleep(interval)
+        gevent.spawn(reportInterval)
 
-        event = threading.Event()
-        thread = threading.Thread(target=reportInterval, args=(interval/1000, event))
-        thread.setDaemon(True)
-        thread.start()
+    def _reportServingStatus(self):
+        isServing = self._dataServer.isServing()
+        if(isServing):
+            self._sendCommand(messages.outgoing.servingStatus, True)
 
     def _stop(self, options):
         try:

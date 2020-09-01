@@ -1,20 +1,15 @@
-import os
-import time
-# from mock import patch
-from gevent import spawn, sleep
+
+from gevent import sleep
 from hkube_python_wrapper import Algorunner
-from tests.configs import config
-from tests.mocks import mockdata
-
-def startCallback(args):
-    return args["input"]["input"][0]
+from hkube_python_wrapper.config import config
 
 
-def xtest_load_algorithm_callbacks():
-    config.discovery["servingReportInterval"] = 0.5
+def test_load_algorithm_callbacks(mocker):
+    interval = 500
+    config.discovery["servingReportInterval"] = interval
     algorunner = Algorunner()
-    algorunner.Run(start=startCallback, options=config)
-    # algorunner._algorithm['start']({'input': mockdata.initData}, None)
-    sleep(3000)
-    assert result1 == result2
-
+    spy = mocker.spy(algorunner, '_reportServingStatus')
+    algorunner.connectToWorker(config)
+    sleep(0.8)
+    assert spy.call_count == 2
+    
