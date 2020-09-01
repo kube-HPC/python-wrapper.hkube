@@ -10,7 +10,7 @@ def test_load_algorithm_callbacks(mocker):
     config.discovery["enable"] = True
     algorunner = Algorunner()
     spy = mocker.spy(algorunner, '_reportServingStatus')
-    algorunner.connectToWorker(config)
+    algorunner._initDataServer(config)
     sleep(0.8)
     assert spy.call_count == 2
     
