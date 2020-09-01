@@ -25,9 +25,9 @@ class DataRequest:
             print('tcp://' + self.request['host'] + ':' + str(self.request['port']))
             adapter = ZMQRequest(self.request)
             response = adapter.invokeAdapter()
-            return self.encoding.decode(response)
+            return (len(response), self.encoding.decode(response))
         except Exception as e:
-            return self._createError('unknown', str(e))
+            return 0, self._createError('unknown', str(e))
         finally:
             adapter.close()
 
