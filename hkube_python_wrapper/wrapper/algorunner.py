@@ -5,7 +5,6 @@ monkey.patch_all()
 import os
 import sys
 import importlib
-import threading
 import traceback
 import gevent
 from events import Events
