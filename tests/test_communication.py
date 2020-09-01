@@ -1,12 +1,13 @@
 
 from gevent import sleep
 from hkube_python_wrapper import Algorunner
-from hkube_python_wrapper.config import config
+from tests.configs import config
 
 
 def test_load_algorithm_callbacks(mocker):
     interval = 500
     config.discovery["servingReportInterval"] = interval
+    config.discovery["enable"] = True
     algorunner = Algorunner()
     spy = mocker.spy(algorunner, '_reportServingStatus')
     algorunner.connectToWorker(config)

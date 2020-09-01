@@ -176,7 +176,7 @@ class Algorunner:
                 'port': options.discovery.get("port")
             }
             self._dataServer = DataServer(options.discovery)
-            self._reportServing(interval=config.discovery.get("servingReportInterval"))
+            self._reportServing(interval=options.discovery.get("servingReportInterval"))
 
     def _initDataAdapter(self, options):
         self._dataAdapter = DataAdapter(options, self._dataServer)
