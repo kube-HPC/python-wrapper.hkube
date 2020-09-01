@@ -1,4 +1,3 @@
-from gevent import sleep
 from hkube_python_wrapper.communication.zmq.ZMQServers import ZMQServers
 from hkube_python_wrapper.util.encoding import Encoding
 import hkube_python_wrapper.util.object_path as objectPath
@@ -84,6 +83,4 @@ class DataServer:
         return self._adapter.isServing()
 
     def shutDown(self):
-        while (self.isServing()):
-            sleep(1)
         self._adapter.close()

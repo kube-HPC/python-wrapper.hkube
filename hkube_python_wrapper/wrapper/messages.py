@@ -10,6 +10,7 @@ class Outgoing(object):
         self.error = "errorMessage"
         self.storing = "storing"
         self.done = "done"
+        self.servingStatus = "servingStatus"
         self.startAlgorithmExecution = "startAlgorithmExecution"
         self.stopAlgorithmExecution = "stopAlgorithmExecution"
         self.startRawSubPipeline = "startRawSubPipeline"
