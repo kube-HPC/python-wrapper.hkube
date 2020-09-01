@@ -33,7 +33,7 @@ class ZMQServers(object):
         context.term()
 
     def isServing(self):
-        res = all(i.isServing() for i in self._instances)
+        res = any(i.isServing() for i in self._instances)
         return res
 
     def close(self):
