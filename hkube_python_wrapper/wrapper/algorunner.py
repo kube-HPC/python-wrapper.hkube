@@ -1,4 +1,7 @@
 from __future__ import print_function, division, absolute_import
+
+import gc
+
 from gevent import monkey
 
 monkey.patch_all()
@@ -254,6 +257,7 @@ class Algorunner:
         if (span):
             Tracer.instance.finish_span(span)
         self._sendCommand(messages.outgoing.done, algorithmData)
+        gc.collect()
 
     def _handle_responseV2(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         encodedData = self._dataAdapter.encode(algorithmData)
@@ -282,6 +286,7 @@ class Algorunner:
         if (span):
             Tracer.instance.finish_span(span)
         self._sendCommand(messages.outgoing.done, None)
+        gc.collect()
 
     def _reportServing(self, interval=None):
         if(interval is None):
