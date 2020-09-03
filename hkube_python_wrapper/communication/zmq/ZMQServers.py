@@ -4,7 +4,7 @@ context = zmq.Context()
 
 
 class ZMQServers(object):
-    def __init__(self, port, replyFunc):
+    def __init__(self, port, replyFunc, num_threads):
         self._isServing = False
         self._active = True
         self._replyFunc = replyFunc
@@ -13,6 +13,7 @@ class ZMQServers(object):
         self._instances = []
         self._clients = None
         self._workers = None
+        self._num_threads = num_threads
 
     def listen(self):
         self._clients = context.socket(zmq.ROUTER)
@@ -20,8 +21,8 @@ class ZMQServers(object):
 
         self._workers = context.socket(zmq.DEALER)
         self._workers.bind(self._url_worker)
-
-        for _ in range(5):
+        print('Creating {num_threads} ZMQ Servers'.format(num_threads=self._num_threads))
+        for _ in range(self._num_threads):
             server = ZMQServer(context, self._replyFunc, self._url_worker)
             server.start()
             self._instances.append(server)

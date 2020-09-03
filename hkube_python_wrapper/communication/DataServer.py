@@ -15,7 +15,7 @@ class DataServer:
         self._port = config['port']
         self._encodingType = config['encoding']
         self._encoding = Encoding(self._encodingType)
-        self._adapter = ZMQServers(self._port, self._createReply)
+        self._adapter = ZMQServers(self._port, self._createReply, config.get('num_threads',5))
 
     def listen(self):
         print('discovery serving on {host}:{port} with {encoding} encoding'.format(
