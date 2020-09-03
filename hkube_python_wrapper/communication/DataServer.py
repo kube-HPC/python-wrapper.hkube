@@ -34,8 +34,7 @@ class DataServer:
             result = self._createError('unknown', str(e))
         if (typeCheck.isBytearray(result)):
             return result
-        else:
-            return self._encoding.encode(result)
+        return self._encoding.encode(result)
 
     @timing
     def createData(self, taskId, tasks, datapath):
