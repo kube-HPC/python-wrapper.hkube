@@ -21,7 +21,8 @@ class DataAdapter:
         self._requestTimeout = options.discovery['timeout']
         self._networkTimeout = options.discovery['networkTimeout']
         self._maxWorkers = min(32, (multiprocessing.cpu_count() or 1) + 4)
-        print('using {workers} for DataAdapter'.format(workers=self._maxWorkers))
+        print('using {workers} for DataAdapter'.format(
+            workers=self._maxWorkers))
 
     def encode(self, value):
         return self._encoding.encode(value)
@@ -89,39 +90,41 @@ class DataAdapter:
         dataPath = options.get('path')
         storageInfo = options.get('storageInfo')
         if (storageInfo):
-            storageResult = self._getFromCacheOrStorage(storageInfo, dataPath)
+            storageResult = self._getFromCacheOrStorage(
+                storageInfo, dataPath, storageInfo.get("path"))
             batchResponse.append(storageResult)
             return batchResponse
-        peerResponse = self._getFromPeer(options, dataPath)
-        peerError = self._getPeerError(peerResponse)
+        tasksNotInCache, batchResponse = self._storageCache.getAll(tasks)
+        if (tasksNotInCache):
+            options['tasks'] = tasksNotInCache
+            size, peerResponse = self._getFromPeer(options, dataPath)  # pylint: disable=unused-variable
+            peerError = self._getPeerError(peerResponse)
 
-        if (peerError):
-            message = peerError.get('message')
-            print('batch request has failed with {message}, using storage fallback'.format(message=message))
-            for t in tasks:
-                storageData = self._getDataForTask(jobId, t, dataPath)
-                batchResponse.append(storageData)
-        else:
-            errors = peerResponse.get('errors')
-            items = peerResponse.get('items')
-
-            if (errors):
+            if (peerError):
+                message = peerError.get('message')
+                print('batch request has failed with {message}, using storage fallback'.format(
+                    message=message))
+                for t in tasksNotInCache:
+                    storageData = self._getDataForTask(jobId, t, dataPath)
+                    batchResponse.append(storageData)
+            else:
+                items = peerResponse.get('items')
                 for i, t in enumerate(items):
                     peerError = self._getPeerError(t)
+                    taskId = tasksNotInCache[i]
                     if (peerError):
-                        taskId = tasks[i]
-                        storageData = self._getDataForTask(jobId, taskId, dataPath)
+                        storageData = self._getDataForTask(
+                            jobId, taskId, dataPath)
                         batchResponse.append(storageData)
                     else:
                         batchResponse.append(t)
-            else:
-                batchResponse += items
-
+                        if not (dataPath):
+                            self._storageCache.update(taskId, t)
         return batchResponse
 
     def _getDataForTask(self, jobId, taskId, dataPath):
         path = self._storageManager.hkube.createPath(jobId, taskId)
-        return self._getFromCacheOrStorage({'path': path}, dataPath)
+        return self._getFromCacheOrStorage({'path': path}, dataPath, taskId)
 
     def tryGetDataFromPeerOrStorage(self, options):
         dataPath = options.get('path')
@@ -129,15 +132,22 @@ class DataAdapter:
         discovery = options.get('discovery')
         data = None
         hasResponse = False
-
         if (discovery):
-            data = self._getFromPeer(options, dataPath)
-            peerError = self._getPeerError(data)
-            hasResponse = not peerError
-            data = None if peerError else data
-
-        if (not hasResponse and storageInfo):
-            data = self._getFromCacheOrStorage(storageInfo, dataPath)
+            cacheId = options.get('taskId')
+        else:
+            cacheId = storageInfo.get("path")
+        data = self._getFromCache(cacheId, dataPath)
+        if not (data):
+            if (discovery):
+                size, data = self._getFromPeer(options, dataPath)
+                peerError = self._getPeerError(data)
+                hasResponse = not peerError
+                data = None if peerError else data
+                if (data and not dataPath and size > 0):
+                    self._setToCache(cacheId, data, size)
+            if (not hasResponse and storageInfo):
+                data = self._getFromCacheOrStorage(
+                    storageInfo, dataPath, cacheId)
 
         return data
 
@@ -150,9 +160,9 @@ class DataAdapter:
         port = discovery.get('port')
         host = discovery.get('host')
 
-        response = None
         if (self._dataServer and self._dataServer.isLocal(host, port)):
             response = self._dataServer.createData(taskId, tasks, dataPath)
+            size = -1
 
         else:
             request = {
@@ -169,9 +179,9 @@ class DataAdapter:
 
             }
             dataRequest = DataRequest(request)
-            response = dataRequest.invoke()
+            size, response = dataRequest.invoke()
 
-        return response
+        return (size, response)
 
     def _getPeerError(self, options):
         error = None
@@ -180,23 +190,26 @@ class DataAdapter:
 
         return error
 
-    def _getFromCacheOrStorage(self, options, dataPath):
-        path = options.get('path')
-        data = self._getFromCache(path)
+    def _getFromCacheOrStorage(self, options, dataPath, cacheID):
+        data = self._getFromCache(cacheID, dataPath)
         if (data is None):
             size, data = self._getFromStorage(options)
-            self._setToCache(path, data, size)
-        if (dataPath):
-            data = getPath(data, dataPath)
+            self._setToCache(cacheID, data, size)
+            if (dataPath):
+                data = getPath(data, dataPath)
+
         return data
 
     @trace(name='getFromCache')
     @timing
-    def _getFromCache(self, path):
-        return self._storageCache.get(path)
+    def _getFromCache(self, cacheId, dataPath):
+        data = self._storageCache.get(cacheId)
+        if (data and dataPath):
+            data = getPath(data, dataPath)
+        return data
 
-    def _setToCache(self, path, data, size):
-        self._storageCache.update(path, data, size)
+    def _setToCache(self, cacheId, data, size):
+        self._storageCache.update(cacheId, data, size)
 
     @trace(name='getFromStorage')
     @timing

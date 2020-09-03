@@ -27,6 +27,7 @@ discovery = {
     "networkTimeout": getIntEnv('DISCOVERY_NETWORK_TIMEOUT', 1000),
     "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE_MB', 400),
     "num_threads": getIntEnv('DISCOVERY_SERVER_NUM_THREADS', 5),
+    "servingReportInterval": getIntEnv('DISCOVERY_SERVING_REPORT_INTERVAL', 5000),
 }
 algorithm = {
     "path": os.environ.get('ALGORITHM_PATH', "algorithm_unique_folder"),
