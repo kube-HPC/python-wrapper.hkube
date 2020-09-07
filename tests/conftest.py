@@ -46,6 +46,7 @@ def pytest_sessionfinish(session, exitstatus):
     """
     global ws_server
     if ws_server is not None:
+        print('killing ws_server')
         ws_server.kill()
     ws_server = None
     # print('pytest_sessionfinish')

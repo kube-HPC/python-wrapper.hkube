@@ -1,7 +1,8 @@
 import os
 import time
 # from mock import patch
-from gevent import spawn, sleep
+from time import sleep
+from threading import Thread
 from hkube_python_wrapper import Algorunner
 from tests.configs import config
 from tests.mocks import mockdata
@@ -26,6 +27,8 @@ def test_load_algorithm_callbacks():
     result1 = algorunner._algorithm['start']({'input': mockdata.initData}, None)
     result2 = startCallback({'input': mockdata.initData})
     assert result1 == result2
+    algorunner.close()
+
 
 
 def xtest_exit():
@@ -48,7 +51,7 @@ def xtest_exit():
         status = {'exit': False}
         algorunner.loadAlgorithmCallbacks(startCallback, exit=doExit)
         algorunner._dataServer.isServing = isServingTrue
-        spawn(invokeExit)
+        Thread(target=invokeExit).start()
         sleep(1)
         assert status['exit'] == False
         algorunner._dataServer.isServing = isServingFalse
@@ -67,6 +70,8 @@ def test_failed_load_algorithm():
     algorunner.loadAlgorithm(alg)
     assert "No module named" in algorunner._loadAlgorithmError
     assert "no_such_path" in algorunner._loadAlgorithmError
+    algorunner.close()
+
 
 
 def xtest_load_algorithm():
@@ -96,3 +101,5 @@ def test_connect_to_worker():
     time.sleep(2)
     assert algorunner._connected == True
     assert algorunner._input == mockdata.initData
+    algorunner.close()
+

@@ -1,5 +1,5 @@
 import threading
-import zmq.green as zmq
+import zmq
 
 
 class ZMQServer(threading.Thread):
@@ -11,9 +11,11 @@ class ZMQServer(threading.Thread):
         self._workerUrl = workerUrl
         self._context = context
         threading.Thread.__init__(self)
+        self.daemon = True
 
     def run(self):
         self._socket = self._context.socket(zmq.REP)
+        self._socket.setsockopt(zmq.LINGER, 0)
         self._socket.connect(self._workerUrl)
 
         while self._active:
@@ -27,6 +29,7 @@ class ZMQServer(threading.Thread):
                 self._isServing = False
             except Exception:
                 print('socket closed')
+        print('ZmqServer run loop exit')
 
     def _send(self, message):
         toBeSent = self._replyFunc(message)

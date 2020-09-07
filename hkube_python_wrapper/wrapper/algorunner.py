@@ -1,21 +1,25 @@
 from __future__ import print_function, division, absolute_import
-from gevent import monkey
 
-monkey.patch_all()
+from ..config import config
+from .wc import WebsocketClient
+from .data_adapter import DataAdapter
+from .methods import methods
+from .messages import messages
+from hkube_python_wrapper.tracing import Tracer
+from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
+from hkube_python_wrapper.communication.DataServer import DataServer
 import os
 import sys
 import importlib
 import traceback
-import gevent
 from events import Events
-from hkube_python_wrapper.communication.DataServer import DataServer
-from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
-from hkube_python_wrapper.tracing import Tracer
-from .messages import messages
-from .methods import methods
-from .data_adapter import DataAdapter
-from .wc import WebsocketClient
-from ..config import config
+from threading import Thread, Timer
+if (sys.version_info > (3, 0)):
+    # Python 3 code in this block
+    from queue import Queue, Empty  # pylint: disable=import-error
+else:
+    # Python 2 code in this block
+    from Queue import Queue, Empty  # pylint: disable=import-error
 
 
 class Algorunner:
@@ -27,12 +31,14 @@ class Algorunner:
         self._loadAlgorithmError = None
         self._connected = False
         self._hkubeApi = None
+        self.msg_queue = Queue()
         self._dataAdapter = None
         self._dataServer = None
         self._discovery = None
         self._wsc = None
         self.tracer = None
         self._storage = None
+        self._active = True
 
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):
@@ -57,7 +63,8 @@ class Algorunner:
         else:
             algorunner.loadAlgorithm(config)
         jobs = algorunner.connectToWorker(config)
-        gevent.joinall(jobs)
+        for j in jobs:
+            j.join()
 
     @staticmethod
     def Debug(debug_url, start, init=None, stop=None, exit=None, options=None):
@@ -67,7 +74,8 @@ class Algorunner:
         config.discovery["enable"] = False
         algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
         jobs = algorunner.connectToWorker(config)
-        gevent.joinall(jobs)
+        for j in jobs:
+            j.join()
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None, options=None):
         try:
@@ -153,15 +161,48 @@ class Algorunner:
         self._url += '?storage={storage}&encoding={encoding}'.format(
             storage=self._storage, encoding=encoding)
 
-        self._wsc = WebsocketClient(encoding)
+        self._wsc = WebsocketClient(self.msg_queue, encoding)
         self._initStorage(options)
-        self._hkubeApi = HKubeApi(self._wsc, self._dataAdapter, self._storage)
+        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
-        job1 = gevent.spawn(self._wsc.startWS, self._url)
-        job2 = gevent.spawn(self._dataServer and self._dataServer.listen)
-        return [job1, job2]
+        t1 = Thread(name="WsThread", target=self._wsc.startWS, args=(self._url, ))
+        t1.daemon = True
+        t1.start()
+        # t2 = Thread(name="DataserverThread", target=self._dataServer and self._dataServer.listen)
+        self._dataServer and self._dataServer.listen()
+        # t2.daemon = True
+        # t2.start()
+        t3 = Thread(name="RunThread", target=self.run)
+        t3.start()
+        return [t1, t3]
+
+    def handle(self, command, data):
+        if (command == messages.incoming.initialize):
+            self._init(data)
+        if (command == messages.incoming.start):
+            self._start(data)
+        if (command == messages.incoming.stop):
+            self._stop(data)
+        if (command == messages.incoming.exit):
+            self._exit(data)
+        if (command in [messages.incoming.algorithmExecutionDone, messages.incoming.algorithmExecutionError]):
+            self._hkubeApi.algorithmExecutionDone(data)
+        if (command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError, messages.incoming.subPipelineStopped]):
+            self._hkubeApi.subPipelineDone(data)
+
+    def get_message(self, blocking=True):
+        return self.msg_queue.get(block=blocking, timeout=0.1)
+
+    def run(self):
+        while self._active:
+            try:
+                (command, data) = self.get_message()
+                self.handle(command, data)
+            except Empty:
+                pass
+        print('Exiting run loop')
 
     def _initStorage(self, options):
         if (self._storage != 'v1'):
@@ -182,7 +223,9 @@ class Algorunner:
         self._dataAdapter = DataAdapter(options, self._dataServer)
 
     def close(self):
-        self._wsc.shutDown()
+        if (self._wsc):
+            self._wsc.shutDown()
+        self._active = False
 
     def _registerToWorkerEvents(self):
         self._wsc.events.on_connection += self._connection
@@ -289,10 +332,11 @@ class Algorunner:
         interval = interval / 1000
 
         def reportInterval():
-            while (True):
-                self._reportServingStatus()
-                gevent.sleep(interval)
-        gevent.spawn(reportInterval)
+            if (not self._active):
+                return
+            self._reportServingStatus()
+            Timer(interval, reportInterval).start()
+        reportInterval()
 
     def _reportServingStatus(self):
         isServing = self._dataServer.isServing()

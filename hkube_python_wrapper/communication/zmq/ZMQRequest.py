@@ -1,4 +1,4 @@
-import zmq.green as zmq
+import zmq
 
 context = zmq.Context()
 

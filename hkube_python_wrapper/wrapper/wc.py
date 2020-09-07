@@ -3,73 +3,27 @@ import time
 from events import Events
 from websocket import ABNF
 import websocket
-import gevent
-from gevent import monkey
 from hkube_python_wrapper.util.encoding import Encoding
-from hkube_python_wrapper.wrapper.messages import messages
-monkey.patch_all()
 
 
 class WebsocketClient:
-    def __init__(self, encoding):
+    def __init__(self, msg_queue, encoding):
         self.events = Events()
+        self.msg_queue = msg_queue
         self._ws = None
         self._reconnectInterval = 0.1
         self._active = True
-        self._switcher = {
-            messages.incoming.initialize: self.init,
-            messages.incoming.start: self.start,
-            messages.incoming.stop: self.stop,
-            messages.incoming.exit: self.exit,
-            messages.incoming.algorithmExecutionDone: self.algorithmExecutionDone,
-            messages.incoming.algorithmExecutionError: self.algorithmExecutionError,
-            messages.incoming.subPipelineDone: self.subPipelineDone,
-            messages.incoming.subPipelineStarted: self.subPipelineStarted,
-            messages.incoming.subPipelineError: self.subPipelineError,
-            messages.incoming.subPipelineStopped: self.subPipelineStopped
-        }
         self._firstConnect = False
         self._encoding = Encoding(encoding)
         self._ws_opcode = ABNF.OPCODE_BINARY if self._encoding.isBinary else ABNF.OPCODE_TEXT
         print('Initialized socket with {encoding} encoding'.format(encoding=encoding))
-
-    def init(self, data):
-        self.events.on_init(data)
-
-    def start(self, data):
-        self.events.on_start(data)
-
-    def stop(self, data):
-        self.events.on_stop(data)
-
-    def exit(self, data):
-        self.events.on_exit(data)
-
-    def algorithmExecutionDone(self, data):
-        self.events.on_algorithmExecutionDone(data)
-
-    def algorithmExecutionError(self, data):
-        self.events.on_algorithmExecutionError(data)
-
-    def subPipelineStarted(self, data):
-        self.events.on_subPipelineStarted(data)
-
-    def subPipelineDone(self, data):
-        self.events.on_subPipelineDone(data)
-
-    def subPipelineError(self, data):
-        self.events.on_subPipelineError(data)
-
-    def subPipelineStopped(self, data):
-        self.events.on_subPipelineStopped(data)
 
     def on_message(self, message):
         decoded = self._encoding.decode(message, plain_encode=True)
         command = decoded["command"]
         data = decoded.get("data", None)
         print('got message from worker: {command}'.format(command=command))
-        func = self._switcher.get(command)
-        gevent.spawn(func, data)
+        self.msg_queue.put((command, data))
 
     def on_error(self, error):
         if self._firstConnect:
