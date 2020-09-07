@@ -32,9 +32,8 @@ class DataServer:
 
         except Exception as e:
             result = self._createError('unknown', str(e))
-        if (typeCheck.isBytearray(result)):
-            return result
-        return self._encoding.encode(result)
+        encoded = self._encoding.encode(result)
+        return encoded
 
     @timing
     def createData(self, taskId, tasks, datapath):
@@ -72,8 +71,6 @@ class DataServer:
         return data
 
     def setSendingState(self, taskId, data, size):
-        if (typeCheck.isBytearray(data)):
-            data = self._encoding.encode(data)
         return self._cache.update(taskId, data, size)
 
     def _createError(self, code, message):
