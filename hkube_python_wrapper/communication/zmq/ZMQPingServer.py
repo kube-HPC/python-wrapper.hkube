@@ -2,15 +2,14 @@ import threading
 import zmq.green as zmq
 
 
-class ZMQServer(threading.Thread):
-    def __init__(self, context, replyFunc, workerUrl):
+class ZMQPingServer(threading.Thread):
+    def __init__(self, context, workerUrl, name):
         self._isServing = False
         self._active = True
         self._socket = None
-        self._replyFunc = replyFunc
         self._workerUrl = workerUrl
         self._context = context
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name=name)
 
     def run(self):
         self._socket = self._context.socket(zmq.REP)
@@ -18,16 +17,15 @@ class ZMQServer(threading.Thread):
 
         while self._active:
             try:
+                print('waiting for ping on {p}'.format(p=self._socket.get(zmq.LAST_ENDPOINT)))
                 message = self._socket.recv()
                 self._isServing = True
-                self._send(message)
+                print('got ping')
+                if(message == b'ping'):
+                    self._socket.send(b'pong')
                 self._isServing = False
             except Exception:
                 print('socket closed')
-
-    def _send(self, message):
-        toBeSent = self._replyFunc(message)
-        self._socket.send(toBeSent, copy=False)
 
     def isServing(self):
         return self._isServing
