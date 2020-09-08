@@ -15,7 +15,7 @@ class DataRequest:
             u'dataPath': reqDetails.get('dataPath')
         }
         self.encoding = Encoding(encoding)
-        content = self.encoding.encode(options, plain_encode=True)
+        header ,content = self.encoding.encode(options, plain_encode=True)
         self.request = dict()
         self.request.update(address)
         self.request.update({"content": content, "timeout": timeout, "networkTimeout": networkTimeout})
@@ -24,8 +24,12 @@ class DataRequest:
         try:
             print('tcp://' + self.request['host'] + ':' + str(self.request['port']))
             adapter = ZMQRequest(self.request)
-            response = adapter.invokeAdapter()
-            return (len(response), self.encoding.decode(response))
+            responseFrames = adapter.invokeAdapter()
+            header = None
+            if (len(responseFrames) == 2):
+                header = responseFrames[1]
+            content = responseFrames[0]
+            return (len(content), self.encoding.decode(content,header))
         except Exception as e:
             return 0, self._createError('unknown', str(e))
         finally:

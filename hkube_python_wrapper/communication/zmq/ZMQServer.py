@@ -20,17 +20,14 @@ class ZMQServer(threading.Thread):
             try:
                 message = self._socket.recv()
                 self._isServing = True
-                if(message == b'Are you there'):
-                    self._socket.send(b'Yes')
-                else:
-                    self._send(message)
+                self._send(message)
                 self._isServing = False
             except Exception:
                 print('socket closed')
 
     def _send(self, message):
         toBeSent = self._replyFunc(message)
-        self._socket.send(toBeSent, copy=False)
+        self._socket.send_multipart(toBeSent, copy=False)
 
     def isServing(self):
         return self._isServing

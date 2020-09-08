@@ -33,7 +33,8 @@ class DataServer:
         except Exception as e:
             result = self._createError('unknown', str(e))
 
-        return self._encoding.encode(result)
+        header , encoded = self._encoding.encode(result)
+        return [header,encoded]
 
     @timing
     def createData(self, taskId, tasks, datapath):

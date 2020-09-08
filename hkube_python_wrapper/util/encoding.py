@@ -80,7 +80,7 @@ class Encoding:
     def encode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
         if(not self.isBinary or plainEncode is True):
-            return self._encode(value)
+            return (None, self._encode(value))
 
         payload = None
         if (typeCheck.isBytearray(value)):
@@ -91,8 +91,20 @@ class Encoding:
             payload = self._encode(value)
 
         header = self.createHeader(dataType, self.protocolType)
-        header += payload
-        return header
+        # header += payload
+        return header ,payload
+
+    def decode(self, header, value, **kwargs):
+        if (header == None):
+            self._decode(value)
+        else:
+            dt = bytes(header[2:3])
+            dataType = struct.unpack(">B", dt)[0]
+            if (dataType == DATA_TYPE_ENCODED):
+                payload = self._decode(value)
+            else:
+                payload = value
+            return payload
 
     def decode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')

@@ -16,15 +16,12 @@ class ZMQRequest(object):
         self.networkTimeout = int(reqDetails['networkTimeout'])
 
     def invokeAdapter(self):
-        self.socket.send(b'Are you there')
         result = self.poller.poll(self.networkTimeout)
         if (result):
-            there = self.socket.recv()
-            if (there == b'Yes'):
                 self.socket.send(self.content)
                 result = self.poller.poll(self.timeout)
                 if (result):
-                    message = self.socket.recv()
+                    message = self.socket.recv_multipart()
                     return message
                 raise Exception('Timed out:' + str(self.timeout))
         raise Exception('No server on other side ' + self.connStr)
