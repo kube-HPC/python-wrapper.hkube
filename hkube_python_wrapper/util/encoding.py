@@ -77,7 +77,7 @@ class Encoding:
         self._fromBytes = self._fromBytesPY3 if PY3 else self._fromBytesPY2
         self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
 
-    def encode(self, value, **kwargs):
+    def encode2(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
         if(not self.isBinary or plainEncode is True):
             return (None, self._encode(value))
@@ -92,9 +92,26 @@ class Encoding:
 
         header = self.createHeader(dataType, self.protocolType)
         # header += payload
-        return header ,payload
+        return header, payload
 
-    def decode(self, header, value, **kwargs):
+    def encode(self, value, **kwargs):
+        plainEncode = kwargs.get('plain_encode')
+        if(not self.isBinary or plainEncode is True):
+            return self._encode(value)
+
+        payload = None
+        if (typeCheck.isBytearray(value)):
+            dataType = DATA_TYPE_RAW
+            payload = value
+        else:
+            dataType = DATA_TYPE_ENCODED
+            payload = self._encode(value)
+
+        header = self.createHeader(dataType, self.protocolType)
+        header += payload
+        return payload
+
+    def decode2(self, header, value, **kwargs):
         if (header == None):
             self._decode(value)
         else:

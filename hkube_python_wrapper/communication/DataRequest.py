@@ -15,7 +15,7 @@ class DataRequest:
             u'dataPath': reqDetails.get('dataPath')
         }
         self.encoding = Encoding(encoding)
-        header ,content = self.encoding.encode(options, plain_encode=True)
+        content = self.encoding.encode(options, plain_encode=True)
         self.request = dict()
         self.request.update(address)
         self.request.update({"content": content, "timeout": timeout, "networkTimeout": networkTimeout})
@@ -29,8 +29,9 @@ class DataRequest:
             if (len(responseFrames) == 2):
                 header = responseFrames[1]
             content = responseFrames[0]
-            return (len(content), self.encoding.decode(content,header))
+            return (len(content), self.encoding.decode2(content,header))
         except Exception as e:
+            print ("exception " + str(e))
             return 0, self._createError('unknown', str(e))
         finally:
             adapter.close()
