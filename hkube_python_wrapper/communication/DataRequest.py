@@ -26,10 +26,13 @@ class DataRequest:
             adapter = ZMQRequest(self.request)
             responseFrames = adapter.invokeAdapter()
             header = None
-            if (len(responseFrames) == 2):
+            results = []
+            for i in range(0,len(responseFrames)):
                 header = responseFrames[1]
-            content = responseFrames[0]
-            return (len(content), self.encoding.decode2(content,header))
+                content = responseFrames[0]
+                decoded = self.encoding.decode2(header,content)
+                results.append (len(content),decoded)
+            return results
         except Exception as e:
             print ("exception " + str(e))
             return 0, self._createError('unknown', str(e))

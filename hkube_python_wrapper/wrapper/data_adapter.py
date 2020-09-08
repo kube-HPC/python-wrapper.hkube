@@ -97,29 +97,19 @@ class DataAdapter:
         tasksNotInCache, batchResponse = self._storageCache.getAll(tasks)
         if (tasksNotInCache):
             options['tasks'] = tasksNotInCache
-            size, peerResponse = self._getFromPeer(options, dataPath)  # pylint: disable=unused-variable
-            peerError = self._getPeerError(peerResponse)
-
-            if (peerError):
-                message = peerError.get('message')
-                print('batch request has failed with {message}, using storage fallback'.format(
-                    message=message))
-                for t in tasksNotInCache:
-                    storageData = self._getDataForTask(jobId, t, dataPath)
+            results = self._getFromPeer(options, dataPath)  # pylint: disable=unused-variable
+            for i ,item in enumerate(results):
+                size, content = item
+                peerError = self._getPeerError(content)
+                taskId = tasksNotInCache[i]
+                if (peerError):
+                    storageData = self._getDataForTask(
+                        jobId, taskId, dataPath)
                     batchResponse.append(storageData)
-            else:
-                items = peerResponse.get('items')
-                for i, t in enumerate(items):
-                    peerError = self._getPeerError(t)
-                    taskId = tasksNotInCache[i]
-                    if (peerError):
-                        storageData = self._getDataForTask(
-                            jobId, taskId, dataPath)
-                        batchResponse.append(storageData)
-                    else:
-                        batchResponse.append(t)
-                        if not (dataPath):
-                            self._storageCache.update(taskId, t)
+                else:
+                    batchResponse.append(content)
+                    if not (dataPath):
+                        self._storageCache.update(taskId, content)
         return batchResponse
 
     def _getDataForTask(self, jobId, taskId, dataPath):
@@ -139,7 +129,7 @@ class DataAdapter:
         data = self._getFromCache(cacheId, dataPath)
         if not (data):
             if (discovery):
-                size, data = self._getFromPeer(options, dataPath)
+                size, data = self._getFromPeer(options, dataPath)[0]
                 peerError = self._getPeerError(data)
                 hasResponse = not peerError
                 data = None if peerError else data
@@ -179,9 +169,9 @@ class DataAdapter:
 
             }
             dataRequest = DataRequest(request)
-            size, response = dataRequest.invoke()
+            responses = dataRequest.invoke()
 
-        return (size, response)
+        return responses
 
     def _getPeerError(self, options):
         error = None

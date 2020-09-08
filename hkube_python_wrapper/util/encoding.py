@@ -91,7 +91,6 @@ class Encoding:
             payload = self._encode(value)
 
         header = self.createHeader(dataType, self.protocolType)
-        # header += payload
         return header, payload
 
     def encode(self, value, **kwargs):

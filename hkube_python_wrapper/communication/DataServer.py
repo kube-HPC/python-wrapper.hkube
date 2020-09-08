@@ -15,6 +15,8 @@ class DataServer:
         self._encodingType = config['encoding']
         self._encoding = Encoding(self._encodingType)
         self._adapter = ZMQServers(self._port, self._createReply)
+        self.notAvailable = self._encoding.encode2(
+            self._createError('notAvailable', 'taskId notAvailable'))
 
     def listen(self):
         print('discovery serving on {host}:{port} with {encoding} encoding'.format(
@@ -27,14 +29,17 @@ class DataServer:
             decoded = self._encoding.decode(message, plain_encode=True)
             tasks = decoded.get('tasks')
             taskId = decoded.get('taskId')
-            datapath = decoded.get('dataPath')
-            result = self.createData(taskId, tasks, datapath)
+            resultsAsTupple = self._getDataByTaskId(taskId, tasks)
 
         except Exception as e:
             result = self._createError('unknown', str(e))
-
-        header , encoded = self._encoding.encode(result)
-        return [header,encoded]
+            header, encoded = self._encoding.encode2(result)
+            return [header, encoded]
+        parts = []
+        for header, content in resultsAsTupple:
+            parts.append(header)
+            parts.append(content)
+        return parts
 
     @timing
     def createData(self, taskId, tasks, datapath):
@@ -53,26 +58,21 @@ class DataServer:
 
         return dict({"items": items, "errors": errors})
 
-    def _getDataByTaskId(self, taskId, datapath):
-        result = None
-        if (taskId not in self._cache):
-            result = self._createError('notAvailable', 'taskId notAvailable')
-        else:
-            data = self._cache.get(taskId)
-            result = self._createDataByPath(data, datapath)
-        return result
-
-    def _createDataByPath(self, data, datapath):
-        if (datapath):
-            data = objectPath.getPath(data, datapath)
-            if (data == 'DEFAULT'):
-                data = self._createError('noSuchDataPath',
-                                         '{datapath} does not exist in data'.format(datapath=datapath))
-
-        return data
+    def _getDataByTaskId(self, taskId, tasks):
+        results = []
+        if (tasks is None):
+            tasks = [taskId]
+        for task in tasks:
+            if (task not in self._cache):
+                result = self.notAvailable
+            else:
+                result = (self._cache.getHeader(task), self._cache.get(task))
+            results.append(result)
+        return results
 
     def setSendingState(self, taskId, data, size):
-        return self._cache.update(taskId, data, size)
+        header, encoded = self._encoding.encode2(data)
+        return self._cache.update(taskId, encoded, size, header)
 
     def _createError(self, code, message):
         return {'hkube_error': {'code': code, 'message': message}}
