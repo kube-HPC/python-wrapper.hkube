@@ -21,13 +21,13 @@ PY3 = sys.version_info[0] == 3
 
 '''
 
-- Hkube header format: 8 bytes (64 bit)
+- Hkube footer format: 8 bytes (64 bit)
 - Include 2 bytes for magic number and 2 reserved bytes
 
 +---------------------------------------------------------------+
  0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
 +---------------------------------------  ----------------------+
-|     VERSION    | HEADER_LENGTH  |  DATA_TYPE  | PROTOCOL_TYPE |
+|     VERSION    | FOOTER_LENGTH  |  DATA_TYPE  | PROTOCOL_TYPE |
 +---------------------------------------------------------------+
 |      UNUSED    |     UNUSED     |        MAGIC NUMBER         |
 +---------------------------------------------------------------+
@@ -36,7 +36,7 @@ PY3 = sys.version_info[0] == 3
 '''
 
 VERSION = 0x01
-HEADER_LENGTH = 0x08
+FOOTER_LENGTH = 0x08
 PROTOCOL_TYPE_BSON = 0x01
 PROTOCOL_TYPE_JSON = 0x02
 PROTOCOL_TYPE_MSGPACK = 0x03
@@ -90,8 +90,8 @@ class Encoding:
             dataType = DATA_TYPE_ENCODED
             payload = self._encode(value)
 
-        header = self.createFooter(dataType, self.protocolType)
-        payload += header
+        footer = self.createFooter(dataType, self.protocolType)
+        payload += footer
         return payload
 
     def decode(self, value, **kwargs):
@@ -105,16 +105,16 @@ class Encoding:
 
         view = self._fromBytes(value)
         totalLength = len(view)
-        footer = bytes(view[totalLength - HEADER_LENGTH:totalLength])
+        footer = bytes(view[totalLength - FOOTER_LENGTH:totalLength])
         mg = bytes(footer[-2:])
         if (mg != MAGIC_NUMBER):
             return self._decode(value)
 
         ftl = bytes(footer[1:2])
         dt = bytes(footer[2:3])
-        headerLength = struct.unpack(">B", ftl)[0]
+        footerLength = struct.unpack(">B", ftl)[0]
         dataType = struct.unpack(">B", dt)[0]
-        data = view[0: totalLength - headerLength]
+        data = view[0: totalLength - footerLength]
 
         payload = None
         if (dataType == DATA_TYPE_ENCODED):
@@ -158,12 +158,12 @@ class Encoding:
         return msgpack.unpackb(value, raw=False)
 
     def createFooter(self, dataType, protocolType):
-        header = bytearray()
-        header.append(VERSION)
-        header.append(HEADER_LENGTH)
-        header.append(dataType)
-        header.append(protocolType)
-        header.append(UNUSED)
-        header.append(UNUSED)
-        header.extend(MAGIC_NUMBER)
-        return header
+        footer = bytearray()
+        footer.append(VERSION)
+        footer.append(FOOTER_LENGTH)
+        footer.append(dataType)
+        footer.append(protocolType)
+        footer.append(UNUSED)
+        footer.append(UNUSED)
+        footer.extend(MAGIC_NUMBER)
+        return footer
