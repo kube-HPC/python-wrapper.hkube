@@ -90,7 +90,7 @@ class Encoding:
             dataType = DATA_TYPE_ENCODED
             payload = self._encode(value)
 
-        header = self.createHeader(dataType, self.protocolType)
+        header = self.createFooter(dataType, self.protocolType)
         payload += header
         return payload
 
@@ -105,13 +105,13 @@ class Encoding:
 
         view = self._fromBytes(value)
         totalLength = len(view)
-        header = bytes(view[totalLength - HEADER_LENGTH:totalLength])
-        mg = bytes(header[-2:])
+        footer = bytes(view[totalLength - HEADER_LENGTH:totalLength])
+        mg = bytes(footer[-2:])
         if (mg != MAGIC_NUMBER):
             return self._decode(value)
 
-        ftl = bytes(header[1:2])
-        dt = bytes(header[2:3])
+        ftl = bytes(footer[1:2])
+        dt = bytes(footer[2:3])
         headerLength = struct.unpack(">B", ftl)[0]
         dataType = struct.unpack(">B", dt)[0]
         data = view[0: totalLength - headerLength]
@@ -157,7 +157,7 @@ class Encoding:
     def _msgpackDecode(self, value):
         return msgpack.unpackb(value, raw=False)
 
-    def createHeader(self, dataType, protocolType):
+    def createFooter(self, dataType, protocolType):
         header = bytearray()
         header.append(VERSION)
         header.append(HEADER_LENGTH)
