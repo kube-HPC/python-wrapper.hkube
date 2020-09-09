@@ -31,7 +31,7 @@ class ZMQServer(threading.Thread):
             toBeSent = self._replyFunc(message)
             self._socket.send_multipart(toBeSent, copy=False)
         except Exception as e:
-            print (e)
+            print(e)
 
     def isServing(self):
         return self._isServing

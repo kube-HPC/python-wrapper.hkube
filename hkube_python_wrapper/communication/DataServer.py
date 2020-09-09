@@ -1,6 +1,5 @@
 from hkube_python_wrapper.communication.zmq.ZMQServers import ZMQServers
 from hkube_python_wrapper.util.encoding import Encoding
-import hkube_python_wrapper.util.object_path as objectPath
 from hkube_python_wrapper.util.decorators import timing
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.cache.caching import Cache
@@ -15,7 +14,7 @@ class DataServer:
         self._encodingType = config['encoding']
         self._encoding = Encoding(self._encodingType)
         self._adapter = ZMQServers(self._port, self._createReply)
-        self.notAvailable = self._encoding.encode_separately(
+        self.notAvailable = self._encoding.encode(
             self._createError('notAvailable', 'taskId notAvailable'))
 
     def listen(self):
@@ -29,28 +28,27 @@ class DataServer:
             decoded = self._encoding.decode(message, plain_encode=True)
             tasks = decoded.get('tasks')
             taskId = decoded.get('taskId')
-            resultsAsTupple = self._getDataByTaskId(taskId, tasks)
+            results = self.getDataByTaskId(taskId, tasks)
 
         except Exception as e:
             result = self._createError('unknown', str(e))
-            header, encoded = self._encoding.encode_separately(result)
-            return [header, encoded]
+            encoded = self._encoding.encode(result)
+            return [encoded]
         parts = []
-        for header, content in resultsAsTupple:
-            parts.append(header)
+        for content in results:
             parts.append(content)
         return parts
 
     @timing
     def createData(self, taskId, tasks, datapath):
         if (taskId is not None):
-            return self._getDataByTaskId(taskId, datapath)
+            return self.getDataByTaskId(taskId, datapath)
 
         errors = False
         items = []
 
         for task in tasks:
-            result = self._getDataByTaskId(task, datapath)
+            result = self.getDataByTaskId(task, datapath)
             if (typeCheck.isDict(result) and 'hkube_error' in result):
                 errors = True
 
@@ -58,7 +56,7 @@ class DataServer:
 
         return dict({"items": items, "errors": errors})
 
-    def _getDataByTaskId(self, taskId, tasks):
+    def getDataByTaskId(self, taskId, tasks):
         results = []
         if (tasks is None):
             tasks = [taskId]
@@ -66,12 +64,12 @@ class DataServer:
             if (task not in self._cache):
                 result = self.notAvailable
             else:
-                result = (self._cache.getHeader(task), self._cache.get(task))
+                result = self._cache.get(task)
             results.append(result)
         return results
 
-    def setSendingState(self, taskId, header, encoded, size):
-         return self._cache.update(taskId, encoded, size=size, header=header)
+    def setSendingState(self, taskId, encoded, size):
+        return self._cache.update(taskId, encoded, size=size)
 
     def _createError(self, code, message):
         return {'hkube_error': {'code': code, 'message': message}}

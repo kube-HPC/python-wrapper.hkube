@@ -27,9 +27,6 @@ class DataAdapter:
     def encode(self, value):
         return self._encoding.encode(value)
 
-    def encode_separately(self, value):
-        return Encoding(self._requestEncoding).encode_separately(value)
-
     def decode(self, value):
         return self._encoding.decode(value)
 
@@ -111,7 +108,7 @@ class DataAdapter:
                         jobId, taskId, dataPath)
                     batchResponse.append(storageData)
                 else:
-                    self._storageCache.update(taskId, content)
+                    self._storageCache.update(taskId, content, size)
                     if (dataPath):
                         content = getPath(content, dataPath)
                     batchResponse.append(content)
@@ -159,9 +156,10 @@ class DataAdapter:
         host = discovery.get('host')
 
         if (self._dataServer and self._dataServer.isLocal(host, port)):
-            response = self._dataServer.createData(taskId, tasks, dataPath)
-            size = -1
-
+            dataList = self._dataServer.getDataByTaskId(taskId, tasks)
+            results = []
+            for data in dataList:
+                results.append(len(data), data)
         else:
             request = {
                 'address': {
@@ -178,7 +176,6 @@ class DataAdapter:
             }
             dataRequest = DataRequest(request)
             responses = dataRequest.invoke()
-
         return responses
 
     def _getPeerError(self, options):

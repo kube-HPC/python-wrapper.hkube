@@ -27,16 +27,12 @@ class DataRequest:
                   ':' + str(self.request['port']))
             adapter = ZMQRequest(self.request)
             responseFrames = adapter.invokeAdapter()
-            header = None
             results = []
-            for i in range(0, len(responseFrames)/2):
-                header = responseFrames[i*2]
-                content = responseFrames[i*2+1]
-                decoded = self.encoding.decode_separately(header, content)
+            for content in responseFrames:
+                decoded = self.encoding.decode(content)
                 results.append((len(content), decoded))
             return results
         except Exception as e:
-            print ("exception " + str(e))
             return [(0, self._createError('unknown', str(e)))]
         finally:
             adapter.close()
