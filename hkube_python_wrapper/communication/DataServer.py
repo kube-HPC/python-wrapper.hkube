@@ -70,9 +70,8 @@ class DataServer:
             results.append(result)
         return results
 
-    def setSendingState(self, taskId, data, size):
-        header, encoded = self._encoding.encode2(data)
-        return self._cache.update(taskId, encoded, size, header)
+    def setSendingState(self, taskId, header, encoded, size):
+         return self._cache.update(taskId, encoded, size=size, header=header)
 
     def _createError(self, code, message):
         return {'hkube_error': {'code': code, 'message': message}}

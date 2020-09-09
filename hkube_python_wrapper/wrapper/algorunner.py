@@ -256,7 +256,7 @@ class Algorunner:
         self._sendCommand(messages.outgoing.done, algorithmData)
 
     def _handle_responseV2(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
-        encodedData = self._dataAdapter.encode(algorithmData)
+        header, encodedData = self._dataAdapter.encode2(algorithmData)
         encodedData
         data = {
             'jobId': jobId,
@@ -271,7 +271,8 @@ class Algorunner:
         storingData.update(storageInfo)
         incache = None
         if (self._dataServer and savePaths):
-            incache = self._dataServer.setSendingState(taskId, algorithmData, len(encodedData))
+            incache = self._dataServer.setSendingState(taskId,header, encodedData, len(encodedData))
+        encodedData = header + encodedData
         if(incache):
             storingData.update({'discovery': self._discovery, 'taskId': taskId})
             self._sendCommand(messages.outgoing.storing, storingData)
