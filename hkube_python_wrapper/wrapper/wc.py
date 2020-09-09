@@ -31,6 +31,9 @@ class WebsocketClient:
             messages.incoming.serviceDiscoveryUpdate: self.discoveryUpdate
         }
         self._firstConnect = False
+        self._printThrottleMessages = {
+            messages.outgoing.streamingStatistics: {"delay": 30, "lastPrint": None}
+        }
         self._encoding = Encoding(encoding)
         self._ws_opcode = ABNF.OPCODE_BINARY if self._encoding.isBinary else ABNF.OPCODE_TEXT
         print('Initialized socket with {encoding} encoding'.format(
@@ -89,9 +92,25 @@ class WebsocketClient:
         self.events.on_connection()
 
     def send(self, message):
-        print('sending message to worker: {command}'.format(**message))
-        self._ws.send(self._encoding.encode(
-            message, plain_encode=True), opcode=self._ws_opcode)
+        self._printThrottle(message)
+        self._ws.send(self._encoding.encode(message, plain_encode=True), opcode=self._ws_opcode)
+
+    def _printThrottle(self, message):
+        command = message["command"]
+        setting = self._printThrottleMessages.get(command)
+        shouldPrint = True
+        if(setting):
+            delay = setting["delay"]
+            lastPrint = setting["lastPrint"]
+
+            if(lastPrint is None or time.time() - lastPrint > delay):
+                shouldPrint = True
+                setting.update({"lastPrint": time.time()})
+            else:
+                shouldPrint = False
+
+        if(shouldPrint):
+            print('sending message to worker: {command}'.format(command=command))
 
     def startWS(self, url):
         self._ws = websocket.WebSocketApp(
