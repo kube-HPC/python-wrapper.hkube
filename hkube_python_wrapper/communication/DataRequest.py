@@ -18,24 +18,26 @@ class DataRequest:
         content = self.encoding.encode(options, plain_encode=True)
         self.request = dict()
         self.request.update(address)
-        self.request.update({"content": content, "timeout": timeout, "networkTimeout": networkTimeout})
+        self.request.update(
+            {"content": content, "timeout": timeout, "networkTimeout": networkTimeout})
 
     def invoke(self):
         try:
-            print('tcp://' + self.request['host'] + ':' + str(self.request['port']))
+            print('tcp://' + self.request['host'] +
+                  ':' + str(self.request['port']))
             adapter = ZMQRequest(self.request)
             responseFrames = adapter.invokeAdapter()
             header = None
             results = []
-            for i in range(0,len(responseFrames)):
-                header = responseFrames[1]
-                content = responseFrames[0]
-                decoded = self.encoding.decode2(header,content)
-                results.append (len(content),decoded)
+            for i in range(0, len(responseFrames)/2):
+                header = responseFrames[i*2]
+                content = responseFrames[i*2+1]
+                decoded = self.encoding.decode2(header, content)
+                results.append((len(content), decoded))
             return results
         except Exception as e:
             print ("exception " + str(e))
-            return 0, self._createError('unknown', str(e))
+            return [(0, self._createError('unknown', str(e)))]
         finally:
             adapter.close()
 
