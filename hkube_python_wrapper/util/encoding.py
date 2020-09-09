@@ -90,7 +90,7 @@ class Encoding:
 
         header = self.createHeader(dataType, self.protocolType)
         header += payload
-        return payload
+        return header
 
     def decode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
