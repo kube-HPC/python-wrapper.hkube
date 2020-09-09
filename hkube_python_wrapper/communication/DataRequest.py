@@ -32,7 +32,7 @@ class DataRequest:
             for i in range(0, len(responseFrames)/2):
                 header = responseFrames[i*2]
                 content = responseFrames[i*2+1]
-                decoded = self.encoding.decode2(header, content)
+                decoded = self.encoding.decode_separately(header, content)
                 results.append((len(content), decoded))
             return results
         except Exception as e:

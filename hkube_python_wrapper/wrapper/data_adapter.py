@@ -27,6 +27,9 @@ class DataAdapter:
     def encode(self, value):
         return self._encoding.encode(value)
 
+    def encode_separately(self, value):
+        return Encoding(self._requestEncoding).encode_separately(value)
+
     def decode(self, value):
         return self._encoding.decode(value)
 
@@ -97,8 +100,9 @@ class DataAdapter:
         tasksNotInCache, batchResponse = self._storageCache.getAll(tasks)
         if (tasksNotInCache):
             options['tasks'] = tasksNotInCache
-            results = self._getFromPeer(options, dataPath)  # pylint: disable=unused-variable
-            for i ,item in enumerate(results):
+            results = self._getFromPeer(
+                options, dataPath)  # pylint: disable=unused-variable
+            for i, item in enumerate(results):
                 size, content = item
                 peerError = self._getPeerError(content)
                 taskId = tasksNotInCache[i]
@@ -107,9 +111,11 @@ class DataAdapter:
                         jobId, taskId, dataPath)
                     batchResponse.append(storageData)
                 else:
+                    self._storageCache.update(taskId, content)
+                    if (dataPath):
+                        content = getPath(content, dataPath)
                     batchResponse.append(content)
-                    if not (dataPath):
-                        self._storageCache.update(taskId, content)
+
         return batchResponse
 
     def _getDataForTask(self, jobId, taskId, dataPath):
@@ -130,6 +136,8 @@ class DataAdapter:
         if not (data):
             if (discovery):
                 size, data = self._getFromPeer(options, dataPath)[0]
+                self._setToCache(cacheId, data, size)
+                data = getPath(data, dataPath)
                 peerError = self._getPeerError(data)
                 hasResponse = not peerError
                 data = None if peerError else data

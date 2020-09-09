@@ -77,7 +77,7 @@ class Encoding:
         self._fromBytes = self._fromBytesPY3 if PY3 else self._fromBytesPY2
         self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
 
-    def encode2(self, value, **kwargs):
+    def encode_separately(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
         if(not self.isBinary or plainEncode is True):
             return (None, self._encode(value))
@@ -110,7 +110,7 @@ class Encoding:
         header += payload
         return payload
 
-    def decode2(self, header, value, **kwargs):
+    def decode_separately(self, header, value, **kwargs):
         if (header == None):
             self._decode(value)
         else:
