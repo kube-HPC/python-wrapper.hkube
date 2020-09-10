@@ -11,21 +11,18 @@ class DataRequest:
         networkTimeout = reqDetails.get('networkTimeout')
         tasks = reqDetails.get('tasks')
         options = {
-            u'tasks': tasks,
-            u'dataPath': reqDetails.get('dataPath')
+            u'tasks': tasks
         }
         self.tasks = tasks
         self.encoding = Encoding(encoding)
         content = self.encoding.encode(options, plain_encode=True)
         self.request = dict()
         self.request.update(address)
-        self.request.update(
-            {"content": content, "timeout": timeout, "networkTimeout": networkTimeout})
+        self.request.update({"content": content, "timeout": timeout, "networkTimeout": networkTimeout})
 
     def invoke(self):
         try:
-            print('tcp://' + self.request['host'] +
-                  ':' + str(self.request['port']))
+            print('tcp://' + self.request['host'] + ':' + str(self.request['port']))
             adapter = ZMQRequest(self.request)
             responseFrames = adapter.invokeAdapter()
             results = []
