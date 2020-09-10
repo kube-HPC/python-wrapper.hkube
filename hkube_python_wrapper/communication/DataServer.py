@@ -1,7 +1,6 @@
 from hkube_python_wrapper.communication.zmq.ZMQServers import ZMQServers
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.util.decorators import timing
-import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.cache.caching import Cache
 
 
@@ -27,8 +26,7 @@ class DataServer:
         try:
             decoded = self._encoding.decode(message, plain_encode=True)
             tasks = decoded.get('tasks')
-            taskId = decoded.get('taskId')
-            results = self.getDataByTaskId(taskId, tasks)
+            results = self.getDataByTaskId(tasks)
 
         except Exception as e:
             result = self._createError('unknown', str(e))
@@ -39,27 +37,8 @@ class DataServer:
             parts.append(content)
         return parts
 
-    @timing
-    def createData(self, taskId, tasks, datapath):
-        if (taskId is not None):
-            return self.getDataByTaskId(taskId, datapath)
-
-        errors = False
-        items = []
-
-        for task in tasks:
-            result = self.getDataByTaskId(task, datapath)
-            if (typeCheck.isDict(result) and 'hkube_error' in result):
-                errors = True
-
-            items.append(result)
-
-        return dict({"items": items, "errors": errors})
-
-    def getDataByTaskId(self, taskId, tasks):
+    def getDataByTaskId(self, tasks):
         results = []
-        if (tasks is None):
-            tasks = [taskId]
         for task in tasks:
             if (task not in self._cache):
                 result = self.notAvailable

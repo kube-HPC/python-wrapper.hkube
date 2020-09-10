@@ -10,16 +10,11 @@ class DataRequest:
         timeout = reqDetails.get('timeout')
         networkTimeout = reqDetails.get('networkTimeout')
         tasks = reqDetails.get('tasks')
-        taskId = reqDetails.get('taskId')
         options = {
             u'tasks': tasks,
-            u'taskId': taskId,
             u'dataPath': reqDetails.get('dataPath')
         }
-        if not (tasks):
-            self.tasks = [taskId]
-        else:
-            self.tasks = tasks
+        self.tasks = tasks
         self.encoding = Encoding(encoding)
         content = self.encoding.encode(options, plain_encode=True)
         self.request = dict()

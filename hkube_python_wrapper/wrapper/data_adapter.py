@@ -36,13 +36,9 @@ class DataAdapter:
         inputArgs = options.get('input')
         flatInput = options.get('flatInput')
         storage = options.get('storage')
-        useCache = options.get('useCache')
 
         if (not flatInput):
             return inputArgs
-
-        if (useCache is False):
-            self._storageCache = Cache(config.storage)
 
         for k, v in flatInput.items():
             if self._isStorage(v):
@@ -133,10 +129,11 @@ class DataAdapter:
         if not (data):
             if (discovery):
                 size, data = self._getFromPeer(options, dataPath)[0]
-                self._setToCache(cacheId, data, size)
-                data = getPath(data, dataPath)
                 peerError = self._getPeerError(data)
                 hasResponse = not peerError
+                if (hasResponse):
+                    self._setToCache(cacheId, data, size)
+                data = getPath(data, dataPath)
                 data = None if peerError else data
                 if (data and not dataPath and size > 0):
                     self._setToCache(cacheId, data, size)
@@ -149,17 +146,20 @@ class DataAdapter:
     @trace(name='getFromPeer')
     @timing
     def _getFromPeer(self, options, dataPath):
-        tasks = options.get('tasks')
         taskId = options.get('taskId')
+        if(taskId):
+            tasks = [taskId]
+        else:
+            tasks = options.get('tasks')
         discovery = options.get('discovery')
         port = discovery.get('port')
         host = discovery.get('host')
 
         if (self._dataServer and self._dataServer.isLocal(host, port)):
-            dataList = self._dataServer.getDataByTaskId(taskId, tasks)
-            results = []
+            dataList = self._dataServer.getDataByTaskId(tasks)
+            responses = []
             for data in dataList:
-                results.append(len(data), data)
+                responses.append((len(data), data))
         else:
             request = {
                 'address': {
@@ -167,7 +167,6 @@ class DataAdapter:
                     'host': host
                 },
                 'tasks': tasks,
-                'taskId': taskId,
                 'dataPath': dataPath,
                 'encoding': self._requestEncoding,
                 'timeout': self._requestTimeout,
