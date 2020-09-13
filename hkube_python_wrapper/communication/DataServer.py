@@ -13,7 +13,7 @@ class DataServer:
         self._encodingType = config['encoding']
         self._encoding = Encoding(self._encodingType)
         self._adapter = ZMQServers(self._port, self._createReply)
-        self.notAvailable = self._encoding.encode(
+        self.notAvailable = self._encoding.encode_separately(
             self._createError('notAvailable', 'taskId notAvailable'))
 
     def listen(self):
@@ -26,14 +26,15 @@ class DataServer:
         try:
             decoded = self._encoding.decode(message, plain_encode=True)
             tasks = decoded.get('tasks')
-            results = self.getDataByTaskId(tasks)
+            resultsAsTupple = self.getDataByTaskId(tasks)
 
         except Exception as e:
             result = self._createError('unknown', str(e))
-            encoded = self._encoding.encode(result)
-            return [encoded]
+            header, encoded = self._encoding.encode_separately(result)
+            return [header, encoded]
         parts = []
-        for content in results:
+        for header, content in resultsAsTupple:
+            parts.append(header)
             parts.append(content)
         return parts
 
@@ -43,12 +44,12 @@ class DataServer:
             if (task not in self._cache):
                 result = self.notAvailable
             else:
-                result = self._cache.get(task)
+                result = (self._cache.getHeader(task), self._cache.get(task))
             results.append(result)
         return results
 
-    def setSendingState(self, taskId, encoded, size):
-        return self._cache.update(taskId, encoded, size=size)
+    def setSendingState(self, taskId, header, encoded, size):
+        return self._cache.update(taskId, encoded, size=size, header=header)
 
     def _createError(self, code, message):
         return {'hkube_error': {'code': code, 'message': message}}
