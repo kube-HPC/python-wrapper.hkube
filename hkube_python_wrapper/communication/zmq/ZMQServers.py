@@ -24,7 +24,7 @@ class ZMQServers(object):
 
         try:
             self._device = zmq.devices.ThreadDevice(zmq.QUEUE, zmq.ROUTER, zmq.DEALER)
-            self._device.context_factory=lambda : self._context
+            self._device.context_factory = lambda: self._context
             self._device.bind_in(self._url_client)
             self._device.setsockopt_in(zmq.LINGER, 0)
             self._device.bind_out(self._url_worker)
@@ -32,7 +32,6 @@ class ZMQServers(object):
             self._device.start()
         except Exception as e:
             print('################################ zmq.device failed with '+str(e))
-
 
     def isServing(self):
         res = any(i.isServing() for i in self._instances)
