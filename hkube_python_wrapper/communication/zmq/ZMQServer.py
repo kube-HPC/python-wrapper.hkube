@@ -20,6 +20,9 @@ class ZMQServer(threading.Thread):
 
         while self._active:
             try:
+                events = self._socket.poll(timeout=1000)
+                if (events == 0):
+                    continue
                 message = self._socket.recv()
                 self._isServing = True
                 if(message == b'Are you there'):
@@ -27,9 +30,11 @@ class ZMQServer(threading.Thread):
                 else:
                     self._send(message)
                 self._isServing = False
-            except Exception:
-                print('socket closed')
+            except Exception as e:
+                print('socket closed: '+str(e))
+                break
         print('ZmqServer run loop exit')
+        self._socket.close()
 
     def _send(self, message):
         toBeSent = self._replyFunc(message)
