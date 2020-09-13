@@ -9,11 +9,11 @@ class DataRequest:
         address = reqDetails.get('address')
         timeout = reqDetails.get('timeout')
         networkTimeout = reqDetails.get('networkTimeout')
+        tasks = reqDetails.get('tasks')
         options = {
-            u'tasks': reqDetails.get('tasks'),
-            u'taskId': reqDetails.get('taskId'),
-            u'dataPath': reqDetails.get('dataPath')
+            u'tasks': tasks
         }
+        self.tasks = tasks
         self.encoding = Encoding(encoding)
         content = self.encoding.encode(options, plain_encode=True)
         self.request = dict()
@@ -24,11 +24,17 @@ class DataRequest:
         try:
             print('tcp://' + self.request['host'] + ':' + str(self.request['port']))
             adapter = ZMQRequest(self.request)
-            response = adapter.invokeAdapter()
-            return (len(response), self.encoding.decode(response))
+            responseFrames = adapter.invokeAdapter()
+            results = []
+            for content in responseFrames:
+                decoded = self.encoding.decode(content)
+                results.append((len(content), decoded))
+            return results
         except Exception as e:
-            print(e)
-            return 0, self._createError('unknown', str(e))
+            results = []
+            for _ in self.tasks:
+                results.append((0, self._createError('unknown', str(e))))
+            return results
         finally:
             adapter.close()
 
