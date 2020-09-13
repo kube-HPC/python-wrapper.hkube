@@ -1,4 +1,5 @@
 import zmq
+from .consts import consts
 
 context = zmq.Context()
 
@@ -16,11 +17,11 @@ class ZMQRequest(object):
         self.networkTimeout = int(reqDetails['networkTimeout'])
 
     def invokeAdapter(self):
-        self.socket.send(b'Are you there')
+        self.socket.send(consts.zmq.ping)
         result = self.poller.poll(self.networkTimeout)
         if (result):
             there = self.socket.recv()
-            if (there == b'Yes'):
+            if (there == consts.zmq.ping):
                 self.socket.send(self.content)
                 result = self.poller.poll(self.timeout)
                 if (result):

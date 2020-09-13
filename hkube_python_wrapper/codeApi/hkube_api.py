@@ -1,17 +1,11 @@
 from __future__ import print_function, division, absolute_import
 import time
-import sys
 
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.messages import messages
 from .execution import Execution
 from .waitFor import WaitForData
-if (sys.version_info > (3, 0)):
-    # Python 3 code in this block
-    from queue import Empty  # pylint: disable=import-error
-else:
-    # Python 2 code in this block
-    from Queue import Empty  # pylint: disable=import-error
+from hkube_python_wrapper.util.queueImpl import Empty
 
 
 class HKubeApi:
@@ -87,14 +81,7 @@ class HKubeApi:
         }
         self._wc.send(message)
 
-        while not execution.waiter.ready():
-            try:
-                (command, data) = self._wrapper.get_message(False)
-                self._wrapper.handle(command, data)
-            except Empty:
-                pass
-            time.sleep(0.01)
-        return execution.waiter.get()
+        return self._waitForResult(execution)
 
     def start_stored_subpipeline(self, name, flowInput={}, includeResult=True):
         """Starts pipeline execution.
@@ -126,15 +113,7 @@ class HKubeApi:
             }
         }
         self._wc.send(message)
-
-        while not execution.waiter.ready():
-            try:
-                (command, data) = self._wrapper.get_message(False)
-                self._wrapper.handle(command, data)
-            except Empty:
-                pass
-            time.sleep(0.01)
-        return execution.waiter.get()
+        return self._waitForResult(execution)
 
     def start_raw_subpipeline(self, name, nodes, flowInput, options={}, webhooks={}, includeResult=True):
         """Starts pipeline execution.
@@ -172,7 +151,9 @@ class HKubeApi:
             }
         }
         self._wc.send(message)
+        return self._waitForResult(execution)
 
+    def _waitForResult(self, execution):
         while not execution.waiter.ready():
             try:
                 (command, data) = self._wrapper.get_message(False)
@@ -180,3 +161,4 @@ class HKubeApi:
             except Empty:
                 pass
             time.sleep(0.01)
+        return execution.waiter.get()

@@ -8,18 +8,13 @@ from .messages import messages
 from hkube_python_wrapper.tracing import Tracer
 from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
 from hkube_python_wrapper.communication.DataServer import DataServer
+from hkube_python_wrapper.util.queueImpl import Queue, Empty
 import os
 import sys
 import importlib
 import traceback
 from events import Events
 from threading import Thread, Timer
-if (sys.version_info > (3, 0)):
-    # Python 3 code in this block
-    from queue import Queue, Empty  # pylint: disable=import-error
-else:
-    # Python 2 code in this block
-    from Queue import Queue, Empty  # pylint: disable=import-error
 
 
 class Algorunner:
@@ -31,7 +26,7 @@ class Algorunner:
         self._loadAlgorithmError = None
         self._connected = False
         self._hkubeApi = None
-        self.msg_queue = Queue()
+        self._msg_queue = Queue()
         self._dataAdapter = None
         self._dataServer = None
         self._discovery = None
@@ -161,22 +156,17 @@ class Algorunner:
         self._url += '?storage={storage}&encoding={encoding}'.format(
             storage=self._storage, encoding=encoding)
 
-        self._wsc = WebsocketClient(self.msg_queue, encoding)
+        self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initStorage(options)
         self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
-        t1 = Thread(name="WsThread", target=self._wsc.startWS, args=(self._url, ))
-        t1.daemon = True
-        t1.start()
-        # t2 = Thread(name="DataserverThread", target=self._dataServer and self._dataServer.listen)
+        self._wsc.start()
         self._dataServer and self._dataServer.listen()
-        # t2.daemon = True
-        # t2.start()
-        t3 = Thread(name="RunThread", target=self.run)
-        t3.start()
-        return [t1, t3]
+        runThread = Thread(name="RunThread", target=self.run)
+        runThread.start()
+        return [self._wsc, runThread]
 
     def handle(self, command, data):
         if (command == messages.incoming.initialize):
@@ -193,7 +183,7 @@ class Algorunner:
             self._hkubeApi.subPipelineDone(data)
 
     def get_message(self, blocking=True):
-        return self.msg_queue.get(block=blocking, timeout=0.1)
+        return self._msg_queue.get(block=blocking, timeout=0.1)
 
     def run(self):
         while self._active:

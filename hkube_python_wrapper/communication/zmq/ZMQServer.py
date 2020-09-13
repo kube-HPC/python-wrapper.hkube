@@ -1,5 +1,6 @@
 import threading
 import zmq
+from .consts import consts
 
 
 class ZMQServer(threading.Thread):
@@ -25,8 +26,8 @@ class ZMQServer(threading.Thread):
                     continue
                 message = self._socket.recv()
                 self._isServing = True
-                if(message == b'Are you there'):
-                    self._socket.send(b'Yes')
+                if(message == consts.zmq.ping):
+                    self._socket.send(consts.zmq.pong)
                 else:
                     self._send(message)
                 self._isServing = False

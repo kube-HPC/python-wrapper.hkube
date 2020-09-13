@@ -4,18 +4,22 @@ from events import Events
 from websocket import ABNF
 import websocket
 from hkube_python_wrapper.util.encoding import Encoding
+from threading import Thread
 
 
-class WebsocketClient:
-    def __init__(self, msg_queue, encoding):
+class WebsocketClient(Thread):
+    def __init__(self, msg_queue, encoding, url):
+        Thread.__init__(self)
+        self.daemon = True
         self.events = Events()
-        self.msg_queue = msg_queue
+        self._msg_queue = msg_queue
         self._ws = None
         self._reconnectInterval = 0.1
         self._active = True
         self._firstConnect = False
         self._encoding = Encoding(encoding)
         self._ws_opcode = ABNF.OPCODE_BINARY if self._encoding.isBinary else ABNF.OPCODE_TEXT
+        self._url = url
         print('Initialized socket with {encoding} encoding'.format(encoding=encoding))
 
     def on_message(self, message):
@@ -23,7 +27,7 @@ class WebsocketClient:
         command = decoded["command"]
         data = decoded.get("data", None)
         print('got message from worker: {command}'.format(command=command))
-        self.msg_queue.put((command, data))
+        self._msg_queue.put((command, data))
 
     def on_error(self, error):
         if self._firstConnect:
@@ -40,7 +44,10 @@ class WebsocketClient:
         print('sending message to worker: {command}'.format(**message))
         self._ws.send(self._encoding.encode(message, plain_encode=True), opcode=self._ws_opcode)
 
-    def startWS(self, url):
+    def run(self):
+        self._startWS(self._url)
+
+    def _startWS(self, url):
         self._ws = websocket.WebSocketApp(
             url,
             on_message=self.on_message,
