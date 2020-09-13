@@ -1,6 +1,5 @@
 
-import pytest
-import gevent
+from threading import Thread
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.data_adapter import DataAdapter
 from hkube_python_wrapper.communication.DataServer import DataServer
@@ -65,11 +64,11 @@ storage = {
 discovery = dict(config.discovery)
 discovery.update({"port": 9025})
 ds = DataServer(discovery)
-gevent.spawn(ds.listen)
-ds.setSendingState(taskId1, obj1,10)
-ds.setSendingState(taskId2, obj2,10)
-ds.setSendingState(taskId3, obj3,10)
-ds.setSendingState(taskId4, obj4,10)
+ds.listen()
+ds.setSendingState(taskId1, obj1, 10)
+ds.setSendingState(taskId2, obj2, 10)
+ds.setSendingState(taskId3, obj3, 10)
+ds.setSendingState(taskId4, obj4, 10)
 
 
 def test_get_data_no_storage():
@@ -79,7 +78,7 @@ def test_get_data_no_storage():
 
 def test_get_data_no_input():
     result = dataAdapter.getData({'storage': storage})
-    assert result == None
+    assert result is None
 
 
 def test_get_data():
@@ -200,5 +199,3 @@ def test_createStorageInfo():
     assert metadata.get('size') == len(array)
     assert metadata.get('type') == 'array'
     assert result['storageInfo']['path'].find(jobId) != -1
-if __name__ == "__main__":
-    test_get_batch_request_with_storage_fallback()

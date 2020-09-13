@@ -1,6 +1,4 @@
-from gevent.event import Event
-from gevent.monkey import patch_all
-patch_all()
+from threading import Event
 
 
 class WaitForDataTimeoutException(Exception):
@@ -12,20 +10,21 @@ class WaitForDataStateException(Exception):
 
 
 class WaitForData(object):
-    def __init__(self, autoreset=False):
+    def __init__(self, autoreset=False, msg_queue=None):
         self._autoreset = autoreset
+        self._msg_queue = msg_queue
         self._event = Event()
         self._event.clear()
         self._data = None
 
     def reset(self):
-        if not self._event.ready():
+        if not self._event.is_set():
             raise WaitForDataStateException()
         self._data = None
         self._event.clear()
 
     def set(self, data):
-        if self._event.ready():
+        if self._event.is_set():
             raise WaitForDataStateException()
         self._data = data
         self._event.set()
@@ -39,4 +38,4 @@ class WaitForData(object):
         return data
 
     def ready(self):
-        return self._event.ready()
+        return self._event.is_set()

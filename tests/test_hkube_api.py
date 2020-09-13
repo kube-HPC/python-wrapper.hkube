@@ -18,7 +18,7 @@ def start(args, hkubeApi=None):
     # print('start called')
     waiter1 = hkubeApi.start_algorithm(algorithmName, inp1)
     waiter2 = hkubeApi.start_stored_subpipeline(subpipelineName, inp2)
-    res = [waiter1.get(), waiter2.get()]
+    res = [waiter1, waiter2]
     return res
 
 
@@ -34,3 +34,4 @@ def test_callback():
     assert decoded[1] == inp2
     time.sleep(2)
     Tracer.instance.close()
+    algorunner.close()

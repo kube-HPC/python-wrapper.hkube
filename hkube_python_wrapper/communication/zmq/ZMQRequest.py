@@ -1,4 +1,5 @@
-import zmq.green as zmq
+import zmq
+from .consts import consts
 
 context = zmq.Context()
 
@@ -16,19 +17,18 @@ class ZMQRequest(object):
         self.networkTimeout = int(reqDetails['networkTimeout'])
 
     def invokeAdapter(self):
-        self.socket.send(b'Are you there')
+        self.socket.send(consts.zmq.ping)
         result = self.poller.poll(self.networkTimeout)
         if (result):
             there = self.socket.recv()
-            if (there == b'Yes'):
+            if (there == consts.zmq.pong):
                 self.socket.send(self.content)
                 result = self.poller.poll(self.timeout)
                 if (result):
                     message = self.socket.recv_multipart()
                     return message
                 raise Exception('Timed out:' + str(self.timeout))
-        raise Exception('Not server on the other side time out:' + str(self.networkTimeout))
-
+        raise Exception('Ping timed out ({timeout}) to {conn}'.format(timeout=self.networkTimeout, conn=self.connStr))
 
     def close(self):
         self.socket.close()

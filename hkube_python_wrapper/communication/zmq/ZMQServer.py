@@ -1,6 +1,7 @@
 import time
 import threading
-import zmq.green as zmq
+import zmq
+from .consts import consts
 
 
 class ZMQServer(threading.Thread):
@@ -12,23 +13,30 @@ class ZMQServer(threading.Thread):
         self._workerUrl = workerUrl
         self._context = context
         threading.Thread.__init__(self)
+        self.daemon = True
 
     def run(self):
         self._socket = self._context.socket(zmq.REP)
+        self._socket.setsockopt(zmq.LINGER, 0)
         self._socket.connect(self._workerUrl)
 
         while self._active:
             try:
+                events = self._socket.poll(timeout=1000)
+                if (events == 0):
+                    continue
                 message = self._socket.recv()
                 self._lastServing = time.time()
-                if (message == b'Are you there'):
-                    self._socket.send(b'Yes')
+                if(message == consts.zmq.ping):
+                    self._socket.send(consts.zmq.pong)
                 else:
                     self._send(message)
                 self._lastServing = time.time()
             except Exception as e:
-                print(e)
-                self._active = False
+                print('socket closed: '+str(e))
+                break
+        print('ZmqServer run loop exit')
+        self.close()
 
     def _send(self, message):
         try:
