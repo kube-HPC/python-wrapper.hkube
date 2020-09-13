@@ -1,10 +1,11 @@
+import time
 import threading
 import zmq.green as zmq
 
 
 class ZMQServer(threading.Thread):
     def __init__(self, context, replyFunc, workerUrl):
-        self._isServing = False
+        self._lastServing = None
         self._active = True
         self._socket = None
         self._replyFunc = replyFunc
@@ -19,21 +20,25 @@ class ZMQServer(threading.Thread):
         while self._active:
             try:
                 message = self._socket.recv()
-                self._isServing = True
-                if(message == b'Are you there'):
+                self._lastServing = time.time()
+                if (message == b'Are you there'):
                     self._socket.send(b'Yes')
                 else:
                     self._send(message)
-                self._isServing = False
-            except Exception:
-                print('socket closed')
+                self._lastServing = time.time()
+            except Exception as e:
+                print(e)
+                self._active = False
 
     def _send(self, message):
-        toBeSent = self._replyFunc(message)
-        self._socket.send(toBeSent, copy=False)
+        try:
+            toBeSent = self._replyFunc(message)
+            self._socket.send_multipart(toBeSent, copy=False)
+        except Exception as e:
+            print(e)
 
     def isServing(self):
-        return self._isServing
+        return (self._lastServing) and (time.time() - self._lastServing < 10)
 
     def stop(self):
         self._active = False

@@ -18,7 +18,6 @@ type_registry = TypeRegistry(fallback_encoder=bson_fallback_encoder)
 codec_options = CodecOptions(type_registry=type_registry)
 PY3 = sys.version_info[0] == 3
 
-
 '''
 
 - Hkube header format: 8 bytes (64 bit)
@@ -79,10 +78,9 @@ class Encoding:
 
     def encode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
-        if(not self.isBinary or plainEncode is True):
+        if (not self.isBinary or plainEncode is True):
             return self._encode(value)
 
-        payload = None
         if (typeCheck.isBytearray(value)):
             dataType = DATA_TYPE_RAW
             payload = value
@@ -96,8 +94,7 @@ class Encoding:
 
     def decode(self, value, **kwargs):
         plainEncode = kwargs.get('plain_encode')
-
-        if(not self.isBinary or plainEncode is True):
+        if (not self.isBinary or plainEncode is True):
             return self._decode(value)
 
         if (not typeCheck.isBytearray(value)):
@@ -108,7 +105,7 @@ class Encoding:
         header = bytes(view[0:HEADER_LENGTH])
         mg = bytes(header[-2:])
 
-        if(mg != MAGIC_NUMBER):
+        if (mg != MAGIC_NUMBER):
             return self._decode(value)
 
         ftl = bytes(header[1:2])
@@ -118,7 +115,7 @@ class Encoding:
         data = view[headerLength: totalLength]
 
         payload = None
-        if(dataType == DATA_TYPE_ENCODED):
+        if (dataType == DATA_TYPE_ENCODED):
             payload = self._decode(data)
         else:
             payload = self._toBytes(data)

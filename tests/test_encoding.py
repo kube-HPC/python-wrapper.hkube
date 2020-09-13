@@ -118,3 +118,5 @@ def createObjectJson(sizeRandom):
         }
     }
     return obj
+if __name__ == '__main__':
+    test_msgpack_encoding_bytearray()

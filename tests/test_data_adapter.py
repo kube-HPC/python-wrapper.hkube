@@ -200,3 +200,5 @@ def test_createStorageInfo():
     assert metadata.get('size') == len(array)
     assert metadata.get('type') == 'array'
     assert result['storageInfo']['path'].find(jobId) != -1
+if __name__ == "__main__":
+    test_get_batch_request_with_storage_fallback()
