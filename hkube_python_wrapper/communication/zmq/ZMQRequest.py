@@ -21,7 +21,7 @@ class ZMQRequest(object):
         result = self.poller.poll(self.networkTimeout)
         if (result):
             there = self.socket.recv()
-            if (there == consts.zmq.ping):
+            if (there == consts.zmq.pong):
                 self.socket.send(self.content)
                 result = self.poller.poll(self.timeout)
                 if (result):
