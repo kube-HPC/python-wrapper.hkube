@@ -206,9 +206,9 @@ class Algorunner:
                 'host': options.discovery.get("host"),
                 'port': options.discovery.get("port")
             }
-            config = dict(options.discovery)
-            config.update({'encoding': options.data['encoding']})
-            self._dataServer = DataServer(config)
+            discoveryConfig = dict(options.discovery)
+            discoveryConfig.update({'encoding': options.data['encoding']})
+            self._dataServer = DataServer(discoveryConfig)
             self._reportServing(interval=options.discovery.get("servingReportInterval"))
 
     def _initDataAdapter(self, options):
