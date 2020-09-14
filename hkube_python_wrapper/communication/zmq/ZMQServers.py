@@ -1,22 +1,33 @@
 import zmq
 import zmq.devices
+import os
+import multiprocessing
+from collections import namedtuple
+
 from .ZMQServer import ZMQServer
+from .ZMQPingServer import ZMQPingServer
+
+ServerData = namedtuple('ServerData', 'device clients workers')
 
 
 class ZMQServers(object):
-    def __init__(self, port, replyFunc):
+    def __init__(self, port, replyFunc, num_threads):
         self._isServing = False
         self._active = True
         self._replyFunc = replyFunc
         self._url_worker = "inproc://workers"
         self._url_client = "tcp://*:" + str(port)
         self._instances = []
+        self._port = int(port)
         self._device = None
         self._context = zmq.Context()
         self._context.setsockopt(zmq.LINGER, 0)
+        self._num_threads = num_threads
+        self._num_ping_threads = 10
 
     def listen(self):
-
+        pingProcess = multiprocessing.Process(target=self._createZmqPingServers, args=(self._port,))
+        pingProcess.start()
         for _ in range(5):
             server = ZMQServer(self._context, self._replyFunc, self._url_worker)
             server.start()
@@ -50,3 +61,30 @@ class ZMQServers(object):
         self._context.term()
         print('zmq context closed')
         print('closed ZmqServers')
+
+    def _createZmqPingServers(self, port):
+        try:
+            pingContext = zmq.Context()
+            url_worker = "inproc://ping_workers"
+            url_client = "tcp://*:" + str(port+1)
+
+            def createDealerRouter(url_client, url_worker, context):
+                clients = context.socket(zmq.ROUTER)
+                clients.bind(url_client)
+                workers = context.socket(zmq.DEALER)
+                workers.bind(url_worker)
+                return (clients, workers)
+
+            clients, workers = createDealerRouter(url_client=url_client, url_worker=url_worker, context=pingContext)
+            print('clients: {c}, workers: {w}'.format(c=clients.get(zmq.LAST_ENDPOINT), w=workers.get(zmq.LAST_ENDPOINT)))
+            print('Creating {num_threads} ZMQ Ping Servers on port {port}. pid: {pid}'.format(port=url_client, num_threads=self._num_ping_threads, pid=os.getpid()))
+            for i in range(self._num_ping_threads):
+                server = ZMQPingServer(pingContext, url_worker, 'Ping-Thread-'+str(i))
+                server.start()
+                # self._instances.append(server)
+            # ping_device = threading.Thread(target=zmq.device, args=(zmq.QUEUE, clients, workers))
+            # ping_device.start()
+            # return ServerData(ping_device, clients, workers)
+            zmq.device(zmq.QUEUE, clients, workers)
+        except Exception as e:
+            print(e)
