@@ -12,19 +12,19 @@ class ZMQRequest(object):
         self.content = reqDetails['content']
         self.timeout = int(reqDetails['timeout'])
         self.networkTimeout = int(reqDetails['networkTimeout'])
-        self.pingTime=1e10
+        self.pingTime = 1e10
 
     def invokeAdapter(self):
         print('sending ping')
-        pingStart=time.time()
+        pingStart = time.time()
         self.ping_socket.send(consts.zmq.ping)
         result = self.ping_socket.poll(self.networkTimeout)
         if (result):
             there = self.ping_socket.recv()
             if (there == consts.zmq.pong):
                 print('got pong')
-                pingEnd=time.time()
-                self.pingTime=(pingEnd-pingStart)*1000
+                pingEnd = time.time()
+                self.pingTime = (pingEnd-pingStart)*1000
                 self.socket.send(self.content)
                 result = self.socket.poll(self.timeout)
                 if (result):

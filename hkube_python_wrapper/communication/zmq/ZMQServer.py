@@ -1,10 +1,10 @@
 import time
-import threading
+from hkube_python_wrapper.communication.zmq.BaseServer import BaseServer
 import zmq
 from .consts import consts
 
 
-class ZMQServer(threading.Thread):
+class ZMQServer(BaseServer):
     def __init__(self, context, replyFunc, workerUrl):
         self._lastServing = None
         self._active = True
@@ -12,8 +12,7 @@ class ZMQServer(threading.Thread):
         self._replyFunc = replyFunc
         self._workerUrl = workerUrl
         self._context = context
-        threading.Thread.__init__(self)
-        self.daemon = True
+        BaseServer.__init__(self)
 
     def run(self):
         self._socket = self._context.socket(zmq.REP)

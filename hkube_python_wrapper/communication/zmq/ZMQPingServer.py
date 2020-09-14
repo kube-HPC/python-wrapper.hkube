@@ -1,16 +1,14 @@
-from threading import Thread
 import zmq
 from .consts import consts
+from hkube_python_wrapper.communication.zmq.BaseServer import BaseServer
 
-
-class ZMQPingServer(Thread):
+class ZMQPingServer(BaseServer):
     def __init__(self, context, workerUrl, name):
         self._active = True
         self._socket = None
         self._workerUrl = workerUrl
         self._context = context
-        Thread.__init__(self, name=name)
-        self.daemon = True
+        BaseServer.__init__(self, name=name)
 
     def run(self):
         self._socket = self._context.socket(zmq.REP)
@@ -31,7 +29,6 @@ class ZMQPingServer(Thread):
                 break
         print('ZmqPingServer run loop exit')
         self.close()
-
 
     def stop(self):
         self._active = False

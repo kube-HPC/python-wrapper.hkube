@@ -3,7 +3,8 @@ from hkube_python_wrapper.util.encoding import Encoding
 
 
 class DataRequest:
-    ping_times=[]
+    ping_times = []
+
     def __init__(self, reqDetails):
         encoding = reqDetails.get('encoding')
         address = reqDetails.get('address')

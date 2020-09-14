@@ -30,7 +30,7 @@ median = functools.partial(percentile, percent=0.5)
 
 
 def print_percentiles(values, percentiles=[10, 25, 50, 75, 90, 95], title=None):
-    if (len(values) == 0):
+    if not values:
         return
     if (title):
         print(title)

@@ -11,6 +11,7 @@ from hkube_python_wrapper.cache.caching import Cache
 from ..config import config
 from hkube_python_wrapper.util.percentile import print_percentiles
 
+
 class DataAdapter:
     def __init__(self, options, dataServer=None):
         self._dataServer = dataServer
@@ -52,8 +53,8 @@ class DataAdapter:
                     data = self.tryGetDataFromPeerOrStorage(link)
 
                 setPath(inputArgs, k, data)
-        print_percentiles(DataRequest.ping_times,title='Ping Times')
-        DataRequest.ping_times=[]
+        print_percentiles(DataRequest.ping_times, title='Ping Times')
+        DataRequest.ping_times = []
 
         return inputArgs
 
