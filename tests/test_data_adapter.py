@@ -1,4 +1,3 @@
-
 from threading import Thread
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.data_adapter import DataAdapter
@@ -65,10 +64,10 @@ discovery = dict(config.discovery)
 discovery.update({"port": 9025})
 ds = DataServer(discovery)
 ds.listen()
-ds.setSendingState(taskId1, obj1, 10)
-ds.setSendingState(taskId2, obj2, 10)
-ds.setSendingState(taskId3, obj3, 10)
-ds.setSendingState(taskId4, obj4, 10)
+ds.setSendingState(taskId1, None, obj1, 10)
+ds.setSendingState(taskId2, None, obj2, 10)
+ds.setSendingState(taskId3, None, obj3, 10)
+ds.setSendingState(taskId4, None, obj4, 10)
 
 
 def test_get_data_no_storage():
@@ -82,7 +81,6 @@ def test_get_data_no_input():
 
 
 def test_get_data():
-
     result = dataAdapter.getData({'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
     assert result[0]['data']['array1'] == array
     assert result[1]['prop'][0] == array
@@ -143,7 +141,6 @@ def test_get_batch_request_with_storage_fallback():
 
 
 def test_set_data():
-
     result = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': data1})
     assert result['path'].find(jobId) != -1
 
