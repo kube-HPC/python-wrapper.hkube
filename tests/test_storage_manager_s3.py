@@ -4,11 +4,11 @@ from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.storage.storage_manager import StorageManager
 from tests.configs import config
 
+encoding = Encoding(config.data['encoding'])
 config = config.storage.copy()
 config['type'] = 's3'
 
 bucket = 'local-hkube'
-encoding = Encoding(config['encoding'])
 
 raw = {"data": 'all_my_data'}
 encoded = encoding.encode({"data": 'all_my_data'})

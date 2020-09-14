@@ -9,7 +9,7 @@ from hkube_python_wrapper.tracing.tracer import Tracer
 algorithmName = 'eval-alg'
 subpipelineName = 'simple'
 
-encoding = Encoding(config.storage['encoding'])
+encoding = Encoding(config.data['encoding'])
 inp1 = [5, 10]
 inp2 = {'d': [6, 'stam']}
 

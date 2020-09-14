@@ -15,9 +15,11 @@ class DataAdapter:
     def __init__(self, options, dataServer=None):
         self._dataServer = dataServer
         self._storageCache = Cache(config.storage)
-        self._encoding = Encoding(options.storage['encoding'])
-        self._storageManager = StorageManager(options.storage)
-        self._requestEncoding = options.discovery['encoding']
+        self._encoding = Encoding(options.data['encoding'])
+        storageConfig = dict(options.storage)
+        storageConfig.update({'encoding': options.data['encoding']})
+        self._storageManager = StorageManager(storageConfig)
+        self._requestEncoding = options.data['encoding']
         self._requestTimeout = options.discovery['timeout']
         self._networkTimeout = options.discovery['networkTimeout']
         self._maxWorkers = min(32, (multiprocessing.cpu_count() or 1) + 4)
@@ -245,7 +247,7 @@ class DataAdapter:
     def _getPath(self, data, dataPath):
         if (data and dataPath):
             newData = getPath(data, dataPath)
-            if(newData == 'DEFAULT'):
+            if (newData == 'DEFAULT'):
                 newData = data
         else:
             newData = data

@@ -7,13 +7,14 @@ from tests.configs import config
 
 def ensure_dir(dirName):
     if not os.path.exists(dirName):
-        os.makedirs(dirName)  
+        os.makedirs(dirName)
 
+encoding = Encoding(config.data['encoding'])
 config = config.storage
 baseDirectory = config["fs"]["baseDirectory"]
 rootDirectory = baseDirectory.split('/')[0]
 sm = StorageManager(config)
-encoding = Encoding(config['encoding'])
+
 
 dir1 = 'dir1'
 dir2 = 'dir2'

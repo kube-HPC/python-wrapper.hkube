@@ -18,10 +18,12 @@ socket = {
     "url": os.environ.get('WORKER_SOCKET_URL', None),
     "encoding": os.environ.get('WORKER_ALGORITHM_ENCODING', 'bson')
 }
+data = {
+    "encoding": os.environ.get('DATA_ENCODING', 'msgpack')
+}
 discovery = {
     "host": os.environ.get('POD_IP', '127.0.0.1'),
     "port": os.environ.get('DISCOVERY_PORT', 9020),
-    "encoding": os.environ.get('DISCOVERY_ENCODING', 'bson'),
     "enable": getBoolEnv('DISCOVERY_ENABLE', 'True'),
     "timeout": getIntEnv('DISCOVERY_TIMEOUT', 10000),
     "networkTimeout": getIntEnv('DISCOVERY_NETWORK_TIMEOUT', 1000),
@@ -36,7 +38,6 @@ storage = {
     "clusterName": os.environ.get('CLUSTER_NAME', 'local'),
     "type": os.environ.get('DEFAULT_STORAGE', 'fs'),
     "mode": os.environ.get('STORAGE_PROTOCOL', 'v2'),
-    "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
     "maxCacheSize": getIntEnv('STORAGE_MAX_CACHE_SIZE_MB', 400),
     "fs": {
         "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', '/var/tmp/fs/storage')

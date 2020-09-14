@@ -6,6 +6,7 @@ from hkube_python_wrapper.util.encoding import Encoding
 from tests.mocks import mockdata
 from tests.configs import config
 
+data = dict(config.data)
 discovery = dict(config.discovery)
 discovery.update({"port": 9024})
 data1 = mockdata.dataTask1
@@ -15,7 +16,7 @@ taskId1 = mockdata.taskId1
 taskId2 = mockdata.taskId2
 address1 = {'port': "9024", 'host': discovery['host']}
 
-encoding = Encoding(discovery['encoding'])
+encoding = Encoding(data['encoding'])
 timeout = 5000
 networkTimeout = 1000
 
