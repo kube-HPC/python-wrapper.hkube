@@ -27,6 +27,7 @@ class ZMQServers(object):
 
     def listen(self):
         pingProcess = multiprocessing.Process(target=self._createZmqPingServers, args=(self._port,))
+        pingProcess.daemon = True
         pingProcess.start()
         for _ in range(5):
             server = ZMQServer(self._context, self._replyFunc, self._url_worker)
