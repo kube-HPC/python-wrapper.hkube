@@ -48,10 +48,10 @@ class Cache:
             return item.get('value')
         return None
 
-    def getHeader(self, key):
+    def getWithHeader(self, key):
         item = self._cache.get(key)
         if (item is not None):
-            return item.get('header')
+            return item.get('header'), item.get('value')
         return None
 
     def getAll(self, keys):

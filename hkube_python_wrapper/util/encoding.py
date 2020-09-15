@@ -87,8 +87,7 @@ class Encoding:
         header = self.createHeader(dataType, self.protocolType)
         return header, payload
 
-    def encode(self, value, **kwargs):
-        plainEncode = kwargs.get('plain_encode')
+    def encode(self, value, plainEncode=False):
         if (not self.isBinary or plainEncode is True):
             return self._encode(value)
         header, payload = self.encode_separately(value)
@@ -104,9 +103,7 @@ class Encoding:
             payload = value
         return payload
 
-    def decode(self, value, **kwargs):
-        plainEncode = kwargs.get('plain_encode')
-
+    def decode(self, value, plainEncode=False):
         if (not self.isBinary or plainEncode is True):
             return self._decode(value)
 

@@ -25,16 +25,16 @@ class DataServer:
     @timing
     def _createReply(self, message):
         try:
-            decoded = self._encoding.decode(message, plain_encode=True)
+            decoded = self._encoding.decode(message, plainEncode=True)
             tasks = decoded.get('tasks')
-            resultsAsTupple = self.getDataByTaskId(tasks)
+            resultsAsTuple = self.getDataByTaskId(tasks)
 
         except Exception as e:
             result = self._createError('unknown', str(e))
             header, encoded = self._encoding.encode_separately(result)
             return [header, encoded]
         parts = []
-        for header, content in resultsAsTupple:
+        for header, content in resultsAsTuple:
             parts.append(header)
             parts.append(content)
         return parts
@@ -45,7 +45,7 @@ class DataServer:
             if (task not in self._cache):
                 result = self.notAvailable
             else:
-                result = (self._cache.getHeader(task), self._cache.get(task))
+                result = self._cache.getWithHeader(task)
             results.append(result)
         return results
 

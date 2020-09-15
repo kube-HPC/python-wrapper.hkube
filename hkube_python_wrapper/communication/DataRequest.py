@@ -16,7 +16,7 @@ class DataRequest:
         }
         self.tasks = tasks
         self.encoding = Encoding(encoding)
-        content = self.encoding.encode(options, plain_encode=True)
+        content = self.encoding.encode(options, plainEncode=True)
         self.request = dict()
         self.request.update(address)
         self.request.update({"content": content, "timeout": timeout, "networkTimeout": networkTimeout})

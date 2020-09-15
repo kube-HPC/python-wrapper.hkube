@@ -23,7 +23,7 @@ class WebsocketClient(Thread):
         print('Initialized socket with {encoding} encoding'.format(encoding=encoding))
 
     def on_message(self, message):
-        decoded = self._encoding.decode(message, plain_encode=True)
+        decoded = self._encoding.decode(message, plainEncode=True)
         command = decoded["command"]
         data = decoded.get("data", None)
         print('got message from worker: {command}'.format(command=command))
@@ -42,7 +42,7 @@ class WebsocketClient(Thread):
 
     def send(self, message):
         print('sending message to worker: {command}'.format(**message))
-        self._ws.send(self._encoding.encode(message, plain_encode=True), opcode=self._ws_opcode)
+        self._ws.send(self._encoding.encode(message, plainEncode=True), opcode=self._ws_opcode)
 
     def run(self):
         self._startWS(self._url)
