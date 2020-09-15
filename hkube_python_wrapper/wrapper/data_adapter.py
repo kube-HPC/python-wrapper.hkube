@@ -53,7 +53,11 @@ class DataAdapter:
                     data = self.tryGetDataFromPeerOrStorage(link)
 
                 setPath(inputArgs, k, data)
-        print_percentiles(DataRequest.ping_times, title='Ping Times')
+        try:
+            print_percentiles(DataRequest.ping_times, title='Ping Times')
+        except Exception:
+            pass
+
         DataRequest.ping_times = []
 
         return inputArgs

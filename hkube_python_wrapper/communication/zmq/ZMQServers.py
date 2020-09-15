@@ -2,13 +2,9 @@ import zmq
 import zmq.devices
 import os
 import multiprocessing
-from collections import namedtuple
 
 from .ZMQServer import ZMQServer
 from .ZMQPingServer import ZMQPingServer
-
-ServerData = namedtuple('ServerData', 'device clients workers')
-
 
 class ZMQServers(object):
     def __init__(self, port, replyFunc, num_threads):
@@ -29,7 +25,7 @@ class ZMQServers(object):
         pingProcess = multiprocessing.Process(target=self._createZmqPingServers, args=(self._port,))
         pingProcess.daemon = True
         pingProcess.start()
-        for _ in range(5):
+        for _ in range(self._num_threads):
             server = ZMQServer(self._context, self._replyFunc, self._url_worker)
             server.start()
             self._instances.append(server)
@@ -43,7 +39,8 @@ class ZMQServers(object):
             self._device.setsockopt_out(zmq.LINGER, 0)
             self._device.start()
         except Exception as e:
-            print('################################ zmq.device failed with '+str(e))
+            print('zmq.device failed with '+str(e))
+            raise
 
     def isServing(self):
         res = any(i.isServing() for i in self._instances)
@@ -82,10 +79,6 @@ class ZMQServers(object):
             for i in range(self._num_ping_threads):
                 server = ZMQPingServer(pingContext, url_worker, 'Ping-Thread-'+str(i))
                 server.start()
-                # self._instances.append(server)
-            # ping_device = threading.Thread(target=zmq.device, args=(zmq.QUEUE, clients, workers))
-            # ping_device.start()
-            # return ServerData(ping_device, clients, workers)
             zmq.device(zmq.QUEUE, clients, workers)
         except Exception as e:
             print(e)
