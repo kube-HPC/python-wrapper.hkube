@@ -77,12 +77,7 @@ class Encoding:
         self._fromBytes = self._fromBytesPY3 if PY3 else self._fromBytesPY2
         self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
 
-    def encode_separately(self, value, **kwargs):
-        plainEncode = kwargs.get('plain_encode')
-        if(not self.isBinary or plainEncode is True):
-            return (None, self._encode(value))
-
-        payload = None
+    def encode_separately(self, value):
         if (typeCheck.isBytearray(value)):
             dataType = DATA_TYPE_RAW
             payload = value
@@ -98,7 +93,6 @@ class Encoding:
         if(not self.isBinary or plainEncode is True):
             return self._encode(value)
 
-        payload = None
         if (typeCheck.isBytearray(value)):
             dataType = DATA_TYPE_RAW
             payload = value
@@ -142,7 +136,6 @@ class Encoding:
         dataType = struct.unpack(">B", dt)[0]
         data = view[headerLength: totalLength]
 
-        payload = None
         if(dataType == DATA_TYPE_ENCODED):
             payload = self._decode(data)
         else:

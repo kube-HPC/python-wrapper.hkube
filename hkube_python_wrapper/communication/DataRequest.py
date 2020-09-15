@@ -25,7 +25,6 @@ class DataRequest:
             print('tcp://' + self.request['host'] + ':' + str(self.request['port']))
             adapter = ZMQRequest(self.request)
             responseFrames = adapter.invokeAdapter()
-            header = None
             results = []
             for i in range(0, int(len(responseFrames)/2)):
                 header = responseFrames[i*2]
