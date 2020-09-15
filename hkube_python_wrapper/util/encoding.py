@@ -92,15 +92,7 @@ class Encoding:
         plainEncode = kwargs.get('plain_encode')
         if(not self.isBinary or plainEncode is True):
             return self._encode(value)
-
-        if (typeCheck.isBytearray(value)):
-            dataType = DATA_TYPE_RAW
-            payload = value
-        else:
-            dataType = DATA_TYPE_ENCODED
-            payload = self._encode(value)
-
-        header = self.createHeader(dataType, self.protocolType)
+        header, payload = self.encode_separately(value)
         header += payload
         return header
 
@@ -131,15 +123,9 @@ class Encoding:
             return self._decode(value)
 
         ftl = bytes(header[1:2])
-        dt = bytes(header[2:3])
         headerLength = struct.unpack(">B", ftl)[0]
-        dataType = struct.unpack(">B", dt)[0]
         data = view[headerLength: totalLength]
-
-        if(dataType == DATA_TYPE_ENCODED):
-            payload = self._decode(data)
-        else:
-            payload = self._toBytes(data)
+        payload = self.decode_separately(header,data)
         return payload
 
     def _fromBytesPY2(self, value):
