@@ -1,18 +1,14 @@
-import time
-from hkube_python_wrapper.communication.zmq.BaseServer import BaseServer
 import zmq
 from .consts import consts
+from hkube_python_wrapper.communication.zmq.BaseServer import BaseServer
 
-
-class ZMQServer(BaseServer):
-    def __init__(self, context, replyFunc, workerUrl):
-        self._lastServing = None
+class ZMQPingServer(BaseServer):
+    def __init__(self, context, workerUrl, name):
         self._active = True
         self._socket = None
-        self._replyFunc = replyFunc
         self._workerUrl = workerUrl
         self._context = context
-        BaseServer.__init__(self)
+        BaseServer.__init__(self, name=name)
 
     def run(self):
         self._socket = self._context.socket(zmq.REP)
@@ -25,27 +21,14 @@ class ZMQServer(BaseServer):
                 if (events == 0):
                     continue
                 message = self._socket.recv()
-                self._lastServing = time.time()
                 if(message == consts.zmq.ping):
+                    print('got ping')
                     self._socket.send(consts.zmq.pong)
-                else:
-                    self._send(message)
-                self._lastServing = time.time()
             except Exception as e:
                 print('socket closed: '+str(e))
                 break
-        print('ZmqServer run loop exit')
+        print('ZmqPingServer run loop exit')
         self.close()
-
-    def _send(self, message):
-        try:
-            toBeSent = self._replyFunc(message)
-            self._socket.send_multipart(toBeSent, copy=False)
-        except Exception as e:
-            print(e)
-
-    def isServing(self):
-        return (self._lastServing) and (time.time() - self._lastServing < 10)
 
     def stop(self):
         self._active = False
