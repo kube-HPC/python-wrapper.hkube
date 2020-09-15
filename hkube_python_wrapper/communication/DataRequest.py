@@ -3,6 +3,7 @@ from hkube_python_wrapper.util.encoding import Encoding
 
 
 class DataRequest:
+    ping_times = []
 
     def __init__(self, reqDetails):
         encoding = reqDetails.get('encoding')
@@ -29,6 +30,7 @@ class DataRequest:
             for content in responseFrames:
                 decoded = self.encoding.decode(content)
                 results.append((len(content), decoded))
+            DataRequest.ping_times.append(adapter.pingTime)
             return results
         except Exception as e:
             results = []
