@@ -18,7 +18,7 @@ class DataAdapter:
         self._storageCache = Cache(config.storage)
         self._encoding = Encoding(options.storage['encoding'])
         self._storageManager = StorageManager(options.storage)
-        self._requestEncoding = options.discovery['encoding']
+        self._requestEncoding = options.storage['encoding']
         self._requestTimeout = options.discovery['timeout']
         self._networkTimeout = options.discovery['networkTimeout']
         self._maxWorkers = min(32, (multiprocessing.cpu_count() or 1) + 4)
@@ -26,6 +26,9 @@ class DataAdapter:
 
     def encode(self, value):
         return self._encoding.encode(value)
+
+    def encode_separately(self, value):
+        return self._encoding.encode_separately(value)
 
     def decode(self, value):
         return self._encoding.decode(value)

@@ -12,8 +12,9 @@ class DataServer:
         self._port = config['port']
         self._encodingType = config['encoding']
         self._encoding = Encoding(self._encodingType)
+
         self._adapter = ZMQServers(self._port, self._createReply, config.get('num_threads', 5))
-        self.notAvailable = self._encoding.encode(
+        self.notAvailable = self._encoding.encode_separately(
             self._createError('notAvailable', 'taskId notAvailable'))
 
     def listen(self):
@@ -24,16 +25,17 @@ class DataServer:
     @timing
     def _createReply(self, message):
         try:
-            decoded = self._encoding.decode(message, plain_encode=True)
+            decoded = self._encoding.decode(message, plainEncode=True)
             tasks = decoded.get('tasks')
-            results = self.getDataByTaskId(tasks)
+            resultsAsTuple = self.getDataByTaskId(tasks)
 
         except Exception as e:
             result = self._createError('unknown', str(e))
-            encoded = self._encoding.encode(result)
-            return [encoded]
+            header, encoded = self._encoding.encode_separately(result)
+            return [header, encoded]
         parts = []
-        for content in results:
+        for header, content in resultsAsTuple:
+            parts.append(header)
             parts.append(content)
         return parts
 
@@ -43,12 +45,12 @@ class DataServer:
             if (task not in self._cache):
                 result = self.notAvailable
             else:
-                result = self._cache.get(task)
+                result = self._cache.getWithHeader(task)
             results.append(result)
         return results
 
-    def setSendingState(self, taskId, encoded, size):
-        return self._cache.update(taskId, encoded, size=size)
+    def setSendingState(self, taskId, header, encoded, size):
+        return self._cache.update(taskId, encoded, size=size, header=header)
 
     def _createError(self, code, message):
         return {'hkube_error': {'code': code, 'message': message}}

@@ -11,7 +11,7 @@ class Cache:
         self.sumSize = 0
 
     @timing
-    def update(self, key, value, size=None):
+    def update(self, key, value, size=None, header=None):
         if (size is None):
             if (typeCheck.isBytearray(value)):
                 size = len(value)
@@ -25,7 +25,7 @@ class Cache:
                     self._maxCacheSize) + "MB")
                 return None
             self._remove_oldest()
-        self._cache[key] = {'timestamp': datetime.datetime.now(), 'size': size, 'value': value}
+        self._cache[key] = {'timestamp': datetime.datetime.now(), 'size': size, 'value': value, 'header': header}
         self.sumSize += size
         return key
 
@@ -46,6 +46,12 @@ class Cache:
         item = self._cache.get(key)
         if (item is not None):
             return item.get('value')
+        return None
+
+    def getWithHeader(self, key):
+        item = self._cache.get(key)
+        if (item is not None):
+            return item.get('header'), item.get('value')
         return None
 
     def getAll(self, keys):

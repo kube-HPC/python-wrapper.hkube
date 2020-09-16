@@ -27,7 +27,7 @@ mb = 1024 * 1024
 
 
 def create_bytearray(sizeBytes):
-    return b'\xdd'*(sizeBytes)
+    return b'\xdd' * (sizeBytes)
 
 
 def test_msgpack_encoding_bytearray():
@@ -35,6 +35,14 @@ def test_msgpack_encoding_bytearray():
     data = create_bytearray(20)
     encoded = encoding.encode(data)
     decoded = encoding.decode(encoded)
+    assert data == decoded
+
+
+def test_msgpack_encoding_bytearray_separatelly():
+    encoding = Encoding('msgpack')
+    data = create_bytearray(20)
+    header, encoded = encoding.encode_separately(data)
+    decoded = encoding.decode_separately(header, encoded)
     assert data == decoded
 
 
@@ -90,7 +98,7 @@ def randomInt(size):
 
 def createObject(sizeBytes, sizeRandom):
     obj = {
-        "bytesData": bytearray(b'\xdd'*(sizeBytes)),
+        "bytesData": bytearray(b'\xdd' * (sizeBytes)),
         "anotherBytesData": bytearray(sizeBytes),
         "randomString": randomString(sizeRandom),
         "randomIntArray": randomInt(sizeRandom),

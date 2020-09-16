@@ -16,7 +16,7 @@ class DataRequest:
         }
         self.tasks = tasks
         self.encoding = Encoding(encoding)
-        content = self.encoding.encode(options, plain_encode=True)
+        content = self.encoding.encode(options, plainEncode=True)
         self.request = dict()
         self.request.update(address)
         self.request.update({"content": content, "timeout": timeout, "networkTimeout": networkTimeout})
@@ -27,8 +27,10 @@ class DataRequest:
             adapter = ZMQRequest(self.request)
             responseFrames = adapter.invokeAdapter()
             results = []
-            for content in responseFrames:
-                decoded = self.encoding.decode(content)
+            for i in range(0, int(len(responseFrames)/2)):
+                header = responseFrames[i*2]
+                content = responseFrames[i*2+1]
+                decoded = self.encoding.decode_separately(header, content)
                 results.append((len(content), decoded))
             DataRequest.ping_times.append(adapter.pingTime)
             return results
