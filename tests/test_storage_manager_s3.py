@@ -25,6 +25,19 @@ def test_put_get():
     a = sm.storage.get(options)
     assert encoding.decode(a) == raw
 
+def test_multi_parts():
+    obj = {
+        "bytesData": bytearray(b'\xdd'*(5)),
+        "anotherBytesData": bytearray(5),
+        "string": 'stam_data',
+        "int": 42
+    }
+    (header, payload) = encoding.encode_separately(obj)
+    options = {'path': bucket + os.path.sep + 'key2', 'data': [header, payload]}
+    sm.storage.multiPart(options)
+    a = sm.storage.get(options)
+    decoded = encoding.decode(a)
+    assert decoded == obj
 
 def test_fail_to_get():
     options = {'path': bucket + os.path.sep + 'no_such_key', 'data': encoded}

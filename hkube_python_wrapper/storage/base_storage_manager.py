@@ -9,6 +9,12 @@ class BaseStorageManager(object):
         except Exception:
             raise Exception('Failed to write data to storage')
 
+    def multiPart(self, options):
+        try:
+            return self.adapter.multiPart(options)
+        except Exception:
+            raise Exception('Failed to write multiPart data to storage')
+
     def get(self, options):
         try:
             data = self.adapter.get(options)

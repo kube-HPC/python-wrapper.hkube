@@ -42,6 +42,18 @@ class S3Adapter:
         self.client.put_object(Bucket=bucket, Key=key, Body=body)
         return {'path': bucket + os.path.sep + key}
 
+    def multiPart(self, options):
+        path = options["path"]
+        parts = options["data"]
+        body = bytearray()
+        for _, item in enumerate(parts):
+            body += item
+        parsedPath = self._parsePath(path)
+        bucket = parsedPath["bucket"]
+        key = parsedPath["key"]
+        self.client.put_object(Bucket=bucket, Key=key, Body=body)
+        return {'path': bucket + os.path.sep + key}
+
     def get(self, options):
         path = options["path"]
         parsedPath = self._parsePath(path)

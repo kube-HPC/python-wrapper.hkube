@@ -12,6 +12,9 @@ class TaskOutputManager(BaseStorageManager):
     def put(self, jobId, taskId, data):
         return super(TaskOutputManager, self).put({'path': self.createPath(jobId, taskId), 'data': data})
 
+    def multiPart(self, jobId, taskId, data):
+        return super(TaskOutputManager, self).multiPart({'path': self.createPath(jobId, taskId), 'data': data})
+
     def get(self, jobId, taskId):
         return super(TaskOutputManager, self).get({'path': self.createPath(jobId, taskId)})
 

@@ -19,6 +19,16 @@ class FSAdapter:
             f.write(options['data'])
         return {'path': options['path']}
 
+    def multiPart(self, options):
+        filePath = self.getPath(self.basePath, options['path'])
+        self.ensure_dir(filePath)
+        parts = options['data']
+
+        with open(filePath, 'wb') as f:
+            for _, item in enumerate(parts):
+                f.write(item)
+        return {'path': options['path']}
+
     def get(self, options):
         filePath = self.getPath(self.basePath, options['path'])
         result = None

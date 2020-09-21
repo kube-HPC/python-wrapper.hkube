@@ -73,7 +73,7 @@ class DataAdapter:
         jobId = options.get('jobId')
         taskId = options.get('taskId')
         data = options.get('data')
-        result = self._storageManager.hkube.put(jobId, taskId, data)
+        result = self._storageManager.hkube.multiPart(jobId, taskId, data)
         return result
 
     @timing
