@@ -300,13 +300,12 @@ class Algorunner:
         incache = None
         if (self._dataServer and savePaths):
             incache = self._dataServer.setSendingState(taskId, header, encodedData, len(encodedData))
-        storageParts = [header, encodedData]
         if (incache):
             storingData.update({'discovery': self._discovery, 'taskId': taskId})
             self._sendCommand(messages.outgoing.storing, storingData)
-            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': storageParts})
+            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'header': header, 'data': encodedData})
         else:
-            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': storageParts})
+            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'header': header, 'data': encodedData})
             self._sendCommand(messages.outgoing.storing, storingData)
         if (span):
             Tracer.instance.finish_span(span)

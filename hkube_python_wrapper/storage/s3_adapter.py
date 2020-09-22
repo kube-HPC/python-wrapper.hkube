@@ -36,23 +36,15 @@ class S3Adapter:
     def put(self, options):
         path = options["path"]
         body = options["data"]
+        header = options.get("header")
+        metadata = {}
+        if(header):
+            header = Encoding.headerToString(header)
+            metadata = {"header": header}
         parsedPath = self._parsePath(path)
         bucket = parsedPath["bucket"]
         key = parsedPath["key"]
-        self.client.put_object(Bucket=bucket, Key=key, Body=body)
-        return {'path': bucket + os.path.sep + key}
-
-    def multiPart(self, options):
-        path = options["path"]
-        data = options["data"]
-        header = data[0]
-        payload = data[1]
-        header = Encoding.headerToString(header)
-        metadata = {"header": header}
-        parsedPath = self._parsePath(path)
-        bucket = parsedPath["bucket"]
-        key = parsedPath["key"]
-        self.client.put_object(Bucket=bucket, Key=key, Body=payload, Metadata=metadata)
+        self.client.put_object(Bucket=bucket, Key=key, Body=body, Metadata=metadata)
         return {'path': bucket + os.path.sep + key}
 
     def get(self, options):

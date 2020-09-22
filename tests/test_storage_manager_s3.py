@@ -33,8 +33,8 @@ def test_multi_parts():
         "int": 42
     }
     (header, payload) = encoding.encode_separately(obj)
-    options = {'path': bucket + os.path.sep + 'key2', 'data': [header, payload]}
-    sm.storage.multiPart(options)
+    options = {'path': bucket + os.path.sep + 'key2', 'header': header, 'data': payload}
+    sm.storage.put(options)
     (header, payload) = sm.storage.get(options)
     decoded = encoding.decode(header=header, value=payload)
     assert decoded == obj
@@ -62,7 +62,7 @@ def test_list():
 
 
 def test_task_output_put_get():
-    obj_path = sm.hkube.put('myJobId', 'myTaksId', encoded)
+    obj_path = sm.hkube.put('myJobId', 'myTaksId', value=encoded)
     assert obj_path == {'path': bucket + '/myJobId/myTaksId'}
     (header, payload) = sm.hkube.get('myJobId', 'myTaksId')
     assert encoding.decode(header=header, value=payload) == raw

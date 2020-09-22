@@ -46,8 +46,8 @@ def test_multi_parts():
         "int": 42
     }
     (header, payload) = encoding.encode_separately(obj)
-    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': [header, payload]}
-    sm.storage.multiPart(options)
+    options = {'path': dir1 + os.path.sep + 'a.txt', 'header': header, 'data': payload}
+    sm.storage.put(options)
     (header, payload) = sm.storage.get(options)
     decoded = encoding.decode(header=header, value=payload)
     assert decoded == obj
@@ -111,7 +111,7 @@ def test_task_output_put_get():
     newConfig = config.copy()
     newConfig.update({"clusterName": dir2})
     sm2 = StorageManager(newConfig)
-    obj_path = sm2.hkube.put('myJobId', 'myTaksId', encoded)
+    obj_path = sm2.hkube.put('myJobId', 'myTaksId', value=encoded)
     assert obj_path == {'path': dir2 + '-hkube/myJobId/myTaksId'}
     (header, payload) = sm2.hkube.get('myJobId', 'myTaksId')
     assert encoding.decode(header=header, value=payload) == raw

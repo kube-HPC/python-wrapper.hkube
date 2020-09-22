@@ -23,10 +23,10 @@ obj4 = {'data4': {'array4': array}}
 (header3, data3) = dataAdapter.encode_separately(obj3)
 (header4, data4) = dataAdapter.encode_separately(obj4)
 
-storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': [header1, data1]})
-storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'data': [header2, data2]})
-storageInfo3 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId3, 'data': [header3, data3]})
-storageInfo4 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId4, 'data': [header4, data4]})
+storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'header': header1, 'data': data1})
+storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'header': header2, 'data': data2})
+storageInfo3 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId3, 'header': header3, 'data': data3})
+storageInfo4 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId4, 'header': header4, 'data': data4})
 
 inputArgs = [
     {'data': '$$guid-1'},
@@ -141,7 +141,7 @@ def test_get_batch_request_with_storage_fallback():
 
 
 def test_set_data():
-    result = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': [header1, data1]})
+    result = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'header': header1, 'data': data1})
     assert result['path'].find(jobId) != -1
 
 

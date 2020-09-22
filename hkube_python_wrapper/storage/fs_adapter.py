@@ -15,18 +15,13 @@ class FSAdapter:
     def put(self, options):
         filePath = self.getPath(self.basePath, options['path'])
         self.ensure_dir(filePath)
-        with open(filePath, 'wb') as f:
-            f.write(options['data'])
-        return {'path': options['path']}
-
-    def multiPart(self, options):
-        filePath = self.getPath(self.basePath, options['path'])
-        self.ensure_dir(filePath)
-        parts = options['data']
+        data = options['data']
+        header = options.get('header')
 
         with open(filePath, 'wb') as f:
-            for _, item in enumerate(parts):
-                f.write(item)
+            if(header):
+                f.write(header)
+            f.write(data)
         return {'path': options['path']}
 
     def get(self, options):
