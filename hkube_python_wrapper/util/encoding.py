@@ -132,6 +132,8 @@ class Encoding:
         return hex_data.decode('utf-8').rstrip('\n')
     @staticmethod
     def headerFromString(value):
+        if(value is None):
+            return None
         encoded = value.encode('utf-8')
         return base64.decodebytes(encoded)
 
