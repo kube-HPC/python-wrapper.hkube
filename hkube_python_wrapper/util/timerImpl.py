@@ -22,7 +22,6 @@ else:
             self._timer = None
 
         def start(self):
-            print('############# '+str(self))
             self._timer = threading.Timer(self.interval, self.function, self.args, self.kwargs)
             self._timer.name = self.name
             self._timer.daemon = self.daemon
