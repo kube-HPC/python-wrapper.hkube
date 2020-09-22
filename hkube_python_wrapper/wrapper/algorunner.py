@@ -190,11 +190,8 @@ class Algorunner:
     def run(self):
         while self._active:
             try:
-                print('run')
                 (command, data) = self.get_message()
-                print('after')
                 self.handle(command, data)
-                print('after2')
             except Empty:
                 pass
         print('Exiting run loop')
