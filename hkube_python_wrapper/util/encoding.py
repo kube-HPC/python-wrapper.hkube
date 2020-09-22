@@ -130,7 +130,6 @@ class Encoding:
     def hexlify(value):
         hex_data = binascii.hexlify(value)
         return hex_data.decode('utf-8')
-    
     @staticmethod
     def unhexlify(value):
         encoded = value.encode('utf-8')
