@@ -35,8 +35,8 @@ def beforeall(request):
 def test_put_get():
     options = {'path': dir1 + os.path.sep + 'a.txt', 'data': encoded}
     sm.storage.put(options)
-    a = sm.storage.get(options)
-    assert encoding.decode(a) == raw
+    (header, payload) = sm.storage.get(options)
+    assert encoding.decode(header=header, value=payload) == raw
 
 def test_multi_parts():
     obj = {
@@ -48,8 +48,8 @@ def test_multi_parts():
     (header, payload) = encoding.encode_separately(obj)
     options = {'path': dir1 + os.path.sep + 'a.txt', 'data': [header, payload]}
     sm.storage.multiPart(options)
-    a = sm.storage.get(options)
-    decoded = encoding.decode(a)
+    (header, payload) = sm.storage.get(options)
+    decoded = encoding.decode(header=header, value=payload)
     assert decoded == obj
 
 
@@ -113,5 +113,5 @@ def test_task_output_put_get():
     sm2 = StorageManager(newConfig)
     obj_path = sm2.hkube.put('myJobId', 'myTaksId', encoded)
     assert obj_path == {'path': dir2 + '-hkube/myJobId/myTaksId'}
-    a = sm2.hkube.get('myJobId', 'myTaksId')
-    assert encoding.decode(a) == raw
+    (header, payload) = sm2.hkube.get('myJobId', 'myTaksId')
+    assert encoding.decode(header=header, value=payload) == raw

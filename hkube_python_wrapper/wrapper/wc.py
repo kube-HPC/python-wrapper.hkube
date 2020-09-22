@@ -23,7 +23,7 @@ class WebsocketClient(Thread):
         print('Initialized socket with {encoding} encoding'.format(encoding=encoding))
 
     def on_message(self, message):
-        decoded = self._encoding.decode(message, plainEncode=True)
+        decoded = self._encoding.decode(value=message, plainEncode=True)
         command = decoded["command"]
         data = decoded.get("data", None)
         print('got message from worker: {command}'.format(command=command))

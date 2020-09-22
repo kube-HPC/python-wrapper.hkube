@@ -33,7 +33,7 @@ class WebSocketServerClass:
         }
 
     def handleMessage(self, client, server, message):
-        decoded = self._encoding.decode(message, plainEncode=True)
+        decoded = self._encoding.decode(value=message, plainEncode=True)
         command = decoded["command"]
         data = decoded.get("data", None)
         commandBack = self._commands.get(command)

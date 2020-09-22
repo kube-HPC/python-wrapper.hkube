@@ -31,10 +31,11 @@ class FSAdapter:
 
     def get(self, options):
         filePath = self.getPath(self.basePath, options['path'])
-        result = None
+        header = None
+        payload = None
         with open(filePath, 'rb') as f:
-            result = f.read()
-        return result
+            payload = f.read()
+        return (header, payload)
 
     def list(self, options):
         filePath = self.basePath + os.path.sep + options['path']

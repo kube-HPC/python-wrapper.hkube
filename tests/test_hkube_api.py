@@ -28,8 +28,8 @@ def test_callback():
     algorunner.loadAlgorithmCallbacks(start, options=config)
     algorunner.connectToWorker(config)
     time.sleep(3)
-    res = sm.storage.get({"path": "local-hkube/jobId/taskId"})
-    decoded = encoding.decode(res)
+    (header, payload) = sm.storage.get({"path": "local-hkube/jobId/taskId"})
+    decoded = encoding.decode(header=header, value=payload)
     assert decoded[0] == inp1
     assert decoded[1] == inp2
     time.sleep(2)

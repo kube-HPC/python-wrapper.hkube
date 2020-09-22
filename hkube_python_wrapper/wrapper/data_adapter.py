@@ -30,8 +30,8 @@ class DataAdapter:
     def encode_separately(self, value):
         return self._encoding.encode_separately(value)
 
-    def decode(self, value):
-        return self._encoding.decode(value)
+    def decode(self, header=None, value=None):
+        return self._encoding.decode(header=header, value=value)
 
     @trace()
     def getData(self, options):
@@ -158,7 +158,7 @@ class DataAdapter:
             dataList = self._dataServer.getDataByTaskId(tasks)
             responses = []
             for data in dataList:
-                responses.append((len(data), self.decode(data)))
+                responses.append((len(data), self.decode(value=data)))
         else:
             request = {
                 'address': {
@@ -203,9 +203,10 @@ class DataAdapter:
     @trace(name='getFromStorage')
     @timing
     def _getFromStorage(self, options):
-        response = self._storageManager.storage.get(options)
-        size = len(response)
-        return (size, self.decode(response))
+        (header, payload) = self._storageManager.storage.get(options)
+        decoded = self.decode(header=header, value=payload)
+        size = len(payload)
+        return (size, decoded)
 
     def createStorageInfo(self, options):
         jobId = options.get('jobId')

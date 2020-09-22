@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 import sys
+import binascii
 import struct
 import bson
 from bson.codec_options import CodecOptions, TypeRegistry
@@ -94,16 +95,7 @@ class Encoding:
         header += payload
         return header
 
-    def decode_separately(self, header, value):
-        dt = bytes(header[2:3])
-        dataType = struct.unpack(">B", dt)[0]
-        if (dataType == DATA_TYPE_ENCODED):
-            payload = self._decode(value)
-        else:
-            payload = value
-        return payload
-
-    def decode(self, value, plainEncode=False):
+    def decode(self, header=None, value=None, plainEncode=False):
         if (not self.isBinary or plainEncode is True):
             return self._decode(value)
 
@@ -112,17 +104,37 @@ class Encoding:
 
         view = self._fromBytes(value)
         totalLength = len(view)
-        header = bytes(view[0:HEADER_LENGTH])
+
+        sepHeaderLength = HEADER_LENGTH
+        if(header is None):
+            header = bytes(view[0:HEADER_LENGTH])
+            sepHeaderLength = 0
+
         mg = bytes(header[-2:])
 
         if (mg != MAGIC_NUMBER):
             return self._decode(value)
 
         ftl = bytes(header[1:2])
+        dt = bytes(header[2:3])
         headerLength = struct.unpack(">B", ftl)[0]
-        data = view[headerLength: totalLength]
-        payload = self.decode_separately(header, data)
+        dataType = struct.unpack(">B", dt)[0]
+        data = view[headerLength - sepHeaderLength: totalLength]
+        if (dataType == DATA_TYPE_ENCODED):
+            payload = self._decode(data)
+        else:
+            payload = self._toBytes(data)
         return payload
+
+    @staticmethod
+    def hexlify(value):
+        hex_data = binascii.hexlify(value)
+        return hex_data.decode('utf-8')
+    
+    @staticmethod
+    def unhexlify(value):
+        encoded = value.encode('utf-8')
+        return binascii.unhexlify(encoded)
 
     def _fromBytesPY2(self, value):
         return value

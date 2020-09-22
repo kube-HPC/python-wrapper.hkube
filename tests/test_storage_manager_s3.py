@@ -22,8 +22,8 @@ def beforeall():
 def test_put_get():
     options = {'path': bucket + os.path.sep + 'key1', 'data': encoded}
     sm.storage.put(options)
-    a = sm.storage.get(options)
-    assert encoding.decode(a) == raw
+    (header, payload) = sm.storage.get(options)
+    assert encoding.decode(header=header, value=payload) == raw
 
 def test_multi_parts():
     obj = {
@@ -35,9 +35,10 @@ def test_multi_parts():
     (header, payload) = encoding.encode_separately(obj)
     options = {'path': bucket + os.path.sep + 'key2', 'data': [header, payload]}
     sm.storage.multiPart(options)
-    a = sm.storage.get(options)
-    decoded = encoding.decode(a)
+    (header, payload) = sm.storage.get(options)
+    decoded = encoding.decode(header=header, value=payload)
     assert decoded == obj
+    
 
 def test_fail_to_get():
     options = {'path': bucket + os.path.sep + 'no_such_key', 'data': encoded}
@@ -63,5 +64,5 @@ def test_list():
 def test_task_output_put_get():
     obj_path = sm.hkube.put('myJobId', 'myTaksId', encoded)
     assert obj_path == {'path': bucket + '/myJobId/myTaksId'}
-    a = sm.hkube.get('myJobId', 'myTaksId')
-    assert encoding.decode(a) == raw
+    (header, payload) = sm.hkube.get('myJobId', 'myTaksId')
+    assert encoding.decode(header=header, value=payload) == raw

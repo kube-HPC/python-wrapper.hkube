@@ -25,7 +25,7 @@ class DataServer:
     @timing
     def _createReply(self, message):
         try:
-            decoded = self._encoding.decode(message, plainEncode=True)
+            decoded = self._encoding.decode(value=message, plainEncode=True)
             tasks = decoded.get('tasks')
             resultsAsTuple = self.getDataByTaskId(tasks)
 

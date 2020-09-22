@@ -30,7 +30,7 @@ class DataRequest:
             for i in range(0, int(len(responseFrames)/2)):
                 header = responseFrames[i*2]
                 content = responseFrames[i*2+1]
-                decoded = self.encoding.decode_separately(header, content)
+                decoded = self.encoding.decode(header=header, value=content)
                 results.append((len(content), decoded))
             DataRequest.ping_times.append(adapter.pingTime)
             return results
