@@ -12,7 +12,7 @@ if (sys.version_info > (3, 0)):
 else:
     # Python 2 code in this block
     class Timer():
-        def __init__(self, interval, function, args=None, kwargs={}, name='', daemon=False):
+        def __init__(self, interval, function, args=[], kwargs={}, name='', daemon=False):
             self.interval = interval
             self.function = function
             self.args = args
