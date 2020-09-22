@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 import sys
-import binascii
+import base64
 import struct
 import bson
 from bson.codec_options import CodecOptions, TypeRegistry
@@ -127,13 +127,13 @@ class Encoding:
         return payload
 
     @staticmethod
-    def hexlify(value):
-        hex_data = binascii.hexlify(value)
-        return hex_data.decode('utf-8')
+    def headerToString(value):
+        hex_data = base64.encodebytes(value)
+        return hex_data.decode('utf-8').rstrip('\n')
     @staticmethod
-    def unhexlify(value):
+    def headerFromString(value):
         encoded = value.encode('utf-8')
-        return binascii.unhexlify(encoded)
+        return base64.decodebytes(encoded)
 
     def _fromBytesPY2(self, value):
         return value

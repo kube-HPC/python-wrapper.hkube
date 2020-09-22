@@ -47,7 +47,7 @@ class S3Adapter:
         data = options["data"]
         header = data[0]
         payload = data[1]
-        header = Encoding.hexlify(header)
+        header = Encoding.headerToString(header)
         metadata = {"header": header}
         parsedPath = self._parsePath(path)
         bucket = parsedPath["bucket"]
@@ -66,7 +66,7 @@ class S3Adapter:
         header = None
         if(metadata):
             header = metadata.get('Header')
-            header = Encoding.unhexlify(header)
+            header = Encoding.headerFromString(header)
 
         return (header, payload)
 
