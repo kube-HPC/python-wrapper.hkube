@@ -128,14 +128,14 @@ class Encoding:
 
     @staticmethod
     def headerToString(value):
-        hex_data = base64.encodebytes(value)
-        return hex_data.decode('utf-8').rstrip('\n')
+        encoded = base64.encodestring(value)
+        return encoded.decode('utf-8').rstrip('\n')
     @staticmethod
     def headerFromString(value):
         if(value is None):
             return None
         encoded = value.encode('utf-8')
-        return base64.decodebytes(encoded)
+        return base64.decodestring(encoded)
 
     def _fromBytesPY2(self, value):
         return value
