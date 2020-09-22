@@ -128,14 +128,14 @@ class Encoding:
 
     @staticmethod
     def headerToString(value):
-        encoded = base64.encodestring(value)
+        encoded = base64.encodestring(value) # pylint: disable=deprecated-method
         return encoded.decode('utf-8').rstrip('\n')
     @staticmethod
     def headerFromString(value):
         if(value is None):
             return None
         encoded = value.encode('utf-8')
-        return base64.decodestring(encoded)
+        return base64.decodestring(encoded) # pylint: disable=deprecated-method
 
     def _fromBytesPY2(self, value):
         return value
