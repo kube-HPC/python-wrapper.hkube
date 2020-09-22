@@ -9,12 +9,13 @@ from hkube_python_wrapper.tracing import Tracer
 from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
 from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
+from hkube_python_wrapper.util.timerImpl import Timer
 import os
 import sys
 import importlib
 import traceback
 from events import Events
-from threading import Thread, Timer
+from threading import Thread
 
 
 class Algorunner:
@@ -176,7 +177,8 @@ class Algorunner:
         if (command == messages.incoming.stop):
             self._stop(data)
         if (command == messages.incoming.exit):
-            self._exit(data)
+            # call exit on different thread to prevent deadlock
+            Timer(0.1, lambda: self._exit(data), name="Exit timer").start()
         if (command in [messages.incoming.algorithmExecutionDone, messages.incoming.algorithmExecutionError]):
             self._hkubeApi.algorithmExecutionDone(data)
         if (command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError, messages.incoming.subPipelineStopped]):
@@ -188,8 +190,11 @@ class Algorunner:
     def run(self):
         while self._active:
             try:
+                print('run')
                 (command, data) = self.get_message()
+                print('after')
                 self.handle(command, data)
+                print('after2')
             except Empty:
                 pass
         print('Exiting run loop')
@@ -325,7 +330,7 @@ class Algorunner:
             if (not self._active):
                 return
             self._reportServingStatus()
-            Timer(interval, reportInterval).start()
+            Timer(interval, reportInterval, name='reportIntervalTimer').start()
 
         reportInterval()
 
@@ -355,11 +360,14 @@ class Algorunner:
 
             option = options if options is not None else dict()
             code = option.get('exitCode', 0)
+            self.close()
             print('Got exit command. Exiting with code', code)
             sys.exit(code)
 
         except Exception as e:
-            self._sendError(e)
+            print('Got error during exit: '+e)
+            # pylint: disable=protected-access
+            os._exit(0)
 
     def _sendCommand(self, command, data):
         try:

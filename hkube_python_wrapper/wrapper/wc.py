@@ -9,7 +9,7 @@ from threading import Thread
 
 class WebsocketClient(Thread):
     def __init__(self, msg_queue, encoding, url):
-        Thread.__init__(self)
+        Thread.__init__(self, name='WebsocketClient')
         self.daemon = True
         self.events = Events()
         self._msg_queue = msg_queue
@@ -63,3 +63,5 @@ class WebsocketClient(Thread):
 
     def shutDown(self):
         self._active = False
+        if self._ws:
+            self._ws.close()

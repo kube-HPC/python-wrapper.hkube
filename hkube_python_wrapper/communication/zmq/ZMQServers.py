@@ -22,7 +22,7 @@ class ZMQServers(object):
         self._num_ping_threads = 10
 
     def listen(self):
-        pingProcess = multiprocessing.Process(target=self._createZmqPingServers, args=(self._port,))
+        pingProcess = multiprocessing.Process(target=self._createZmqPingServers, args=(self._port,), name="Ping Servers Process")
         pingProcess.daemon = True
         pingProcess.start()
         for _ in range(self._num_threads):
