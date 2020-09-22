@@ -48,7 +48,7 @@ class S3Adapter:
         header = data[0]
         payload = data[1]
         header = Encoding.hexlify(header)
-        metadata =  {"header": header}
+        metadata = {"header": header}
         parsedPath = self._parsePath(path)
         bucket = parsedPath["bucket"]
         key = parsedPath["key"]
