@@ -6,7 +6,7 @@ class BaseStorageManager(object):
     def put(self, options):
         try:
             return self.adapter.put(options)
-        except Exception as e:
+        except Exception:
             raise Exception('Failed to write data to storage')
 
     def get(self, options):
