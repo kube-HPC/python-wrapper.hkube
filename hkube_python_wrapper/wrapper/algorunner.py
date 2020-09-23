@@ -285,7 +285,7 @@ class Algorunner:
         self._sendCommand(messages.outgoing.done, algorithmData)
 
     def _handle_responseV2(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
-        header, encodedData = self._dataAdapter.encode_separately(algorithmData)
+        header, encodedData = self._dataAdapter.encode(algorithmData)
         data = {
             'jobId': jobId,
             'taskId': taskId,

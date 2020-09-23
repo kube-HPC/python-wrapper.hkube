@@ -27,9 +27,6 @@ class DataAdapter:
     def encode(self, value):
         return self._encoding.encode(value)
 
-    def encode_separately(self, value):
-        return self._encoding.encode_separately(value)
-
     def decode(self, header=None, value=None):
         return self._encoding.decode(header=header, value=value)
 

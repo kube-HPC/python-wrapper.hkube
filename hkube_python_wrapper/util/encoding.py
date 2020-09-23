@@ -80,7 +80,10 @@ class Encoding:
         self._fromBytes = self._fromBytesPY3 if PY3 else self._fromBytesPY2
         self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
 
-    def encode_separately(self, value):
+
+    def encode(self, value, useHeader=True, plainEncode=False):
+        if (not self.isBinary or not useHeader or plainEncode is True):
+            return self._encode(value)
         if (typeCheck.isBytearray(value)):
             dataType = DATA_TYPE_RAW
             payload = value
@@ -89,14 +92,7 @@ class Encoding:
             payload = self._encode(value)
 
         header = self.createHeader(dataType, self.protocolType)
-        return header, payload
-
-    def encode(self, value, plainEncode=False):
-        if (not self.isBinary or plainEncode is True):
-            return self._encode(value)
-        header, payload = self.encode_separately(value)
-        header += payload
-        return header
+        return (header, payload)
 
     def decode(self, header=None, value=None, plainEncode=False):
         if (not self.isBinary or plainEncode is True):

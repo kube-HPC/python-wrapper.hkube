@@ -18,10 +18,10 @@ obj2 = {'data2': {'array2': array}}
 obj3 = {'data3': {'array3': array}}
 obj4 = {'data4': {'array4': array}}
 
-(header1, data1) = dataAdapter.encode_separately(obj1)
-(header2, data2) = dataAdapter.encode_separately(obj2)
-(header3, data3) = dataAdapter.encode_separately(obj3)
-(header4, data4) = dataAdapter.encode_separately(obj4)
+(header1, data1) = dataAdapter.encode(obj1)
+(header2, data2) = dataAdapter.encode(obj2)
+(header3, data3) = dataAdapter.encode(obj3)
+(header4, data4) = dataAdapter.encode(obj4)
 
 storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'header': header1, 'data': data1})
 storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'header': header2, 'data': data2})
