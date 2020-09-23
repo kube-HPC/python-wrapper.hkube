@@ -57,7 +57,7 @@ class S3Adapter:
         metadata = response.get('Metadata')
         header = None
         if(metadata):
-            header = metadata.get('Header')
+            header = metadata.get('header')
             header = Encoding.headerFromString(header)
 
         return (header, payload)

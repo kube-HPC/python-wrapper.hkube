@@ -19,9 +19,6 @@ type_registry = TypeRegistry(fallback_encoder=bson_fallback_encoder)
 codec_options = CodecOptions(type_registry=type_registry)
 PY3 = sys.version_info[0] == 3
 
-encodeBase64 = base64.encodebytes if PY3 else base64.encodestring
-decodeBase64 = base64.decodebytes if PY3 else base64.decodestring
-
 '''
 
 - Hkube header format: 8 bytes (64 bit)
@@ -127,14 +124,14 @@ class Encoding:
 
     @staticmethod
     def headerToString(value):
-        encoded = encodeBase64(value)
-        return encoded.decode('utf-8').rstrip('\n')
+        encoded = base64.b64encode(value)
+        return encoded.decode('utf-8')
     @staticmethod
     def headerFromString(value):
         if(value is None):
             return None
-        encoded = value.encode('utf-8')
-        return decodeBase64(encoded)
+        decoded = base64.b64decode(value)
+        return decoded
 
     def _fromBytesPY2(self, value):
         return value

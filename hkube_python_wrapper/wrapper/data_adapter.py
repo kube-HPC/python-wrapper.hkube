@@ -155,8 +155,8 @@ class DataAdapter:
         if (self._dataServer and self._dataServer.isLocal(host, port)):
             dataList = self._dataServer.getDataByTaskId(tasks)
             responses = []
-            for data in dataList:
-                responses.append((len(data), self.decode(value=data)))
+            for header, payload in dataList:
+                responses.append((len(payload), self.decode(header=header, value=payload)))
         else:
             request = {
                 'address': {

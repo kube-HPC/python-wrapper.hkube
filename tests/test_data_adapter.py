@@ -1,4 +1,3 @@
-from threading import Thread
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.data_adapter import DataAdapter
 from hkube_python_wrapper.communication.DataServer import DataServer
@@ -64,10 +63,10 @@ discovery = dict(config.discovery)
 discovery.update({"port": 9025})
 ds = DataServer(discovery)
 ds.listen()
-ds.setSendingState(taskId1, None, obj1, 10)
-ds.setSendingState(taskId2, None, obj2, 10)
-ds.setSendingState(taskId3, None, obj3, 10)
-ds.setSendingState(taskId4, None, obj4, 10)
+ds.setSendingState(taskId1, header1, data1, 10)
+ds.setSendingState(taskId2, header2, data2, 10)
+ds.setSendingState(taskId3, header3, data3, 10)
+ds.setSendingState(taskId4, header4, data4, 10)
 
 
 def test_get_data_no_storage():
@@ -108,6 +107,26 @@ def xtest_get_batch_request_success():
     result = dataAdapter.getData({'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
     assert result[0] == [obj2, obj3, obj4, obj2, obj3, obj4, obj2, obj3, obj4, obj2, obj3, obj4]
 
+def xtest_get_request():
+    inputArgs = ['$$guid-1',]
+    flatInput = {'0': '$$guid-5'}
+    storage = {
+        'guid-5': {'discovery': discovery, 'tasks': [taskId1]}
+    }
+    result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
+    assert result[0] == [obj1]
+
+
+def test_get_local_request():
+    inputArgs = ['$$guid-1',]
+    flatInput = {'0': '$$guid-5'}
+    storage = {
+        'guid-5': {'discovery': discovery, 'tasks': [taskId1]}
+    }
+    dataAdapter._dataServer = ds
+    result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
+    assert result[0] == obj1
+    dataAdapter._dataServer = None
 
 def test_get_batch_request_with_errors():
     inputArgs = [
