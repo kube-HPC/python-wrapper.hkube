@@ -4,7 +4,7 @@ if (sys.version_info > (3, 0)):
     # Python 3 code in this block
     # pylint: disable=inherit-non-class
     class Timer(threading.Timer):
-        def __init__(self, interval, function, args=None, kwargs=None, name='', daemon=False):
+        def __init__(self, interval, function, args=None, kwargs=None, name='', daemon=True):
             # pylint: disable=non-parent-init-called
             threading.Timer.__init__(self, interval, function, args, kwargs)
             self.name = name
@@ -12,7 +12,7 @@ if (sys.version_info > (3, 0)):
 else:
     # Python 2 code in this block
     class Timer():
-        def __init__(self, interval, function, args=[], kwargs={}, name='', daemon=False):
+        def __init__(self, interval, function, args=[], kwargs={}, name='', daemon=True):
             self.interval = interval
             self.function = function
             self.args = args
