@@ -3,11 +3,12 @@ from pympler import asizeof
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.util.decorators import timing
 
+MB = 1024 * 1024
 
 class Cache:
     def __init__(self, config):
         self._cache = dict()
-        self._maxCacheSize = config.get('maxCacheSize')
+        self._maxCacheSize = config.get('maxCacheSize') * MB
         self.sumSize = 0
 
     @timing
@@ -18,16 +19,15 @@ class Cache:
             else:
                 size = asizeof.asizeof(value)
         if (key in self._cache):
-            return key
-        while (self.sumSize + size) >= self._maxCacheSize * 1000 * 1000:
-            if not (self._cache.keys()):
-                print("Trying to insert a value of size " + str(size) + " bytes, larger than " + str(
-                    self._maxCacheSize) + "MB")
-                return None
+            return True
+        if (size > self._maxCacheSize):
+            print("unable to insert cache value of size " + str(size) + " MB, max: " + str(self._maxCacheSize) + "MB")
+            return False
+        while ((self.sumSize + size) > self._maxCacheSize):
             self._remove_oldest()
         self._cache[key] = {'timestamp': datetime.datetime.now(), 'size': size, 'value': value, 'header': header}
         self.sumSize += size
-        return key
+        return True
 
     def __contains__(self, key):
         return key in self._cache
