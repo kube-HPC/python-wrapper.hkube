@@ -8,8 +8,8 @@ def test_json_encoding():
     sizes = [100, 200, 300]
     for size in sizes:
         data = createObjectJson(size)
-        encoded = encoding.encode(data)
-        decoded = encoding.decode(encoded)
+        encoded = encoding.encode(data, plainEncode=True)
+        decoded = encoding.decode(value=encoded, plainEncode=True)
         assert data == decoded
 
 
@@ -18,8 +18,8 @@ def test_bson_encoding():
     sizes = [100, 200, 300]
     for size in sizes:
         data = createObject(size * 1000000, size)
-        encoded = encoding.encode(data)
-        decoded = encoding.decode(encoded)
+        (header, payload) = encoding.encode(data)
+        decoded = encoding.decode(header=header, value=payload)
         assert data == decoded
 
 
@@ -33,16 +33,16 @@ def create_bytearray(sizeBytes):
 def test_msgpack_encoding_bytearray():
     encoding = Encoding('msgpack')
     data = create_bytearray(20)
-    encoded = encoding.encode(data)
-    decoded = encoding.decode(encoded)
+    (header, payload) = encoding.encode(data)
+    decoded = encoding.decode(header=header, value=payload)
     assert data == decoded
 
 
 def test_msgpack_encoding_bytearray_separatelly():
     encoding = Encoding('msgpack')
     data = create_bytearray(20)
-    header, encoded = encoding.encode_separately(data)
-    decoded = encoding.decode_separately(header, encoded)
+    (header, payload) = encoding.encode(data)
+    decoded = encoding.decode(header=header, value=payload)
     assert data == decoded
 
 
@@ -50,7 +50,7 @@ def xtest_msgpack_encoding_string():
     encoding = Encoding('msgpack')
     data = create_bytearray(20)
     encoded = encoding.encode(data)
-    decoded = encoding.decode(data)
+    decoded = encoding.decode(value=data)
     assert data2 == decoded
 
 
@@ -59,8 +59,8 @@ def test_msgpack_encoding():
     sizes = [1, 2, 3]
     for size in sizes:
         data = createObject(size * 1000000, size)
-        encoded = encoding.encode(data)
-        decoded = encoding.decode(encoded)
+        (header, payload) = encoding.encode(data)
+        decoded = encoding.decode(header=header, value=payload)
         assert data == decoded
 
 

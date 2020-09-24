@@ -50,7 +50,7 @@ def test_msgpack_bytearray_storage(sizeBytes):
     data = create_bytearray(sizeBytes)
 
     storageManager.storage.put({"path": "tests/file2", "data": data})
-    res = storageManager.storage.get({"path": "tests/file2"})
+    (header, payload) = storageManager.storage.get({"path": "tests/file2"})
 
     data2 = data[0: sizeBytes]
     assert data2 == res

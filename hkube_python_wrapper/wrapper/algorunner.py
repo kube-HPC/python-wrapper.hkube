@@ -222,10 +222,6 @@ class Algorunner:
     def _registerToWorkerEvents(self):
         self._wsc.events.on_connection += self._connection
         self._wsc.events.on_disconnect += self._disconnect
-        self._wsc.events.on_init += self._init
-        self._wsc.events.on_start += self._start
-        self._wsc.events.on_stop += self._stop
-        self._wsc.events.on_exit += self._exit
 
     def _connection(self):
         self._connected = True
@@ -291,7 +287,7 @@ class Algorunner:
         self._sendCommand(messages.outgoing.done, algorithmData)
 
     def _handle_responseV2(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
-        header, encodedData = self._dataAdapter.encode_separately(algorithmData)
+        header, encodedData = self._dataAdapter.encode(algorithmData)
         data = {
             'jobId': jobId,
             'taskId': taskId,
@@ -306,13 +302,12 @@ class Algorunner:
         incache = None
         if (self._dataServer and savePaths):
             incache = self._dataServer.setSendingState(taskId, header, encodedData, len(encodedData))
-        encodedData = header + encodedData
         if (incache):
             storingData.update({'discovery': self._discovery, 'taskId': taskId})
             self._sendCommand(messages.outgoing.storing, storingData)
-            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'header': header, 'data': encodedData})
         else:
-            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'data': encodedData})
+            self._dataAdapter.setData({'jobId': jobId, 'taskId': taskId, 'header': header, 'data': encodedData})
             self._sendCommand(messages.outgoing.storing, storingData)
         if (span):
             Tracer.instance.finish_span(span)

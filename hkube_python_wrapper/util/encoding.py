@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 import sys
+import base64
 import struct
 import bson
 from bson.codec_options import CodecOptions, TypeRegistry
@@ -76,7 +77,10 @@ class Encoding:
         self._fromBytes = self._fromBytesPY3 if PY3 else self._fromBytesPY2
         self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
 
-    def encode_separately(self, value):
+
+    def encode(self, value, useHeader=True, plainEncode=False):
+        if (not self.isBinary or not useHeader or plainEncode is True):
+            return self._encode(value)
         if (typeCheck.isBytearray(value)):
             dataType = DATA_TYPE_RAW
             payload = value
@@ -85,25 +89,9 @@ class Encoding:
             payload = self._encode(value)
 
         header = self.createHeader(dataType, self.protocolType)
-        return header, payload
+        return (header, payload)
 
-    def encode(self, value, plainEncode=False):
-        if (not self.isBinary or plainEncode is True):
-            return self._encode(value)
-        header, payload = self.encode_separately(value)
-        header += payload
-        return header
-
-    def decode_separately(self, header, value):
-        dt = bytes(header[2:3])
-        dataType = struct.unpack(">B", dt)[0]
-        if (dataType == DATA_TYPE_ENCODED):
-            payload = self._decode(value)
-        else:
-            payload = value
-        return payload
-
-    def decode(self, value, plainEncode=False):
+    def decode(self, header=None, value=None, plainEncode=False):
         if (not self.isBinary or plainEncode is True):
             return self._decode(value)
 
@@ -112,17 +100,38 @@ class Encoding:
 
         view = self._fromBytes(value)
         totalLength = len(view)
-        header = bytes(view[0:HEADER_LENGTH])
+
+        sepHeaderLength = HEADER_LENGTH
+        if(header is None):
+            header = bytes(view[0:HEADER_LENGTH])
+            sepHeaderLength = 0
+
         mg = bytes(header[-2:])
 
         if (mg != MAGIC_NUMBER):
             return self._decode(value)
 
         ftl = bytes(header[1:2])
+        dt = bytes(header[2:3])
         headerLength = struct.unpack(">B", ftl)[0]
-        data = view[headerLength: totalLength]
-        payload = self.decode_separately(header, data)
+        dataType = struct.unpack(">B", dt)[0]
+        data = view[headerLength - sepHeaderLength: totalLength]
+        if (dataType == DATA_TYPE_ENCODED):
+            payload = self._decode(data)
+        else:
+            payload = self._toBytes(data)
         return payload
+
+    @staticmethod
+    def headerToString(value):
+        encoded = base64.b64encode(value)
+        return encoded.decode('utf-8')
+    @staticmethod
+    def headerFromString(value):
+        if(value is None):
+            return None
+        decoded = base64.b64decode(value)
+        return decoded
 
     def _fromBytesPY2(self, value):
         return value

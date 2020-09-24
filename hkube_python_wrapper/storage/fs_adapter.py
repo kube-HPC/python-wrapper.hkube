@@ -15,16 +15,22 @@ class FSAdapter:
     def put(self, options):
         filePath = self.getPath(self.basePath, options['path'])
         self.ensure_dir(filePath)
+        data = options['data']
+        header = options.get('header')
+
         with open(filePath, 'wb') as f:
-            f.write(options['data'])
+            if(header):
+                f.write(header)
+            f.write(data)
         return {'path': options['path']}
 
     def get(self, options):
         filePath = self.getPath(self.basePath, options['path'])
-        result = None
+        header = None
+        payload = None
         with open(filePath, 'rb') as f:
-            result = f.read()
-        return result
+            payload = f.read()
+        return (header, payload)
 
     def list(self, options):
         filePath = self.basePath + os.path.sep + options['path']

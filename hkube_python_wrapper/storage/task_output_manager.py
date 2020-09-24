@@ -9,8 +9,8 @@ class TaskOutputManager(BaseStorageManager):
         super(TaskOutputManager, self).__init__(adapter)
         self.clusterName = config['clusterName']
 
-    def put(self, jobId, taskId, data):
-        return super(TaskOutputManager, self).put({'path': self.createPath(jobId, taskId), 'data': data})
+    def put(self, jobId, taskId, header=None, value=None):
+        return super(TaskOutputManager, self).put({'path': self.createPath(jobId, taskId), 'header': header, 'data': value})
 
     def get(self, jobId, taskId):
         return super(TaskOutputManager, self).get({'path': self.createPath(jobId, taskId)})

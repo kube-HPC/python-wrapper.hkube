@@ -1,6 +1,6 @@
 import os
 import boto3
-
+from hkube_python_wrapper.util.encoding import Encoding
 
 class S3Adapter:
     def __init__(self, config):
@@ -36,10 +36,15 @@ class S3Adapter:
     def put(self, options):
         path = options["path"]
         body = options["data"]
+        header = options.get("header")
+        metadata = {}
+        if(header):
+            header = Encoding.headerToString(header)
+            metadata = {"header": header}
         parsedPath = self._parsePath(path)
         bucket = parsedPath["bucket"]
         key = parsedPath["key"]
-        self.client.put_object(Bucket=bucket, Key=key, Body=body)
+        self.client.put_object(Bucket=bucket, Key=key, Body=body, Metadata=metadata)
         return {'path': bucket + os.path.sep + key}
 
     def get(self, options):
@@ -48,8 +53,14 @@ class S3Adapter:
         bucket = parsedPath["bucket"]
         key = parsedPath["key"]
         response = self.client.get_object(Bucket=bucket, Key=key)
-        data = response['Body'].read()
-        return data
+        payload = response['Body'].read()
+        metadata = response.get('Metadata')
+        header = None
+        if(metadata):
+            header = metadata.get('header')
+            header = Encoding.headerFromString(header)
+
+        return (header, payload)
 
     def list(self, options):
         path = options["path"]

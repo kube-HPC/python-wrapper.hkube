@@ -1,4 +1,3 @@
-from threading import Thread
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.data_adapter import DataAdapter
 from hkube_python_wrapper.communication.DataServer import DataServer
@@ -18,15 +17,15 @@ obj2 = {'data2': {'array2': array}}
 obj3 = {'data3': {'array3': array}}
 obj4 = {'data4': {'array4': array}}
 
-data1 = dataAdapter.encode(obj1)
-data2 = dataAdapter.encode(obj2)
-data3 = dataAdapter.encode(obj3)
-data4 = dataAdapter.encode(obj4)
+(header1, data1) = dataAdapter.encode(obj1)
+(header2, data2) = dataAdapter.encode(obj2)
+(header3, data3) = dataAdapter.encode(obj3)
+(header4, data4) = dataAdapter.encode(obj4)
 
-storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': data1})
-storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'data': data2})
-storageInfo3 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId3, 'data': data3})
-storageInfo4 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId4, 'data': data4})
+storageInfo1 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'header': header1, 'data': data1})
+storageInfo2 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId2, 'header': header2, 'data': data2})
+storageInfo3 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId3, 'header': header3, 'data': data3})
+storageInfo4 = dataAdapter.setData({'jobId': jobId, 'taskId': taskId4, 'header': header4, 'data': data4})
 
 inputArgs = [
     {'data': '$$guid-1'},
@@ -64,10 +63,10 @@ discovery = dict(config.discovery)
 discovery.update({"port": 9025})
 ds = DataServer(discovery)
 ds.listen()
-ds.setSendingState(taskId1, None, obj1, 10)
-ds.setSendingState(taskId2, None, obj2, 10)
-ds.setSendingState(taskId3, None, obj3, 10)
-ds.setSendingState(taskId4, None, obj4, 10)
+ds.setSendingState(taskId1, header1, data1, 10)
+ds.setSendingState(taskId2, header2, data2, 10)
+ds.setSendingState(taskId3, header3, data3, 10)
+ds.setSendingState(taskId4, header4, data4, 10)
 
 
 def test_get_data_no_storage():
@@ -108,6 +107,26 @@ def xtest_get_batch_request_success():
     result = dataAdapter.getData({'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
     assert result[0] == [obj2, obj3, obj4, obj2, obj3, obj4, obj2, obj3, obj4, obj2, obj3, obj4]
 
+def xtest_get_request():
+    inputArgs = ['$$guid-1',]
+    flatInput = {'0': '$$guid-5'}
+    storage = {
+        'guid-5': {'discovery': discovery, 'tasks': [taskId1]}
+    }
+    result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
+    assert result[0] == [obj1]
+
+
+def test_get_local_request():
+    inputArgs = ['$$guid-1',]
+    flatInput = {'0': '$$guid-5'}
+    storage = {
+        'guid-5': {'discovery': discovery, 'tasks': [taskId1]}
+    }
+    dataAdapter._dataServer = ds
+    result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
+    assert result[0] == obj1
+    dataAdapter._dataServer = None
 
 def test_get_batch_request_with_errors():
     inputArgs = [
@@ -141,7 +160,7 @@ def test_get_batch_request_with_storage_fallback():
 
 
 def test_set_data():
-    result = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'data': data1})
+    result = dataAdapter.setData({'jobId': jobId, 'taskId': taskId1, 'header': header1, 'data': data1})
     assert result['path'].find(jobId) != -1
 
 

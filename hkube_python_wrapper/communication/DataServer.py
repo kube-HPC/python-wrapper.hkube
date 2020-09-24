@@ -14,7 +14,7 @@ class DataServer:
         self._encoding = Encoding(self._encodingType)
 
         self._adapter = ZMQServers(self._port, self._createReply, config.get('num_threads', 5))
-        self.notAvailable = self._encoding.encode_separately(
+        self.notAvailable = self._encoding.encode(
             self._createError('notAvailable', 'taskId notAvailable'))
 
     def listen(self):
@@ -25,13 +25,13 @@ class DataServer:
     @timing
     def _createReply(self, message):
         try:
-            decoded = self._encoding.decode(message, plainEncode=True)
+            decoded = self._encoding.decode(value=message, plainEncode=True)
             tasks = decoded.get('tasks')
             resultsAsTuple = self.getDataByTaskId(tasks)
 
         except Exception as e:
             result = self._createError('unknown', str(e))
-            header, encoded = self._encoding.encode_separately(result)
+            header, encoded = self._encoding.encode(result)
             return [header, encoded]
         parts = []
         for header, content in resultsAsTuple:
