@@ -7,8 +7,8 @@ context = zmq.Context()
 
 class ZMQRequest(object):
     def __init__(self, reqDetails):
-        self.socket = self._createSocket(host=reqDetails['host'], port=reqDetails['port'])
-        self.ping_socket = self._createSocket(host=reqDetails['host'], port=int(reqDetails['port'])+1)
+        self.socket, self.connStr = self._createSocket(host=reqDetails['host'], port=reqDetails['port'])
+        self.ping_socket, self.pingConnStr = self._createSocket(host=reqDetails['host'], port=int(reqDetails['port'])+1)
         self.content = reqDetails['content']
         self.timeout = int(reqDetails['timeout'])
         self.networkTimeout = int(reqDetails['networkTimeout'])
@@ -32,11 +32,12 @@ class ZMQRequest(object):
                     return message
                 print('Timed out')
                 raise Exception('Timed out:' + str(self.timeout))
-        print('Ping timed out ({timeout}) to {conn}'.format(timeout=self.networkTimeout, conn=self.connStr))
-        raise Exception('Ping timed out ({timeout}) to {conn}'.format(timeout=self.networkTimeout, conn=self.connStr))
+        print('Ping timed out ({timeout}) to {conn}'.format(timeout=self.networkTimeout, conn=self.pingConnStr))
+        raise Exception('Ping timed out ({timeout}) to {conn}'.format(timeout=self.networkTimeout, conn=self.pingConnStr))
 
     def close(self):
         self.socket.close()
+        self.ping_socket.close()
 
     def _createSocket(self, host, port):
         connStr = 'tcp://' + host + ':' + str(port)
@@ -44,4 +45,4 @@ class ZMQRequest(object):
         socket = context.socket(zmq.REQ)
         socket.setsockopt(zmq.LINGER, 0)
         socket.connect(connStr)
-        return socket
+        return socket, connStr
