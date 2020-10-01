@@ -25,7 +25,7 @@ discovery = {
     "enable": getBoolEnv('DISCOVERY_ENABLE', 'True'),
     "timeout": getIntEnv('DISCOVERY_TIMEOUT', 10000),
     "networkTimeout": getIntEnv('DISCOVERY_NETWORK_TIMEOUT', 1000),
-    "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE_MB', 400),
+    "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 400),
     "num_threads": getIntEnv('DISCOVERY_SERVER_NUM_THREADS', 5),
     "servingReportInterval": getIntEnv('DISCOVERY_SERVING_REPORT_INTERVAL', 5000),
 }
@@ -38,7 +38,7 @@ storage = {
     "type": os.environ.get('DEFAULT_STORAGE', 'fs'),
     "mode": os.environ.get('STORAGE_PROTOCOL', 'v2'),
     "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
-    "maxCacheSize": getIntEnv('STORAGE_MAX_CACHE_SIZE_MB', 400),
+    "maxCacheSize": getIntEnv('STORAGE_MAX_CACHE_SIZE', 400),
     "fs": {
         "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', '/var/tmp/fs/storage')
     },
