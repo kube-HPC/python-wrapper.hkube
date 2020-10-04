@@ -24,7 +24,7 @@ def test_too_large_message():
     assert len(cache._cache) == 1
     result = cache.update("task2", value2, 5000000)
     assert result == None
-    assert len(cache._cache) == 0
+    assert len(cache._cache) == 1
 
 
 def test_get_all():
