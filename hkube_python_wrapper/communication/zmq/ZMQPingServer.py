@@ -22,7 +22,6 @@ class ZMQPingServer(BaseServer):
                     continue
                 message = self._socket.recv()
                 if(message == consts.zmq.ping):
-                    # print('got ping')
                     self._socket.send(consts.zmq.pong)
             except Exception as e:
                 print('socket closed: '+str(e))
