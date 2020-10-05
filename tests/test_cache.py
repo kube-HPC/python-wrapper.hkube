@@ -9,7 +9,7 @@ def test_reaching_limit():
     cache.update("task2", value1, 1000000)
     cache.update("task3", value1, 1000000)
     assert len(cache._cache) == 3
-    cache.update("task4", value1, 1000000)
+    cache.update("task4", value1, 1500000)
     assert len(cache._cache) == 3
     assert "task4" in cache
     assert "task1" not in cache
@@ -20,10 +20,10 @@ def test_too_large_message():
     value1 = {"bytes": bytearray(1000000)}
     value2 = {"bytes": bytearray(5000000)}
     result = cache.update("task1", value1, 1000000)
-    assert result == "task1"
+    assert result == True
     assert len(cache._cache) == 1
-    result = cache.update("task2", value2, 5000000)
-    assert result == None
+    result = cache.update("task2", value2, 6000000)
+    assert result == False
     assert len(cache._cache) == 1
 
 
@@ -32,7 +32,7 @@ def test_get_all():
     value1 = {"data": "1"}
     value2 = {"data": "2"}
     result = cache.update("task1", value1)
-    assert result == "task1"
+    assert result == True
     assert len(cache._cache) == 1
     cache.update("task2", value2)
     assert len(cache._cache) == 2
