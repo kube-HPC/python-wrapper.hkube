@@ -98,29 +98,32 @@ class Encoding:
         if (not typeCheck.isBytearray(value)):
             return value
 
-        view = self._fromBytes(value)
-        totalLength = len(view)
-
-        sepHeaderLength = HEADER_LENGTH
         if(header is None):
+            # try to extract header and payload
+            view = self._fromBytes(value)
             header = bytes(view[0:HEADER_LENGTH])
-            sepHeaderLength = 0
+            if(self.isHeader(header)):
+                totalLength = len(value)
+                data = view[HEADER_LENGTH: totalLength]
+                value = self._toBytes(data)
 
-        mg = bytes(header[-2:])
+        if(not self.isHeader(header)):
+            try:
+                payload = self._decode(value)
+            except Exception:
+                payload = value
+            return payload
 
-        if (mg != MAGIC_NUMBER):
-            return self._decode(value)
-
-        ftl = bytes(header[1:2])
         dt = bytes(header[2:3])
-        headerLength = struct.unpack(">B", ftl)[0]
         dataType = struct.unpack(">B", dt)[0]
-        data = view[headerLength - sepHeaderLength: totalLength]
         if (dataType == DATA_TYPE_ENCODED):
-            payload = self._decode(data)
+            payload = self._decode(value)
         else:
-            payload = self._toBytes(data)
+            payload = value
         return payload
+    def isHeader(self, header):
+        mg = bytes(header[-2:])
+        return mg == MAGIC_NUMBER
 
     @staticmethod
     def headerToString(value):
