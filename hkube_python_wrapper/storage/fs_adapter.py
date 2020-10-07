@@ -1,12 +1,15 @@
 import os
 import sys
 import errno
+from hkube_python_wrapper.util.encoding import Encoding
+
 PY3 = sys.version_info[0] == 3
 
 
 class FSAdapter:
-    def __init__(self, config):
+    def __init__(self, config, encoding):
         self.basePath = config['baseDirectory']
+        self.encoding = Encoding(encoding)
 
     def init(self, options):
         path = options["path"]
@@ -28,7 +31,11 @@ class FSAdapter:
         filePath = self.getPath(self.basePath, options['path'])
         header = None
         payload = None
+        headerLength = self.encoding.headerLength()
         with open(filePath, 'rb') as f:
+            header = f.read(headerLength)
+            if(not self.encoding.isHeader(header)):
+                f.seek(0)
             payload = f.read()
         return (header, payload)
 

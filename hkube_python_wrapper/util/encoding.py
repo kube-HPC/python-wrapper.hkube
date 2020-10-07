@@ -117,8 +117,12 @@ class Encoding:
             payload = value
         return payload
     def isHeader(self, header):
+        if(header is None):
+            return False
         mg = bytes(header[-2:])
         return mg == MAGIC_NUMBER
+    def headerLength(self):
+        return HEADER_LENGTH
 
     @staticmethod
     def headerToString(value):

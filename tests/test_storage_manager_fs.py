@@ -32,8 +32,16 @@ def beforeall(request):
     request.addfinalizer(afterall)
 
 
+def test_put_get_none():
+    (h, p) = encoding.encode(None)
+    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': p}
+    sm.storage.put(options)
+    (head, payl) = sm.storage.get(options)
+    decode = encoding.decode(header=head, value=payl)
+    assert decode is None
+
 def test_put_get():
-    options = {'path': dir1 + os.path.sep + 'a.txt', 'header': header, 'data': payload}
+    options = {'path': dir1 + os.path.sep + 'a.txt', 'data': payload}
     sm.storage.put(options)
     (head, payl) = sm.storage.get(options)
     decode = encoding.decode(header=head, value=payl)
