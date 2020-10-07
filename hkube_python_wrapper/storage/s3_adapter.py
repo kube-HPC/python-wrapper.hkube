@@ -3,7 +3,7 @@ import boto3
 from hkube_python_wrapper.util.encoding import Encoding
 
 class S3Adapter:
-    def __init__(self, config):
+    def __init__(self, config, _):
         accessKeyId = config["accessKeyId"]
         secretAccessKey = config["secretAccessKey"]
         endpoint = config["endpoint"]

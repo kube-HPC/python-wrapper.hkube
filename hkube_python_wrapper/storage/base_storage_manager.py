@@ -12,8 +12,6 @@ class BaseStorageManager(object):
     def get(self, options):
         try:
             data = self.adapter.get(options)
-            if(data is None):
-                return None
             return data
         except Exception:
             raise Exception('Failed to read data from storage')

@@ -74,9 +74,6 @@ class Encoding:
         self._decode = encoder["decode"]
         self.isBinary = encoder["isBinary"]
         self.protocolType = encoder["protocolType"]
-        self._fromBytes = self._fromBytesPY3 if PY3 else self._fromBytesPY2
-        self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
-
 
     def encode(self, value, useHeader=True, plainEncode=False):
         if (not self.isBinary or not useHeader or plainEncode is True):
@@ -98,29 +95,34 @@ class Encoding:
         if (not typeCheck.isBytearray(value)):
             return value
 
-        view = self._fromBytes(value)
-        totalLength = len(view)
-
-        sepHeaderLength = HEADER_LENGTH
         if(header is None):
-            header = bytes(view[0:HEADER_LENGTH])
-            sepHeaderLength = 0
+            # try to extract header and payload
+            header = value[0:HEADER_LENGTH]
+            if(self.isHeader(header)):
+                totalLength = len(value)
+                value = value[HEADER_LENGTH: totalLength]
 
-        mg = bytes(header[-2:])
+        if(not self.isHeader(header)):
+            try:
+                payload = self._decode(value)
+            except Exception:
+                payload = value
+            return payload
 
-        if (mg != MAGIC_NUMBER):
-            return self._decode(value)
-
-        ftl = bytes(header[1:2])
         dt = bytes(header[2:3])
-        headerLength = struct.unpack(">B", ftl)[0]
         dataType = struct.unpack(">B", dt)[0]
-        data = view[headerLength - sepHeaderLength: totalLength]
         if (dataType == DATA_TYPE_ENCODED):
-            payload = self._decode(data)
+            payload = self._decode(value)
         else:
-            payload = self._toBytes(data)
+            payload = value
         return payload
+    def isHeader(self, header):
+        if(header is None):
+            return False
+        mg = bytes(header[-2:])
+        return mg == MAGIC_NUMBER
+    def headerLength(self):
+        return HEADER_LENGTH
 
     @staticmethod
     def headerToString(value):
@@ -132,18 +134,6 @@ class Encoding:
             return None
         decoded = base64.b64decode(value)
         return decoded
-
-    def _fromBytesPY2(self, value):
-        return value
-
-    def _fromBytesPY3(self, value):
-        return memoryview(value)
-
-    def _toBytesPY2(self, value):
-        return value
-
-    def _toBytesPY3(self, value):
-        return value.tobytes()
 
     def _bsonEncode(self, value):
         return bson.encode({'data': value}, codec_options=codec_options)
