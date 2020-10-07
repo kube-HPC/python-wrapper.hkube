@@ -74,9 +74,6 @@ class Encoding:
         self._decode = encoder["decode"]
         self.isBinary = encoder["isBinary"]
         self.protocolType = encoder["protocolType"]
-        self._fromBytes = self._fromBytesPY3 if PY3 else self._fromBytesPY2
-        self._toBytes = self._toBytesPY3 if PY3 else self._toBytesPY2
-
 
     def encode(self, value, useHeader=True, plainEncode=False):
         if (not self.isBinary or not useHeader or plainEncode is True):
@@ -100,12 +97,10 @@ class Encoding:
 
         if(header is None):
             # try to extract header and payload
-            view = self._fromBytes(value)
-            header = bytes(view[0:HEADER_LENGTH])
+            header = value[0:HEADER_LENGTH]
             if(self.isHeader(header)):
                 totalLength = len(value)
-                data = view[HEADER_LENGTH: totalLength]
-                value = self._toBytes(data)
+                value = value[HEADER_LENGTH: totalLength]
 
         if(not self.isHeader(header)):
             try:
@@ -135,18 +130,6 @@ class Encoding:
             return None
         decoded = base64.b64decode(value)
         return decoded
-
-    def _fromBytesPY2(self, value):
-        return value
-
-    def _fromBytesPY3(self, value):
-        return memoryview(value)
-
-    def _toBytesPY2(self, value):
-        return value
-
-    def _toBytesPY3(self, value):
-        return value.tobytes()
 
     def _bsonEncode(self, value):
         return bson.encode({'data': value}, codec_options=codec_options)

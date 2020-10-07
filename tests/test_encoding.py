@@ -4,6 +4,11 @@ from hkube_python_wrapper.util.encoding import Encoding
 
 size = 1 * 1024
 
+def test_none_encoding():
+    encoding = Encoding('msgpack')
+    decoded = encoding.decode(header=None, value=None)
+    assert decoded is None
+
 def test_json_encoding():
     encoding = Encoding('json')
     data = createObjectJson(size)
