@@ -116,11 +116,13 @@ class Encoding:
         else:
             payload = value
         return payload
+
     def isHeader(self, header):
         if(header is None):
             return False
         mg = bytes(header[-2:])
         return mg == MAGIC_NUMBER
+
     def headerLength(self):
         return HEADER_LENGTH
 
@@ -128,6 +130,7 @@ class Encoding:
     def headerToString(value):
         encoded = base64.b64encode(value)
         return encoded.decode('utf-8')
+
     @staticmethod
     def headerFromString(value):
         if(value is None):
