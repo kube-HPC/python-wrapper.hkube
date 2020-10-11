@@ -1,6 +1,6 @@
 import zmq
-import time
 from .consts import consts
+from hkube_python_wrapper.util.decorators import timing
 
 context = zmq.Context()
 
@@ -12,26 +12,36 @@ class ZMQRequest(object):
         self.content = reqDetails['content']
         self.timeout = int(reqDetails['timeout'])
         self.networkTimeout = int(reqDetails['networkTimeout'])
-        self.pingTime = 1e10
 
     def invokeAdapter(self):
-        pingStart = time.time()
+        pong = self.ping()
+        message = None
+        if (pong):
+            message = self.request()
+        return message
+
+    @timing
+    def request(self):
+        self.socket.send(self.content)
+        result = self.socket.poll(self.timeout)
+        if (result):
+            message = self.socket.recv_multipart()
+            return message
+        err = 'request timed out ({timeout}) to {conn}'.format(timeout=self.timeout, conn=self.connStr)
+        print(err)
+        raise Exception(err)
+
+    @timing
+    def ping(self):
         self.ping_socket.send(consts.zmq.ping)
         result = self.ping_socket.poll(self.networkTimeout)
         if (result):
-            there = self.ping_socket.recv()
-            if (there == consts.zmq.pong):
-                pingEnd = time.time()
-                self.pingTime = (pingEnd-pingStart)*1000
-                self.socket.send(self.content)
-                result = self.socket.poll(self.timeout)
-                if (result):
-                    message = self.socket.recv_multipart()
-                    return message
-                print('Timed out')
-                raise Exception('Timed out:' + str(self.timeout))
-        print('Ping timed out ({timeout}) to {conn}'.format(timeout=self.networkTimeout, conn=self.pingConnStr))
-        raise Exception('Ping timed out ({timeout}) to {conn}'.format(timeout=self.networkTimeout, conn=self.pingConnStr))
+            message = self.ping_socket.recv()
+            if (message == consts.zmq.pong):
+                return True
+        err = 'ping timed out ({timeout}) to {conn}'.format(timeout=self.networkTimeout, conn=self.pingConnStr)
+        print(err)
+        raise Exception(err)
 
     def close(self):
         self.socket.close()

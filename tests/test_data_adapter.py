@@ -92,13 +92,9 @@ def test_get_data():
     assert result[8] == inputArgs[8]
 
 
-def xtest_get_batch_request_success():
-    inputArgs = [
-        '$$guid-1',
-    ]
-    flatInput = {
-        '0': '$$guid-5'
-    }
+def test_get_batch_request_success():
+    inputArgs = ['$$guid-1',]
+    flatInput = {'0': '$$guid-5'}
     storage = {'guid-5': [{'discovery': discovery, 'tasks': [taskId2, taskId3, taskId4]},
                           {'discovery': discovery, 'tasks': [taskId2, taskId3, taskId4]},
                           {'discovery': discovery, 'tasks': [taskId2, taskId3, taskId4]},
@@ -107,14 +103,27 @@ def xtest_get_batch_request_success():
     result = dataAdapter.getData({'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
     assert result[0] == [obj2, obj3, obj4, obj2, obj3, obj4, obj2, obj3, obj4, obj2, obj3, obj4]
 
-def xtest_get_request():
+
+def test_get_peer_request_success():
+    inputArgs = [
+        '$$guid-1',
+    ]
+    flatInput = {
+        '0': '$$guid-5'
+    }
+    storage = {'guid-5': [{'discovery': discovery, 'tasks': [taskId2, taskId3, taskId4]}]}
+    result = dataAdapter.getData({'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
+    assert result[0] == [obj2, obj3, obj4]
+
+
+def test_get_request():
     inputArgs = ['$$guid-1',]
     flatInput = {'0': '$$guid-5'}
     storage = {
         'guid-5': {'discovery': discovery, 'tasks': [taskId1]}
     }
     result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
-    assert result[0] == [obj1]
+    assert result[0] == obj1
 
 
 def test_get_local_request():
@@ -125,22 +134,18 @@ def test_get_local_request():
     }
     dataAdapter._dataServer = ds
     result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
-    assert result[0] == obj1
     dataAdapter._dataServer = None
+    assert result[0] == obj1
+
 
 def test_get_batch_request_with_errors():
-    inputArgs = [
-        '$$guid-1',
-    ]
-    flatInput = {
-        '0': '$$guid-5'
-    }
+    inputArgs = ['$$guid-1',]
+    flatInput = {'0': '$$guid-5'}
     storage = {
         'guid-5': [{'discovery': discovery, 'tasks': [taskId1, taskId2, taskId3, taskId4]}]
     }
-
     result = dataAdapter.getData({'jobId': jobId, 'input': inputArgs, 'flatInput': flatInput, 'storage': storage})
-    assert result[0] == [obj1, obj2, obj3, obj4]
+    assert result[0] == [obj2, obj3, obj4, obj1]
 
 
 def test_get_batch_request_with_storage_fallback():
