@@ -13,7 +13,7 @@ class DataServer:
         self._encodingType = config['encoding']
         self._encoding = Encoding(self._encodingType)
 
-        self._adapter = ZMQServers(self._port, self._createReply, config.get('num_threads', 5))
+        self._adapter = ZMQServers(self._port, self._createReply, config)
         self.notAvailable = self._encoding.encode(
             self._createError('notAvailable', 'taskId notAvailable'))
 

@@ -7,7 +7,7 @@ from .ZMQServer import ZMQServer
 from .ZMQPingServer import ZMQPingServer
 
 class ZMQServers(object):
-    def __init__(self, port, replyFunc, num_threads):
+    def __init__(self, port, replyFunc, config):
         self._isServing = False
         self._active = True
         self._replyFunc = replyFunc
@@ -18,8 +18,8 @@ class ZMQServers(object):
         self._device = None
         self._context = zmq.Context()
         self._context.setsockopt(zmq.LINGER, 0)
-        self._num_threads = num_threads
-        self._num_ping_threads = 10
+        self._num_threads = config.get('num_threads', 5)
+        self._num_ping_threads = config.get('num_ping_threads', 5)
 
     def listen(self):
         pingProcess = multiprocessing.Process(target=self._createZmqPingServers, args=(self._port,), name="Ping Servers Process")
