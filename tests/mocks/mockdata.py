@@ -24,7 +24,8 @@ initData = {
     'taskId': 'taskId',
     'input': [1, False, None],
     'nodeName': 'green',
-    'spanId': {"uber-trace-id": "a0aa0bab5bfde7a6:7e187ec65fb04e0e:37bc77758a09b6a4:1"}
+    'spanId': {"uber-trace-id": "a0aa0bab5bfde7a6:7e187ec65fb04e0e:37bc77758a09b6a4:1"},
+    'stateType': 'stateless'
 }
 
 
