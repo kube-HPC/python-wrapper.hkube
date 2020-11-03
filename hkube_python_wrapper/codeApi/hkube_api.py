@@ -22,16 +22,16 @@ class HKubeApi:
         self._storage = storage
         self._executions = {}
         self._lastExecId = 0
-        self._messageProducer = None
+        self.messageProducer = None
         self._messageListeners = dict()
         self._inputListener = []
         self.listeningToMessages = False
 
     def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes):
-        self._messageProducer = MessageProducer(producerConfig, nextNodes)
-        self._messageProducer.registerStatisticsListener(onStatistics)
+        self.messageProducer = MessageProducer(producerConfig, nextNodes)
+        self.messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
-            runThread = Thread(name="MessageProducer", target=self.self._messageProducer.start)
+            runThread = Thread(name="MessageProducer", target=self.self.messageProducer.start)
             runThread.start()
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
@@ -73,10 +73,10 @@ class HKubeApi:
             runThread.start()
 
     def sendMessage(self, msg):
-        if (self._messageProducer is None):
+        if (self.messageProducer is None):
             raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
-        if (self._messageProducer.nodeNames):
-            self._messageProducer.produce(msg)
+        if (self.messageProducer.nodeNames):
+            self.messageProducer.produce(msg)
 
     def stopStreaming(self):
         if (self.listeningToMessages):
@@ -84,9 +84,9 @@ class HKubeApi:
                 listener.close()
         self.listeningToMessages = False
         self._inputListener = []
-        if (self._messageProducer is not None):
-            self._messageProducer.close()
-            self._messageProducer = None
+        if (self.messageProducer is not None):
+            self.messageProducer.close()
+            self.messageProducer = None
 
     def _generateExecId(self):
         self._lastExecId += 1
