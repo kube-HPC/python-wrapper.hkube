@@ -21,12 +21,13 @@ socket = {
 discovery = {
     "host": os.environ.get('POD_IP', '127.0.0.1'),
     "port": os.environ.get('DISCOVERY_PORT', 9020),
-    "encoding": os.environ.get('DISCOVERY_ENCODING', 'bson'),
+    "encoding": os.environ.get('DISCOVERY_ENCODING', 'msgpack'),
     "enable": getBoolEnv('DISCOVERY_ENABLE', 'True'),
     "timeout": getIntEnv('DISCOVERY_TIMEOUT', 10000),
     "networkTimeout": getIntEnv('DISCOVERY_NETWORK_TIMEOUT', 1000),
     "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 400),
     "num_threads": getIntEnv('DISCOVERY_SERVER_NUM_THREADS', 5),
+    "num_ping_threads": getIntEnv('DISCOVERY_SERVER_NUM_PING_THREADS', 5),
     "servingReportInterval": getIntEnv('DISCOVERY_SERVING_REPORT_INTERVAL', 5000),
     "streaming": {
         "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_MB', 1500),
@@ -44,7 +45,7 @@ algorithm = {
 storage = {
     "clusterName": os.environ.get('CLUSTER_NAME', 'local'),
     "type": os.environ.get('DEFAULT_STORAGE', 'fs'),
-    "mode": os.environ.get('STORAGE_PROTOCOL', 'v3'),
+    "mode": os.environ.get('STORAGE_PROTOCOL', 'v2'),
     "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
     "maxCacheSize": getIntEnv('STORAGE_MAX_CACHE_SIZE', 400),
     "fs": {

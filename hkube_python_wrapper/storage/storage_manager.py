@@ -16,7 +16,7 @@ class StorageManager():
         encoding = config["encoding"]
         adapterConfig = config[storageType]
         adapterType = adapterTypes.get(storageType)
-        adapter = adapterType(adapterConfig)
+        adapter = adapterType(adapterConfig, encoding)
         self.hkube = TaskOutputManager(adapter, config)
         self.storage = BaseStorageManager(adapter)
         print('init {type} storage client with {encoding} encoding'.format(type=storageType, encoding=encoding))

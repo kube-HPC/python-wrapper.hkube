@@ -1,10 +1,8 @@
 from hkube_python_wrapper.communication.zmq.ZMQRequest import ZMQRequest
 from hkube_python_wrapper.util.encoding import Encoding
-
+from hkube_python_wrapper.util.decorators import timing
 
 class DataRequest:
-    ping_times = []
-
     def __init__(self, reqDetails):
         encoding = reqDetails.get('encoding')
         address = reqDetails.get('address')
@@ -21,6 +19,7 @@ class DataRequest:
         self.request.update(address)
         self.request.update({"content": content, "timeout": timeout, "networkTimeout": networkTimeout})
 
+    @timing
     def invoke(self):
         try:
             print('tcp://' + self.request['host'] + ':' + str(self.request['port']))
@@ -32,7 +31,6 @@ class DataRequest:
                 content = responseFrames[i*2+1]
                 decoded = self.encoding.decode(header=header, value=content)
                 results.append((len(content), decoded))
-            DataRequest.ping_times.append(adapter.pingTime)
             return results
         except Exception as e:
             results = []
