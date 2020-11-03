@@ -7,7 +7,7 @@
 import time
 from collections import OrderedDict
 
-import zmq.green as zmq
+import zmq
 import msgpack
 
 HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
