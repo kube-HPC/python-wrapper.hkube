@@ -7,7 +7,6 @@
 import time
 from collections import OrderedDict
 
-import gevent
 import zmq.green as zmq
 import msgpack
 
@@ -131,7 +130,6 @@ class ZMQProducer(object):
 
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
         while self.active:
-            gevent.sleep()
             poller = poll_workers
             try:
                 socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))

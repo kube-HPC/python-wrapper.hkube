@@ -1,4 +1,5 @@
-import gevent
+import time
+from threading import Thread
 
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.communication.zmq.streaming.ZMQProducer import ZMQProducer
@@ -27,17 +28,18 @@ class MessageProducer(object):
         def sendStatisticsEvery(interval):
             while (self.active):
                 self.sendStatistics()
-                gevent.sleep(interval)
+                time.sleep(interval)
 
         if (self.nodeNames):
-            gevent.spawn(sendStatisticsEvery, statisticsInterval)
+            runThread = Thread(name="Statistics", target=sendStatisticsEvery, args=[statisticsInterval])
+            runThread.start()
 
     def produce(self, obj):
-        encodedMessage = self._encoding.encode(obj, plain_encode=True)
+        encodedMessage = self._encoding.encode(obj, plainEncode=True)
         self.adapter.produce(encodedMessage)
 
     def responseAccumulator(self, response, consumerType):
-        decodedResponse = self._encoding.decode(response, plain_encode=True)
+        decodedResponse = self._encoding.decode(value=response, plainEncode=True)
         self.responseCount[consumerType] += 1
         duration = decodedResponse['duration']
         self.responsesCache[consumerType].append(float(duration))

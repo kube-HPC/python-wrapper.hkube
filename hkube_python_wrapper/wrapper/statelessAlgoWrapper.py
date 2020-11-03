@@ -1,5 +1,6 @@
-import gevent
 import copy
+import time
+
 from hkube_python_wrapper.util.object_path import setPath
 
 class statelessALgoWrapper(object):
@@ -38,7 +39,7 @@ class statelessALgoWrapper(object):
         while (self.active):
             if (self.error is not None):
                 raise self.error  # pylint: disable=raising-bad-type
-            gevent.sleep(1)
+            time.sleep(1)
 
     def init(self, options):
         self.options = options

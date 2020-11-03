@@ -1,6 +1,5 @@
 from random import randint
 import time
-import gevent
 import zmq.green as zmq
 import msgpack
 
@@ -44,7 +43,6 @@ class ZMQListener(object):
         self.worker = self.worker_socket(context, self.remoteAddress, poller)
         cycles = 0
         while self.active:
-            gevent.sleep()
             try:
                 socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
             except Exception as e:
@@ -88,7 +86,7 @@ class ZMQListener(object):
                 if liveness == 0:
                     print("W: Heartbeat failure, can't reach queue")
                     print("W: Reconnecting in %0.2fs" % interval)
-                    gevent.sleep(interval)
+                    time.sleep(interval)
 
                     if interval < INTERVAL_MAX:
                         interval *= 2
@@ -117,18 +115,3 @@ class ZMQListener(object):
             self.active = False
             if(self.worker is not  None):
                 self.worker.close()
-
-# if __name__ == "__main__":
-#     def doSomething():
-#         gevent.sleep(3)
-#
-#
-#     listener = ZMQListener('tcp://localhost:5556', doSomething)
-#     gevent.spawn(listener.start)
-#     queue = ZMQPublisher(port=5556, maxMemorySize=5000)
-#     gevent.spawn(queue.start)
-#     gevent.sleep(5)
-
-# thread=Thread(target=listener.start)
-# thread.start()
-# client.start()

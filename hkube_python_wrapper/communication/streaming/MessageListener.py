@@ -19,7 +19,7 @@ class MessageListener(object):
 
     def onMessage(self, msg):
         start = time.time()
-        decodedMsg = self._encoding.decode(msg, plain_encode=True)
+        decodedMsg = self._encoding.decode(value=msg, plainEncode=True)
         for listener in self.messageListeners:
             try:
                 listener(decodedMsg, self.messageOriginNodeName)
@@ -28,7 +28,7 @@ class MessageListener(object):
 
         end = time.time()
         duration = int((end - start)*1000)
-        return self._encoding.encode({'duration': duration}, plain_encode=True)
+        return self._encoding.encode({'duration': duration}, plainEncode=True)
 
     def start(self):
         print("start receiving from " + self.messageOriginNodeName)

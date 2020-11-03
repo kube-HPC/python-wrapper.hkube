@@ -5,7 +5,7 @@ from websocket import ABNF
 import websocket
 from hkube_python_wrapper.util.encoding import Encoding
 from threading import Thread
-
+from hkube_python_wrapper.wrapper.messages import messages
 
 class WebsocketClient(Thread):
     def __init__(self, msg_queue, encoding, url):

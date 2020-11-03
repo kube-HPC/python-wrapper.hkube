@@ -251,14 +251,14 @@ class Algorunner:
             if (self._loadAlgorithmError):
                 self._sendError(self._loadAlgorithmError)
             else:
-                if (options.get('stateType') == 'stateless' and self.wrapper is None):
+                self._input = options
+                if (self.isStreamingPipeLine() and options.get('stateType') == 'stateless' and self.wrapper is None):
                     self.wrapper = statelessALgoWrapper(self._algorithm)
                     self._algorithm = dict()
                     self._algorithm['start'] = self.wrapper.start
                     self._algorithm['init'] = self.wrapper.init
                     self._algorithm['stop'] = self.wrapper.stop
                     self._algorithm['exit'] = self.wrapper.exit
-                self._input = options
                 self._nodeName = options.get('nodeName')
                 method = self._getMethod('init')
                 if (method is not None):
@@ -385,7 +385,6 @@ class Algorunner:
     def _stop(self, options):
         try:
             method = self._getMethod('stop')
-            gevent.sleep()
             if (method is not None):
                 method(options)
             if (self.isStreamingPipeLine()):

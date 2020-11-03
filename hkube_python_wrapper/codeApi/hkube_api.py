@@ -1,6 +1,8 @@
 from __future__ import print_function, division, absolute_import
 import time
 
+from threading import Thread
+
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.messages import messages
 from .execution import Execution
@@ -29,7 +31,8 @@ class HKubeApi:
         self._messageProducer = MessageProducer(producerConfig, nextNodes)
         self._messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
-            gevent.spawn(self._messageProducer.start)
+            runThread = Thread(name="MessageProducer", target=self.self._messageProducer.start)
+            runThread.start()
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
         print("parents" + str(parents))
@@ -46,7 +49,8 @@ class HKubeApi:
                 listenr.registerMessageListener(self._onMessage)
                 self._messageListeners[remoteAddress] = listenr
                 if (self.listeningToMessages):
-                    gevent.spawn(listenr.start)
+                    runThread = Thread(name="MessageListener", target=listenr.start)
+                    runThread.start()
             if (predecessor['type'] == 'Del'):
                 if (self.listeningToMessages):
                     self._messageListeners[remoteAddress].close()
@@ -65,7 +69,8 @@ class HKubeApi:
     def startMessageListening(self):
         self.listeningToMessages = True
         for listener in self._messageListeners.values():
-            gevent.spawn(listener.start)
+            runThread = Thread(name="MessageListener", target=listener.start)
+            runThread.start()
 
     def sendMessage(self, msg):
         if (self._messageProducer is None):
