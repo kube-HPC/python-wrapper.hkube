@@ -62,11 +62,11 @@ class ZMQListener(object):
                 if not frames:
                     break  # Interrupted
 
-                if len(frames) == 1 and not frames[0] == PPP_HEARTBEAT:
+                if len(frames) == 2:
                     # Simulate various problems, after a few cycles
                     cycles += 1
                     liveness = HEARTBEAT_LIVENESS
-                    result = self.onMessage(frames[0])
+                    result = self.onMessage(frames[0],frames[1])
                     newFrames = [result, msgpack.packb(self.consumerType)]
                     try:
                         self.worker.send_multipart(newFrames)

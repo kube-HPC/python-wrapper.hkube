@@ -4,7 +4,7 @@ import time
 from threading import Thread
 
 producer_config = {'port': 5557, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 0.1}
-listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack','messageOriginNodeName':'b'}
+listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
 
 
 def test_Messaging():
@@ -19,14 +19,14 @@ def test_Messaging():
     messageProducer.registerStatisticsListener(onStatistics)
     time.sleep(3)
 
-    def onMessage(msg,origin):
+    def onMessage(msg, origin):
         # pylint: disable=unused-argument
-        asserts['field1'] = msg['field1']
+        if (type(msg) == type(dict())):
+            asserts['field1'] = msg['field1']
         time.sleep(1)
 
     runThread = Thread(name="producer", target=messageProducer.start)
     runThread.start()
-
 
     messageProducer.produce({'field1': 'value1'})
     messageProducer.produce({'field1': 'value1'})
@@ -36,13 +36,24 @@ def test_Messaging():
     assert asserts['stats'][0]['sent'] == 0
     messageListener = MessageListener(listenr_config, receiverNode='a')
     messageListener.registerMessageListener(onMessage)
-    runThread = Thread(name="producer", target=messageListener.start)
+    runThread = Thread(name="listen", target=messageListener.start)
     runThread.start()
     time.sleep(4.2)
     assert asserts['field1'] == 'value1'
     assert asserts['stats'][0]['queueSize'] == 0
     assert asserts['stats'][0]['sent'] == 3
     assert asserts['responses'] == 3
+    print('done\n')
+
+    def getHello(msg, origin):
+        if (msg == b'Hello'):
+            asserts['gotHello'] = True
+
+    messageListener.registerMessageListener(getHello)
+    messageProducer.produce(b'Hello')
+    time.sleep(3)
+    assert asserts['gotHello']
+
     messageProducer.close()
-    messageListener.close()
+
     time.sleep(2)

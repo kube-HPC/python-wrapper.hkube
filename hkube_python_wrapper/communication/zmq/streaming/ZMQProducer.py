@@ -89,9 +89,9 @@ class MessageQueue(object):
         self.sizeSum -= len(out)
         self.lostMessages += 1
 
-    def append(self, msg):
+    def append(self,header, msg):
         self.sizeSum += len(msg)
-        return self.queue.append(msg)
+        return self.queue.append((header,msg))
 
     def size(self, consumerType):
         index = self.indexPerConsumer[consumerType]
@@ -117,11 +117,11 @@ class ZMQProducer(object):
         print("Producer listening on " + "tcp://*:" + str(port))
         self.active = True
 
-    def produce(self, message):
+    def produce(self,header, message):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
             print('Loosing a message, queue filled up ')
             self.messageQueue.looseMessage()
-        self.messageQueue.append(message)
+        self.messageQueue.append(header, message)
 
     def start(self):  # pylint: disable=too-many-branches
         poll_workers = zmq.Poller()
@@ -169,7 +169,8 @@ class ZMQProducer(object):
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
             for type, workerQueu in workers.queues.items():
                 if (workerQueu and self.messageQueue.hasItems(type)):
-                    frames = [self.messageQueue.pop(type)]
+                    header, payload = self.messageQueue.pop(type)
+                    frames = [header,payload]
                     frames.insert(0, workers.next(type))
                     try:
                         self._backend.send_multipart(frames)

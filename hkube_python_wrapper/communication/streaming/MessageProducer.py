@@ -35,8 +35,8 @@ class MessageProducer(object):
             runThread.start()
 
     def produce(self, obj):
-        encodedMessage = self._encoding.encode(obj, plainEncode=True)
-        self.adapter.produce(encodedMessage)
+        header ,encodedMessage = self._encoding.encode(obj)
+        self.adapter.produce(header,encodedMessage)
 
     def responseAccumulator(self, response, consumerType):
         decodedResponse = self._encoding.decode(value=response, plainEncode=True)
