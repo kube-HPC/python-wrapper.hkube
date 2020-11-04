@@ -108,8 +108,8 @@ class Algorunner:
             algOptions = options.algorithm
             package = algOptions["path"]
             entry = algOptions["entryPoint"]
-            entryPoint = entry.replace("/", ".")
-            entryPoint = os.path.splitext(entryPoint)[0]
+            entryPoint = os.path.splitext(entry)[0]
+            entryPoint = entryPoint.replace("/", ".")
             __import__(package)
             os.chdir('{cwd}/{package}'.format(cwd=cwd, package=package))
             print('loading {entry}'.format(entry=entry))
