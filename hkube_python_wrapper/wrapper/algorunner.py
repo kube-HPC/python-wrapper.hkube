@@ -174,7 +174,7 @@ class Algorunner:
         print('connecting to {url}'.format(url=self._url))
         self._wsc.start()
         self._dataServer and self._dataServer.listen()
-        runThread = Thread(name="RunThread", target=self.run)
+        runThread = Thread(name="WorkerListener", target=self.run)
         runThread.start()
         return [self._wsc, runThread]
 
@@ -202,7 +202,8 @@ class Algorunner:
         while self._active:
             try:
                 (command, data) = self.get_message()
-                self.handle(command, data)
+                runThread = Thread(name=command + "Thread", target=self.handle, args=[command, data])
+                runThread.start()
             except Empty:
                 pass
         print('Exiting run loop')
@@ -410,7 +411,7 @@ class Algorunner:
             sys.exit(code)
 
         except Exception as e:
-            print('Got error during exit: '+e)
+            print('Got error during exit: ' + e)
             # pylint: disable=protected-access
             os._exit(0)
 

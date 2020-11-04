@@ -31,7 +31,7 @@ class HKubeApi:
         self.messageProducer = MessageProducer(producerConfig, nextNodes)
         self.messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
-            runThread = Thread(name="MessageProducer", target=self.self.messageProducer.start)
+            runThread = Thread(name="MessageProducer", target=self.messageProducer.start)
             runThread.start()
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
