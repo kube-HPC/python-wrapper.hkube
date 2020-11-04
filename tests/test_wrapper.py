@@ -1,5 +1,7 @@
 import os
 import time
+import pytest
+
 # from mock import patch
 from time import sleep
 from threading import Thread
@@ -89,6 +91,18 @@ def xtest_load_algorithm():
     result1 = algorunner._algorithm['start']({'input': mockdata.initData}, None)
     result2 = startCallback({'input': mockdata.initData})
     assert result1 == result2
+
+@pytest.mark.parametrize("test_input,expected", [
+    ('main.py','main'),
+    ('main','main'),
+    ('foo.bar.main.py','foo.bar.main'),
+    ('foo.bar.main','foo.bar.main'),
+    ('foo/bar/main.py','foo.bar.main'),
+    ('foo/bar/main','foo.bar.main'),
+    ])
+def test_entryPoint(test_input,expected):
+    actual = Algorunner._getEntryPoint(test_input)
+    assert actual == expected
 
 def startCallback2(args):
     return args["input"][0]
