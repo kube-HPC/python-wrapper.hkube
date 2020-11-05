@@ -35,8 +35,8 @@ class MessageProducer(object):
             runThread.start()
 
     def produce(self, obj):
-        header ,encodedMessage = self._encoding.encode(obj)
-        self.adapter.produce(header,encodedMessage)
+        header, encodedMessage = self._encoding.encode(obj)
+        self.adapter.produce(header, encodedMessage)
 
     def responseAccumulator(self, response, consumerType):
         decodedResponse = self._encoding.decode(value=response, plainEncode=True)
@@ -71,7 +71,7 @@ class MessageProducer(object):
             listener(statistics)
         for singleNodeStatisticsForPrint in statistics:
             singleNodeStatisticsForPrint['durations'] = singleNodeStatisticsForPrint['durations'][:10]
-        if(self.printStatistics % 10 == 0):
+        if (self.printStatistics % 10 == 0):
             print("statistics " + str(statistics))
         self.printStatistics += 1
 

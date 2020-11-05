@@ -17,9 +17,9 @@ class MessageListener(object):
     def registerMessageListener(self, listener):
         self.messageListeners.append(listener)
 
-    def onMessage(self,header, msg):
+    def onMessage(self, header, msg):
         start = time.time()
-        decodedMsg = self._encoding.decode(header=header,value=msg)
+        decodedMsg = self._encoding.decode(header=header, value=msg)
         for listener in self.messageListeners:
             try:
                 listener(decodedMsg, self.messageOriginNodeName)
@@ -27,7 +27,7 @@ class MessageListener(object):
                 print('Error during MessageListener onMessage' + e)
 
         end = time.time()
-        duration = int((end - start)*1000)
+        duration = int((end - start) * 1000)
         return self._encoding.encode({'duration': duration}, plainEncode=True)
 
     def start(self):
