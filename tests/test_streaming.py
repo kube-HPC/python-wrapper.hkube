@@ -55,5 +55,6 @@ def test_Messaging():
     assert asserts['gotHello']
 
     messageProducer.close()
+    messageListener.close()
 
     time.sleep(2)
