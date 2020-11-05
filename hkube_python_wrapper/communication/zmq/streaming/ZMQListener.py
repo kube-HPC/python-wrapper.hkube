@@ -33,7 +33,7 @@ class ZMQListener(object):
         worker.send_multipart([PPP_READY, msgpack.packb(self.consumerType)])
         return worker
 
-    def start(self): # pylint: disable=too-many-branches
+    def start(self):  # pylint: disable=too-many-branches
         context = zmq.Context(1)
         poller = zmq.Poller()
         liveness = HEARTBEAT_LIVENESS
@@ -57,7 +57,7 @@ class ZMQListener(object):
                 try:
                     frames = self.worker.recv_multipart()
                 except Exception as e:
-                    if(self.active):
+                    if (self.active):
                         print(e)
                 if not frames:
                     break  # Interrupted
@@ -66,12 +66,12 @@ class ZMQListener(object):
                     # Simulate various problems, after a few cycles
                     cycles += 1
                     liveness = HEARTBEAT_LIVENESS
-                    result = self.onMessage(frames[0],frames[1])
+                    result = self.onMessage(frames[0], frames[1])
                     newFrames = [result, msgpack.packb(self.consumerType)]
                     try:
                         self.worker.send_multipart(newFrames)
                     except Exception as e:
-                        if(self.active):
+                        if (self.active):
                             print(e)
 
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
@@ -95,7 +95,7 @@ class ZMQListener(object):
                         self.worker.setsockopt(zmq.LINGER, 0)
                         self.worker.close()
                     except Exception as e:
-                        if(self.active):
+                        if (self.active):
                             print(e)
                     self.worker = self.worker_socket(context, self.remoteAddress, poller)
                     liveness = HEARTBEAT_LIVENESS
@@ -113,5 +113,5 @@ class ZMQListener(object):
             print("Attempting to close inactive ZMQListener")
         else:
             self.active = False
-            if(self.worker is not  None):
+            if (self.worker is not None):
                 self.worker.close()
