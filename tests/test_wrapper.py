@@ -6,15 +6,17 @@ from threading import Thread
 from hkube_python_wrapper import Algorunner
 from tests.configs import config
 from tests.mocks import mockdata
+from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
 
 oneMB = 1024 * 1024
+
 
 class Algorithm(object):
     pass
 
 
 def startCallbackBytes(args):
-    return bytearray(b'\xdd'*(1 * oneMB))
+    return bytearray(b'\xdd' * (1 * oneMB))
 
 
 def startCallback(args):
@@ -24,11 +26,24 @@ def startCallback(args):
 def test_load_algorithm_callbacks():
     algorunner = Algorunner()
     algorunner.loadAlgorithmCallbacks(startCallback, options=config)
-    result1 = algorunner._algorithm['start']({'input': mockdata.initData}, None)
+    result1 = algorunner._originalAlgorithm['start']({'input': mockdata.initData}, None)
     result2 = startCallback({'input': mockdata.initData})
     assert result1 == result2
     algorunner.close()
 
+
+def test_load_algorithm_streaming_then_batch():
+    algorunner = Algorunner()
+    algorunner.loadAlgorithmCallbacks(startCallback, options=config)
+    algorunner._hkubeApi = HKubeApi(None, algorunner, None, None)
+    algorunner._init(mockdata.streamingInitData)
+    thrd = Thread(target=algorunner._originalAlgorithm['start'], args=[{'input': mockdata.streamingInitData}, algorunner._hkubeApi])
+    thrd.start()
+    algorunner._stop(mockdata.initData)
+    result1 = algorunner._originalAlgorithm['start']({'input': mockdata.initData}, algorunner._hkubeApi)
+    result2 = startCallback({'input': mockdata.initData})
+    assert result1 == result2
+    algorunner.close()
 
 
 def xtest_exit():
@@ -44,6 +59,7 @@ def xtest_exit():
 
         def isServingFalse():
             return False
+
         algorunner = Algorunner()
         algorunner.loadAlgorithmCallbacks(startCallback)
         algorunner.connectToWorker(config)
@@ -65,13 +81,12 @@ def test_failed_load_algorithm():
     alg.algorithm = {
         "path": "no_such_path",
         "entryPoint": "main.py"
-        }
+    }
     algorunner = Algorunner()
     algorunner.loadAlgorithm(alg)
     assert "No module named" in algorunner._loadAlgorithmError
     assert "no_such_path" in algorunner._loadAlgorithmError
     algorunner.close()
-
 
 
 def xtest_load_algorithm():
@@ -86,12 +101,14 @@ def xtest_load_algorithm():
     algorunner.loadAlgorithm(alg)
 
     # os.chdir(cwd)
-    result1 = algorunner._algorithm['start']({'input': mockdata.initData}, None)
+    result1 = algorunner._originalAlgorithm['start']({'input': mockdata.initData}, None)
     result2 = startCallback({'input': mockdata.initData})
     assert result1 == result2
 
+
 def startCallback2(args):
     return args["input"][0]
+
 
 def test_connect_to_worker():
     config.discovery.update({"port": "9021"})
@@ -102,4 +119,3 @@ def test_connect_to_worker():
     assert algorunner._connected == True
     assert algorunner._input == mockdata.initData
     algorunner.close()
-

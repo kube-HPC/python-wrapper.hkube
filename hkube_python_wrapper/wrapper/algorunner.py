@@ -24,7 +24,7 @@ class Algorunner:
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self._url = None
-        self._algorithm = dict()
+        self._originalAlgorithm = dict()
         self._input = None
         self._loadAlgorithmError = None
         self._connected = False
@@ -82,15 +82,15 @@ class Algorunner:
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None, options=None):
         try:
             print('Initializing algorithm callbacks')
-            self._algorithm['start'] = start
-            self._algorithm['init'] = init
-            self._algorithm['stop'] = stop
-            self._algorithm['exit'] = exit
+            self._originalAlgorithm['start'] = start
+            self._originalAlgorithm['init'] = init
+            self._originalAlgorithm['stop'] = stop
+            self._originalAlgorithm['exit'] = exit
             for k, v in methods.items():
                 methodName = k
                 method = v
                 isMandatory = method["mandatory"]
-                if self._algorithm[methodName] is not None:
+                if self._originalAlgorithm[methodName] is not None:
                     print('found method {methodName}'.format(
                         methodName=methodName))
                 else:
@@ -102,7 +102,7 @@ class Algorunner:
                     print(error)
             # fix start if it has only one argument
             if start.__code__.co_argcount == 1:
-                self._algorithm['start'] = lambda args, api: start(args)
+                self._originalAlgorithm['start'] = lambda args, api: start(args)
             self.tracer = Tracer(options.tracer)
 
         except Exception as e:
@@ -129,11 +129,11 @@ class Algorunner:
                 method = v
                 isMandatory = method["mandatory"]
                 try:
-                    self._algorithm[methodName] = getattr(mod, methodName)
+                    self._originalAlgorithm[methodName] = getattr(mod, methodName)
                     # fix start if it has only one argument
-                    if methodName == 'start' and self._algorithm['start'].__code__.co_argcount == 1:
-                        self._algorithm['startOrig'] = self._algorithm['start']
-                        self._algorithm['start'] = lambda args, api: self._algorithm['startOrig'](
+                    if methodName == 'start' and self._originalAlgorithm['start'].__code__.co_argcount == 1:
+                        self._originalAlgorithm['startOrig'] = self._originalAlgorithm['start']
+                        self._originalAlgorithm['start'] = lambda args, api: self._originalAlgorithm['startOrig'](
                             args)
                     print('found method {methodName}'.format(
                         methodName=methodName))
@@ -252,12 +252,14 @@ class Algorunner:
             else:
                 self._input = options
                 if self.isStreamingPipeLine() and options.get('stateType') == 'stateless' and self.wrapper is None:
-                    self.wrapper = statelessALgoWrapper(self._algorithm)
+                    self.wrapper = statelessALgoWrapper(self._originalAlgorithm)
                     self._algorithm = dict()
                     self._algorithm['start'] = self.wrapper.start
                     self._algorithm['init'] = self.wrapper.init
                     self._algorithm['stop'] = self.wrapper.stop
                     self._algorithm['exit'] = self.wrapper.exit
+                else:
+                    self._algorithm = self._originalAlgorithm
                 self._nodeName = options.get('nodeName')
                 method = self._getMethod('init')
                 if (method is not None):
