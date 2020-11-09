@@ -25,6 +25,7 @@ class Algorunner:
     def __init__(self):
         self._url = None
         self._originalAlgorithm = dict()
+        self._algorithm = None
         self._input = None
         self._loadAlgorithmError = None
         self._connected = False
