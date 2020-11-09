@@ -1,7 +1,7 @@
-from random import randint
 import time
 import zmq
 import msgpack
+import uuid
 
 HEARTBEAT_LIVENESS = 3
 HEARTBEAT_INTERVAL = 1
@@ -21,13 +21,12 @@ class ZMQListener(object):
         self.active = True
         self.worker = None
 
-    def worker_socket(self, context, remoteAddress, poller):
+    def worker_socket(self, context, remoteAddress):
         """Helper function that returns a new configured socket
            connected to the Paranoid Pirate queue"""
         worker = context.socket(zmq.DEALER)  # DEALER
-        identity = ('id' + str(randint(0, 0x10000)) + '-' + str(randint(0, 0x10000))).encode()
+        identity = str(uuid.uuid4()).encode()
         worker.setsockopt(zmq.IDENTITY, identity)
-        poller.register(worker, zmq.POLLIN)
         worker.connect(remoteAddress)
         print("zmq listener connecting to " + remoteAddress)
         worker.send_multipart([PPP_READY, msgpack.packb(self.consumerType)])
@@ -35,22 +34,20 @@ class ZMQListener(object):
 
     def start(self):  # pylint: disable=too-many-branches
         context = zmq.Context(1)
-        poller = zmq.Poller()
         liveness = HEARTBEAT_LIVENESS
         interval = INTERVAL_INIT
 
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-        self.worker = self.worker_socket(context, self.remoteAddress, poller)
-        cycles = 0
+        self.worker = self.worker_socket(context, self.remoteAddress)
         while self.active:
             try:
-                socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
+                result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
             except Exception as e:
                 if (self.active):
                     print(e)
 
             # Handle worker activity on backend
-            if socks.get(self.worker) == zmq.POLLIN:
+            if result == zmq.POLLIN:
                 #  Get message
                 #  - 3-part envelope + content -> request
                 #  - 1-part HEARTBEAT -> heartbeat
@@ -60,11 +57,10 @@ class ZMQListener(object):
                     if (self.active):
                         print(e)
                 if not frames:
-                    break  # Interrupted
+                    if (self.active):
+                        raise Exception("Connection to producer on " + self.remoteAddress + " interrupted")
 
                 if len(frames) == 2:
-                    # Simulate various problems, after a few cycles
-                    cycles += 1
                     liveness = HEARTBEAT_LIVENESS
                     result = self.onMessage(frames[0], frames[1])
                     newFrames = [result, msgpack.packb(self.consumerType)]
@@ -73,6 +69,7 @@ class ZMQListener(object):
                     except Exception as e:
                         if (self.active):
                             print(e)
+                            raise e
 
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
                     liveness = HEARTBEAT_LIVENESS
@@ -90,14 +87,13 @@ class ZMQListener(object):
 
                     if interval < INTERVAL_MAX:
                         interval *= 2
-                    poller.unregister(self.worker)
                     try:
                         self.worker.setsockopt(zmq.LINGER, 0)
                         self.worker.close()
                     except Exception as e:
                         if (self.active):
                             print(e)
-                    self.worker = self.worker_socket(context, self.remoteAddress, poller)
+                    self.worker = self.worker_socket(context, self.remoteAddress)
                     liveness = HEARTBEAT_LIVENESS
 
             if time.time() > heartbeat_at:

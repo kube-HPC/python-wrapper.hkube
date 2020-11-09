@@ -31,7 +31,7 @@ discovery = {
     "servingReportInterval": getIntEnv('DISCOVERY_SERVING_REPORT_INTERVAL', 5000),
     "streaming": {
         "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_MB', 1500),
-        "port": os.environ.get('STREAMING_DISCOVERY_PORT', 9021),
+        "port": os.environ.get('STREAMING_DISCOVERY_PORT', 9022),
         "statisticsInterval": os.environ.get('STREAMING_STATISTICS_INTERVAL', 2),
         "stateful": getBoolEnv('STREAMING_STATEFUL', 'True')
     }
@@ -40,7 +40,6 @@ discovery = {
 algorithm = {
     "path": os.environ.get('ALGORITHM_PATH', "algorithm_unique_folder"),
     "entryPoint": os.environ.get('ALGORITHM_ENTRY_POINT', "main.py"),
-    "isStatefull": os.environ.get('IS_STATEFULL')
 }
 storage = {
     "clusterName": os.environ.get('CLUSTER_NAME', 'local'),

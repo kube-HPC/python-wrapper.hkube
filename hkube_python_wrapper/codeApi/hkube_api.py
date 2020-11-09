@@ -31,7 +31,7 @@ class HKubeApi:
         self.messageProducer = MessageProducer(producerConfig, nextNodes)
         self.messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
-            runThread = Thread(name="MessageProducer", target=self.messageProducer.start)
+            runThread = Thread(name="MessageProducer", target=self.messageProducer.start, daemon=True)
             runThread.start()
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
@@ -45,11 +45,11 @@ class HKubeApi:
                 options.update(listenerConfig)
                 options['remoteAddress'] = remoteAddress
                 options['messageOriginNodeName'] = predecessor['nodeName']
-                listenr = MessageListener(options, nodeName)
-                listenr.registerMessageListener(self._onMessage)
-                self._messageListeners[remoteAddress] = listenr
+                listener = MessageListener(options, nodeName)
+                listener.registerMessageListener(self._onMessage)
+                self._messageListeners[remoteAddress] = listener
                 if (self.listeningToMessages):
-                    runThread = Thread(name="MessageListener", target=listenr.start)
+                    runThread = Thread(name="MessageListener", target=listener.start, daemon=True)
                     runThread.start()
             if (predecessor['type'] == 'Del'):
                 if (self.listeningToMessages):
@@ -64,12 +64,12 @@ class HKubeApi:
             try:
                 listener(msg, origin)
             except Exception as e:
-                print("hkube_api message listener through exception: " +str(e))
+                print("hkube_api message listener through exception: " + str(e))
 
     def startMessageListening(self):
         self.listeningToMessages = True
         for listener in self._messageListeners.values():
-            runThread = Thread(name="MessageListener", target=listener.start)
+            runThread = Thread(name="MessageListener", target=listener.start, daemon=True)
             runThread.start()
 
     def sendMessage(self, msg):

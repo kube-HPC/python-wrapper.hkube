@@ -27,8 +27,8 @@ class Worker(object):
 class WorkerQueue(object):
     def __init__(self, consumerTypes):
         self.queues = {}
-        for consumberType in consumerTypes:
-            self.queues[consumberType] = OrderedDict()
+        for consumerType in consumerTypes:
+            self.queues[consumerType] = OrderedDict()
 
     def ready(self, worker, consumerType):
         self.queues[consumerType].pop(worker.address, None)
@@ -42,9 +42,9 @@ class WorkerQueue(object):
             for address, worker in queue.items():
                 if t > worker.expiry:  # Worker expired
                     expired.append((address, type))
-            for (address, cunsumerType) in expired:
+            for (address, consumerType) in expired:
                 print("W: Idle worker expired: %s" % address)
-                self.queues[cunsumerType].pop(address, None)
+                self.queues[consumerType].pop(address, None)
 
     def next(self, type):
         address, worker = self.queues[type].popitem(False)  # pylint: disable=unused-variable
@@ -65,6 +65,8 @@ class MessageQueue(object):
     def hasItems(self, consumerType):
         return self.indexPerConsumer[consumerType] < len(self.queue)
 
+    # Messages are kept in the queue until consumers of all types popped out the message.
+    # An index per consumer type is maintained, to know which messages the consumer already received and conclude which message should he get now.
     def pop(self, consumerType):
         index = self.indexPerConsumer[consumerType]
         out = self.queue[index]
@@ -84,7 +86,7 @@ class MessageQueue(object):
                     self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
         return out
 
-    def looseMessage(self):
+    def loseMessage(self):
         out = self.queue.pop(0)
         self.sizeSum -= len(out)
         self.lostMessages += 1
@@ -120,7 +122,7 @@ class ZMQProducer(object):
     def produce(self, header, message):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
             print('Loosing a message, queue filled up ')
-            self.messageQueue.looseMessage()
+            self.messageQueue.loseMessage()
         self.messageQueue.append(header, message)
 
     def start(self):  # pylint: disable=too-many-branches
@@ -145,7 +147,8 @@ class ZMQProducer(object):
                     if (self.active):
                         print(e)
                 if not frames:
-                    break
+                    if (self.active):
+                        raise Exception("Unexpected router no frames on receive, no address frame")
                 address = frames[0]
                 consumerType = msgpack.unpackb(frames[2])
                 if not consumerType in self.consumerTypes:
@@ -188,36 +191,3 @@ class ZMQProducer(object):
     def close(self):
         self.active = False
         self._backend.close()
-
-# if __name__ == "__main__":
-#     queue = MessageQueue(['a', 'b', 'c'])
-#     queue.append('1')
-#     queue.append('2')
-#     queue.append('3')
-#     item = queue.pop('a')
-#     assert item == '1'
-#     assert len(queue.queue) == 3
-#     item = queue.pop('b')
-#     assert item == '1'
-#     assert len(queue.queue) == 3
-#     item = queue.pop('a')
-#     print(item)
-#     assert item == '2'
-#
-#     item = queue.pop('c')
-#     assert item == '1'
-#     assert len(queue.queue) == 2
-
-#     queue = ZMQPublisher(port=5556, maxMemorySize=5000)
-#     gevent.spawn(queue.start)
-#     gevent.sleep(3000)
-#     thread = Thread(target=queue.start)
-#     thread.start()
-#     i = -1
-#     while (i < 700):
-#         i += 1
-#         y = 0
-#         while (y < 700):
-#             y += 1
-#             queue.send(str(i * 700 + y) + 'jjjj')
-#         time.sleep(3)

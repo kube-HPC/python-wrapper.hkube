@@ -3,7 +3,7 @@ from threading import Thread
 
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.communication.zmq.streaming.ZMQProducer import ZMQProducer
-
+from hkube_python_wrapper.util.fifo_array import FifoArray
 RESPONSE_CACHE = 2000
 
 
@@ -21,7 +21,7 @@ class MessageProducer(object):
         self.active = True
         self.printStatistics = 0
         for nodeName in nodeNames:
-            self.responsesCache[nodeName] = []
+            self.responsesCache[nodeName] = FifoArray(RESPONSE_CACHE)
             self.responseCount[nodeName] = 0
         self.listeners = []
 
@@ -31,7 +31,7 @@ class MessageProducer(object):
                 time.sleep(interval)
 
         if (self.nodeNames):
-            runThread = Thread(name="Statistics", target=sendStatisticsEvery, args=[statisticsInterval])
+            runThread = Thread(name="Statistics", target=sendStatisticsEvery, args=[statisticsInterval],daemon=True)
             runThread.start()
 
     def produce(self, obj):
@@ -43,12 +43,11 @@ class MessageProducer(object):
         self.responseCount[consumerType] += 1
         duration = decodedResponse['duration']
         self.responsesCache[consumerType].append(float(duration))
-        if (len(self.responsesCache) > RESPONSE_CACHE):
-            self.responsesCache.pop(0)
+
 
     def resetResponseCache(self, consumerType):
-        responsePerNode = self.responsesCache[consumerType]
-        self.responsesCache[consumerType] = []
+        responsePerNode = self.responsesCache[consumerType].getAsArray()
+        self.responsesCache[consumerType].reset()
         return responsePerNode
 
     def getResponseCount(self, consumerType):

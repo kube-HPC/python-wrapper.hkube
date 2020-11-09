@@ -17,7 +17,6 @@ import os
 import sys
 import importlib
 import traceback
-from events import Events
 from threading import Thread
 
 
@@ -27,7 +26,6 @@ class Algorunner:
         self._url = None
         self._algorithm = dict()
         self._input = None
-        self._events = Events()
         self._loadAlgorithmError = None
         self._connected = False
         self._hkubeApi = None
@@ -174,7 +172,7 @@ class Algorunner:
         print('connecting to {url}'.format(url=self._url))
         self._wsc.start()
         self._dataServer and self._dataServer.listen()
-        runThread = Thread(name="WorkerListener", target=self.run)
+        runThread = Thread(name="WorkerListener", target=self.run, daemon=True)
         runThread.start()
         return [self._wsc, runThread]
 
@@ -202,7 +200,7 @@ class Algorunner:
         while self._active:
             try:
                 (command, data) = self.get_message()
-                runThread = Thread(name=command + "Thread", target=self.handle, args=[command, data])
+                runThread = Thread(name=command + "Thread", target=self.handle, args=[command, data], daemon=True)
                 runThread.start()
             except Empty:
                 pass
@@ -253,7 +251,7 @@ class Algorunner:
                 self._sendError(self._loadAlgorithmError)
             else:
                 self._input = options
-                if (self.isStreamingPipeLine() and options.get('stateType') == 'stateless' and self.wrapper is None):
+                if self.isStreamingPipeLine() and options.get('stateType') == 'stateless' and self.wrapper is None:
                     self.wrapper = statelessALgoWrapper(self._algorithm)
                     self._algorithm = dict()
                     self._algorithm['start'] = self.wrapper.start
@@ -271,9 +269,9 @@ class Algorunner:
 
     def _discovery_update(self, discovery):
         print('Got discovery update' + str(discovery))
-        messageListenrConfig = {'encoding': config.discovery['encoding']}
+        messageListenerConfig = {'encoding': config.discovery['encoding']}
         self._hkubeApi.setupStreamingListeners(
-            messageListenrConfig, discovery, self._nodeName)
+            messageListenerConfig, discovery, self._nodeName)
 
     def _start(self, options):
         if (self.isStreamingPipeLine()):
@@ -299,11 +297,11 @@ class Algorunner:
             nodeName = self._input.get("nodeName")
             info = self._input.get("info", {})
             savePaths = info.get("savePaths", [])
-            topSpan = options.get(
-                'spanId') if options else self._input.get('spanId')
-            span = Tracer.instance.create_span(
-                "start", topSpan, jobId, taskId, nodeName)
-
+            if (options):
+                topSpan = options.get('spanId')
+            else:
+                topSpan = self._input.get('spanId')
+            span = Tracer.instance.create_span("start", topSpan, jobId, taskId, nodeName)
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
             method = self._getMethod('start')
@@ -398,7 +396,6 @@ class Algorunner:
     def _exit(self, options):
         try:
             self._dataServer and self._dataServer.shutDown()
-            self._wsc.shutDown()
             self._wsc.shutDown()
             method = self._getMethod('exit')
             if (method is not None):
