@@ -14,6 +14,7 @@ import os
 import sys
 import importlib
 import traceback
+import platform
 from events import Events
 from threading import Thread
 
@@ -59,6 +60,37 @@ class Algorunner:
         else:
             algorunner.loadAlgorithm(config)
         jobs = algorunner.connectToWorker(config)
+        for j in jobs:
+            j.join()
+
+    @staticmethod
+    def RunLocal(name=None, start=None, init=None, stop=None, exit=None, options=None):
+        """Starts the algorunner wrapper and registers for local run.
+
+        Convenience method to start the algorithm. Pass the algorithm methods
+        This method blocks forever
+
+        Args:
+            start (function): The entry point of the algorithm. Called for every invocation.
+            init (function): Optional init method. Called for every invocation before the start.
+            stop (function): Optional stop method. Called when the parent pipeline is stopped.
+            exit (function): Optional exit handler. Called before the algorithm is forced to exit.
+                    Can be used to clean up resources.
+
+        Returns:
+            Never returns.
+        """
+        algorunner = Algorunner()
+        options = options or config
+        options.storage['mode'] = 'v1'
+        options.discovery["enable"] = False
+        if name:
+            options.algorithm['name'] = name
+        if (start):
+            algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options)
+        else:
+            algorunner.loadAlgorithm(options)
+        jobs = algorunner.connectToWorker(options)
         for j in jobs:
             j.join()
 
@@ -162,7 +194,8 @@ class Algorunner:
 
         self._url += '?storage={storage}&encoding={encoding}'.format(
             storage=self._storage, encoding=encoding)
-
+        if (options.algorithm['name']):
+            self._url += '&name={name}'.format(name=options.algorithm['name'])
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initStorage(options)
         self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage)
