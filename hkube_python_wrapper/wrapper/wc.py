@@ -44,8 +44,25 @@ class WebsocketClient(Thread):
         self.events.on_connection()
 
     def send(self, message):
-        print('sending message to worker: {command}'.format(**message))
-        self._ws.send(self._encoding.encode(message, plainEncode=True), opcode=self._ws_opcode)
+        self._printThrottle(message)
+        self._ws.send(self._encoding.encode(message, plain_encode=True), opcode=self._ws_opcode)
+
+    def _printThrottle(self, message):
+        command = message["command"]
+        setting = self._printThrottleMessages.get(command)
+        shouldPrint = True
+        if(setting):
+            delay = setting["delay"]
+            lastPrint = setting["lastPrint"]
+
+            if(lastPrint is None or time.time() - lastPrint > delay):
+                shouldPrint = True
+                setting.update({"lastPrint": time.time()})
+            else:
+                shouldPrint = False
+
+        if(shouldPrint):
+            print('sending message to worker: {command}'.format(command=command))
 
     def run(self):
         self._startWS(self._url)
