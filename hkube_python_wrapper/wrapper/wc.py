@@ -45,7 +45,7 @@ class WebsocketClient(Thread):
 
     def send(self, message):
         self._printThrottle(message)
-        self._ws.send(self._encoding.encode(message, plain_encode=True), opcode=self._ws_opcode)
+        self._ws.send(self._encoding.encode(message, plainEncode=True), opcode=self._ws_opcode)
 
     def _printThrottle(self, message):
         command = message["command"]
