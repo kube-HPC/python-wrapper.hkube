@@ -3,7 +3,7 @@ import time
 
 from hkube_python_wrapper.util.object_path import setPath
 
-class statelessALgoWrapper(object):
+class statelessAlgoWrapper(object):
     def __init__(self, algo):
         self._hkubeApi = None
         self.originalAlgorithm = algo
@@ -14,6 +14,7 @@ class statelessALgoWrapper(object):
     def _invokeAlgorithm(self, msg, origin):
         if not (self.originalAlgorithm.get('init') is None):
             self.originalAlgorithm['init'](msg)
+            #TODO should init be called upon every message
         input = copy.copy(self.options['input'])
 
         flatInput = self.options.get('flatInput')

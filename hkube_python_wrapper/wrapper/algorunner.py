@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from random import randint
 
-from .statelessAlgoWrapper import statelessALgoWrapper
+from .statelessAlgoWrapper import statelessAlgoWrapper
 from ..config import config
 from .wc import WebsocketClient
 from .data_adapter import DataAdapter
@@ -253,12 +253,13 @@ class Algorunner:
             else:
                 self._input = options
                 if self.isStreamingPipeLine() and options.get('stateType') == 'stateless' and self.wrapper is None:
-                    self.wrapper = statelessALgoWrapper(self._originalAlgorithm)
+                    self.wrapper = statelessAlgoWrapper(self._originalAlgorithm)
                     self._algorithm = dict()
                     self._algorithm['start'] = self.wrapper.start
                     self._algorithm['init'] = self.wrapper.init
                     self._algorithm['stop'] = self.wrapper.stop
                     self._algorithm['exit'] = self.wrapper.exit
+                #TODO keep the build algorithm in advance
                 else:
                     self._algorithm = self._originalAlgorithm
                 self._nodeName = options.get('nodeName')
@@ -277,11 +278,12 @@ class Algorunner:
             messageListenerConfig, discovery, self._nodeName)
 
     def _start(self, options):
+
         if (self.isStreamingPipeLine()):
+            #TODO setup streaming in a seprate function
             def onStatistics(statistics):
                 self._sendCommand(
                     messages.outgoing.streamingStatistics, statistics)
-
             producerConfig = {}
             producerConfig["port"] = config.discovery['streaming']['port']
             producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']

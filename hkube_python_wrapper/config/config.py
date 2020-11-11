@@ -45,7 +45,7 @@ storage = {
     "clusterName": os.environ.get('CLUSTER_NAME', 'local'),
     "type": os.environ.get('DEFAULT_STORAGE', 'fs'),
     "mode": os.environ.get('STORAGE_PROTOCOL', 'v2'),
-    "encoding": os.environ.get('STORAGE_ENCODING', 'bson'),
+    "encoding": os.environ.get('STORAGE_ENCODING', 'msgpack'),
     "maxCacheSize": getIntEnv('STORAGE_MAX_CACHE_SIZE', 400),
     "fs": {
         "baseDirectory": os.environ.get('BASE_FS_ADAPTER_DIRECTORY', '/var/tmp/fs/storage')

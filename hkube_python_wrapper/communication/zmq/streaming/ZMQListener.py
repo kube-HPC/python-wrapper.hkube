@@ -39,23 +39,27 @@ class ZMQListener(object):
 
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
         self.worker = self.worker_socket(context, self.remoteAddress)
+        result = None
         while self.active:
             try:
                 result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
             except Exception as e:
                 if (self.active):
                     print(e)
-
+                    raise e
+            #TODO send error to worker on failure
             # Handle worker activity on backend
             if result == zmq.POLLIN:
                 #  Get message
                 #  - 3-part envelope + content -> request
                 #  - 1-part HEARTBEAT -> heartbeat
+                frames = None
                 try:
                     frames = self.worker.recv_multipart()
                 except Exception as e:
                     if (self.active):
                         print(e)
+                        raise e
                 if not frames:
                     if (self.active):
                         raise Exception("Connection to producer on " + self.remoteAddress + " interrupted")
