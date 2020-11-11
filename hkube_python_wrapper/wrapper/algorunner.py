@@ -17,7 +17,7 @@ import os
 import sys
 import importlib
 import traceback
-from threading import Thread
+from threading import Thread, current_thread
 
 
 class Algorunner:
@@ -39,8 +39,9 @@ class Algorunner:
         self._storage = None
         self._active = True
         self._nodeName = None
-        self.startCurrentlyRunning = None
+        self.runningStartThread = None
         self.wrapper = None
+        self.stopped = False
 
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):
@@ -259,7 +260,7 @@ class Algorunner:
                     self._algorithm['init'] = self.wrapper.init
                     self._algorithm['stop'] = self.wrapper.stop
                     self._algorithm['exit'] = self.wrapper.exit
-                #TODO keep the build algorithm in advance
+                # TODO keep the build algorithm in advance
                 else:
                     self._algorithm = self._originalAlgorithm
                 self._nodeName = options.get('nodeName')
@@ -280,10 +281,11 @@ class Algorunner:
     def _start(self, options):
 
         if (self.isStreamingPipeLine()):
-            #TODO setup streaming in a seprate function
+            # TODO setup streaming in a seprate function
             def onStatistics(statistics):
                 self._sendCommand(
                     messages.outgoing.streamingStatistics, statistics)
+
             producerConfig = {}
             producerConfig["port"] = config.discovery['streaming']['port']
             producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
@@ -293,7 +295,8 @@ class Algorunner:
                 onStatistics, producerConfig, self._input['childs'])
         # pylint: disable=unused-argument
         span = None
-        threadId = randint(0, 0x10000)
+        self.runningStartThread = current_thread()
+        self.stopped = False
         try:
             self._sendCommand(messages.outgoing.started, None)
             # TODO: add parent span from worker
@@ -310,19 +313,16 @@ class Algorunner:
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
             method = self._getMethod('start')
-            self.startCurrentlyRunning = threadId
             algorithmData = method(self._input, self._hkubeApi)
-            if (self.startCurrentlyRunning is not None):
+            if not (self.stopped):
                 self._handle_response(algorithmData, jobId,
-                                      taskId, nodeName, savePaths, span)
-                self.startCurrentlyRunning = None
+                                  taskId, nodeName, savePaths, span)
+            self.runningStartThread = None
+
         except Exception as e:
             traceback.print_exc()
             Tracer.instance.finish_span(span, e)
-            if (self.startCurrentlyRunning == threadId):
-                self._sendError(e)
-            else:
-                print('Exception from old algorithm run: ' + str(e))
+            self._sendError(e)
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         if (self._storage == 'v3'):
@@ -387,14 +387,16 @@ class Algorunner:
             self._sendCommand(messages.outgoing.servingStatus, True)
 
     def _stop(self, options):
+        self.stopped = True
         try:
             method = self._getMethod('stop')
             if (method is not None):
                 method(options)
             if (self.isStreamingPipeLine()):
                 self._hkubeApi.stopStreaming()
+            if (self.runningStartThread):
+                self.runningStartThread.join()
             self._sendCommand(messages.outgoing.stopped, None)
-            self.startCurrentlyRunning = None
         except Exception as e:
             self._sendError(e)
 
