@@ -37,7 +37,7 @@ class MessageQueue(object):
 
     def loseMessage(self):
         out = self.queue.pop(0)
-        header,msg = out
+        _,msg = out
         self.sizeSum -= len(msg)
         self.lostMessages += 1
 
