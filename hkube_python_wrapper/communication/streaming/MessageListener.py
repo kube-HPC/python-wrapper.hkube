@@ -6,7 +6,8 @@ from hkube_python_wrapper.util.encoding import Encoding
 
 class MessageListener(object):
 
-    def __init__(self, options, receiverNode):
+    def __init__(self, options, receiverNode, errorHandler=None):
+        self.errorHandler = errorHandler
         remoteAddress = options['remoteAddress']
         self.adapater = ZMQListener(remoteAddress, self.onMessage, receiverNode)
         self.messageOriginNodeName = options['messageOriginNodeName']
@@ -32,7 +33,11 @@ class MessageListener(object):
 
     def start(self):
         print("start receiving from " + self.messageOriginNodeName)
-        self.adapater.start()
+        try:
+            self.adapater.start()
+        except Exception as e:
+            self.errorHandler.sendError(e)
+
 
     def close(self):
         self.messageListeners = []

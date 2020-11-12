@@ -44,7 +44,7 @@ class Algorunner:
         self.stopped = False
 
     @staticmethod
-    def Run(start=None, init=None, stop=None, exit=None, options=None):
+    def Run(start=None, init=None, stop=None, exit=None, options=None, errorHandler = None):
         """Starts the algorunner wrapper.
 
         Convenience method to start the algorithm. Pass the algorithm methods
@@ -168,7 +168,7 @@ class Algorunner:
 
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initStorage(options)
-        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage)
+        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage,self)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
@@ -250,7 +250,7 @@ class Algorunner:
     def _init(self, options):
         try:
             if (self._loadAlgorithmError):
-                self._sendError(self._loadAlgorithmError)
+                self.sendError(self._loadAlgorithmError)
             else:
                 self._input = options
                 if self.isStreamingPipeLine() and options.get('stateType') == 'stateless' and self.wrapper is None:
@@ -270,7 +270,7 @@ class Algorunner:
                 self._sendCommand(messages.outgoing.initialized, None)
 
         except Exception as e:
-            self._sendError(e)
+            self.sendError(e)
 
     def _discovery_update(self, discovery):
         print('Got discovery update' + str(discovery))
@@ -322,7 +322,7 @@ class Algorunner:
         except Exception as e:
             traceback.print_exc()
             Tracer.instance.finish_span(span, e)
-            self._sendError(e)
+            self.sendError(e)
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         if (self._storage == 'v3'):
@@ -398,7 +398,7 @@ class Algorunner:
                 self.runningStartThread.join()
             self._sendCommand(messages.outgoing.stopped, None)
         except Exception as e:
-            self._sendError(e)
+            self.sendError(e)
 
     def _exit(self, options):
         try:
@@ -423,9 +423,9 @@ class Algorunner:
         try:
             self._wsc.send({'command': command, 'data': data})
         except Exception as e:
-            self._sendError(e)
+            self.sendError(e)
 
-    def _sendError(self, error):
+    def sendError(self, error):
         try:
             print(error)
             self._wsc.send({

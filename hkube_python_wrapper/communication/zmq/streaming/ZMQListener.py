@@ -47,7 +47,6 @@ class ZMQListener(object):
                 if (self.active):
                     print(e)
                     raise e
-            #TODO send error to worker on failure
             # Handle worker activity on backend
             if result == zmq.POLLIN:
                 #  Get message
