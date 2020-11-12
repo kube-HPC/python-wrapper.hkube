@@ -88,7 +88,8 @@ class MessageQueue(object):
 
     def loseMessage(self):
         out = self.queue.pop(0)
-        self.sizeSum -= len(out)
+        header,msg = out
+        self.sizeSum -= len(msg)
         self.lostMessages += 1
 
     def append(self, header, msg):

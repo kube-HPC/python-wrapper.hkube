@@ -25,6 +25,7 @@ class Algorunner:
     def __init__(self):
         self._url = None
         self._originalAlgorithm = dict()
+        self._statelessWrapped = dict()
         self._algorithm = None
         self._input = None
         self._loadAlgorithmError = None
@@ -40,11 +41,10 @@ class Algorunner:
         self._active = True
         self._nodeName = None
         self.runningStartThread = None
-        self.wrapper = None
         self.stopped = False
 
     @staticmethod
-    def Run(start=None, init=None, stop=None, exit=None, options=None, errorHandler = None):
+    def Run(start=None, init=None, stop=None, exit=None, options=None, errorHandler=None):
         """Starts the algorunner wrapper.
 
         Convenience method to start the algorithm. Pass the algorithm methods
@@ -105,6 +105,7 @@ class Algorunner:
             # fix start if it has only one argument
             if start.__code__.co_argcount == 1:
                 self._originalAlgorithm['start'] = lambda args, api: start(args)
+            self._wrapStatless()
             self.tracer = Tracer(options.tracer)
 
         except Exception as e:
@@ -146,11 +147,19 @@ class Algorunner:
                     if (isMandatory):
                         raise Exception(error)
                     print(error)
+            self._wrapStatless()
             self.tracer = Tracer(options.tracer)
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)
             traceback.print_exc()
             print(e)
+
+    def _wrapStatless(self):
+        wrapper = statelessAlgoWrapper(self._originalAlgorithm)
+        self._statelessWrapped['start'] = wrapper.start
+        self._statelessWrapped['init'] = wrapper.init
+        self._statelessWrapped['stop'] = wrapper.stop
+        self._statelessWrapped['exit'] = wrapper.exit
 
     def connectToWorker(self, options):
         socket = options.socket
@@ -168,7 +177,7 @@ class Algorunner:
 
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initStorage(options)
-        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage,self)
+        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage, self)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
@@ -253,14 +262,8 @@ class Algorunner:
                 self.sendError(self._loadAlgorithmError)
             else:
                 self._input = options
-                if self.isStreamingPipeLine() and options.get('stateType') == 'stateless' and self.wrapper is None:
-                    self.wrapper = statelessAlgoWrapper(self._originalAlgorithm)
-                    self._algorithm = dict()
-                    self._algorithm['start'] = self.wrapper.start
-                    self._algorithm['init'] = self.wrapper.init
-                    self._algorithm['stop'] = self.wrapper.stop
-                    self._algorithm['exit'] = self.wrapper.exit
-                # TODO keep the build algorithm in advance
+                if self.isStreamingPipeLine() and options.get('stateType') == 'stateless':
+                    self._algorithm = self._statelessWrapped
                 else:
                     self._algorithm = self._originalAlgorithm
                 self._nodeName = options.get('nodeName')
@@ -278,21 +281,22 @@ class Algorunner:
         self._hkubeApi.setupStreamingListeners(
             messageListenerConfig, discovery, self._nodeName)
 
+    def _setupStreamingProducer(self):
+        def onStatistics(statistics):
+            self._sendCommand(
+                messages.outgoing.streamingStatistics, statistics)
+
+        producerConfig = {}
+        producerConfig["port"] = config.discovery['streaming']['port']
+        producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
+        producerConfig['encoding'] = config.discovery['encoding']
+        producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
+        self._hkubeApi.setupStreamingProducer(
+            onStatistics, producerConfig, self._input['childs'])
+
     def _start(self, options):
-
         if (self.isStreamingPipeLine()):
-            # TODO setup streaming in a seprate function
-            def onStatistics(statistics):
-                self._sendCommand(
-                    messages.outgoing.streamingStatistics, statistics)
-
-            producerConfig = {}
-            producerConfig["port"] = config.discovery['streaming']['port']
-            producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
-            producerConfig['encoding'] = config.discovery['encoding']
-            producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
-            self._hkubeApi.setupStreamingProducer(
-                onStatistics, producerConfig, self._input['childs'])
+            self._setupStreamingProducer()
         # pylint: disable=unused-argument
         span = None
         self.runningStartThread = current_thread()
@@ -316,7 +320,7 @@ class Algorunner:
             algorithmData = method(self._input, self._hkubeApi)
             if not (self.stopped):
                 self._handle_response(algorithmData, jobId,
-                                  taskId, nodeName, savePaths, span)
+                                      taskId, nodeName, savePaths, span)
             self.runningStartThread = None
 
         except Exception as e:
