@@ -10,7 +10,7 @@ if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PU
       git checkout -f -b version-branch
 
       pip install --upgrade bump2version
-      bump2version patch
+      bump2version build
 
       git commit -am "$(git log -1 --pretty=%B) .... bump version [skip ci]"
       git push origin version-branch:master --follow-tags
