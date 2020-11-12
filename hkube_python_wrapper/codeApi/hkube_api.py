@@ -15,7 +15,7 @@ from ..communication.streaming.MessageProducer import MessageProducer
 class HKubeApi:
     """Hkube interface for code-api operations"""
 
-    def __init__(self, wc, wrapper, dataAdapter, storage, errorHandler=None):
+    def __init__(self, wc, wrapper, dataAdapter, storage):
         self._wc = wc
         self._wrapper = wrapper
         self._dataAdapter = dataAdapter
@@ -26,7 +26,6 @@ class HKubeApi:
         self._messageListeners = dict()
         self._inputListener = []
         self.listeningToMessages = False
-        self.errorHandler = errorHandler
 
     def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes):
         self.messageProducer = MessageProducer(producerConfig, nextNodes)
@@ -36,7 +35,7 @@ class HKubeApi:
             runThread.start()
 
     def sendError(self, e):
-        self.errorHandler.sendError(e)
+        self._wrapper.sendError(e)
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
         print("parents" + str(parents))

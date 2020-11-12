@@ -1,7 +1,5 @@
 from __future__ import print_function, division, absolute_import
 
-from random import randint
-
 from .statelessAlgoWrapper import statelessAlgoWrapper
 from ..config import config
 from .wc import WebsocketClient
@@ -44,7 +42,7 @@ class Algorunner:
         self.stopped = False
 
     @staticmethod
-    def Run(start=None, init=None, stop=None, exit=None, options=None, errorHandler=None):
+    def Run(start=None, init=None, stop=None, exit=None, options=None):
         """Starts the algorunner wrapper.
 
         Convenience method to start the algorithm. Pass the algorithm methods
@@ -105,7 +103,7 @@ class Algorunner:
             # fix start if it has only one argument
             if start.__code__.co_argcount == 1:
                 self._originalAlgorithm['start'] = lambda args, api: start(args)
-            self._wrapStatless()
+            self._wrapStateless()
             self.tracer = Tracer(options.tracer)
 
         except Exception as e:
@@ -153,14 +151,14 @@ class Algorunner:
                     if (isMandatory):
                         raise Exception(error)
                     print(error)
-            self._wrapStatless()
+            self._wrapStateless()
             self.tracer = Tracer(options.tracer)
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)
             traceback.print_exc()
             print(e)
 
-    def _wrapStatless(self):
+    def _wrapStateless(self):
         wrapper = statelessAlgoWrapper(self._originalAlgorithm)
         self._statelessWrapped['start'] = wrapper.start
         self._statelessWrapped['init'] = wrapper.init
@@ -183,7 +181,7 @@ class Algorunner:
 
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initStorage(options)
-        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage, self)
+        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))

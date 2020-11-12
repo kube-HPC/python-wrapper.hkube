@@ -2,7 +2,7 @@ import time
 from threading import Thread
 
 from hkube_python_wrapper.util.encoding import Encoding
-from hkube_python_wrapper.communication.zmq.streaming.ZMQProducer import ZMQProducer
+from hkube_python_wrapper.communication.zmq.streaming.producer.ZMQProducer import ZMQProducer
 from hkube_python_wrapper.util.fifo_array import FifoArray
 
 RESPONSE_CACHE = 2000
