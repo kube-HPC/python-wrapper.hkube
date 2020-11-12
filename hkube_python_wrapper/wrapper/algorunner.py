@@ -187,7 +187,8 @@ class Algorunner:
         print('connecting to {url}'.format(url=self._url))
         self._wsc.start()
         self._dataServer and self._dataServer.listen()
-        runThread = Thread(name="WorkerListener", target=self.run, daemon=True)  # pylint: disable=unexpected-keyword-arg
+        runThread = Thread(name="WorkerListener", target=self.run)
+        runThread.daemon = True
         runThread.start()
         return [self._wsc, runThread]
 
@@ -215,7 +216,8 @@ class Algorunner:
         while self._active:
             try:
                 (command, data) = self.get_message()
-                runThread = Thread(name=command + "Thread", target=self.handle, args=[command, data], daemon=True)  # pylint: disable=unexpected-keyword-arg
+                runThread = Thread(name=command + "Thread", target=self.handle, args=[command, data])
+                runThread.daemon = True
                 runThread.start()
             except Empty:
                 pass
