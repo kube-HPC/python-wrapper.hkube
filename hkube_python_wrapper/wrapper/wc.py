@@ -5,6 +5,7 @@ from websocket import ABNF
 import websocket
 from hkube_python_wrapper.util.encoding import Encoding
 from threading import Thread
+from ratelimit import limits
 
 
 class WebsocketClient(Thread):
@@ -29,6 +30,7 @@ class WebsocketClient(Thread):
         print('got message from worker: {command}'.format(command=command))
         self._msg_queue.put((command, data))
 
+    @limits(calls=1,period=5,raise_on_limit=False)
     def on_error(self, error):
         if self._firstConnect:
             print(error)
