@@ -112,14 +112,20 @@ class Algorunner:
             self._loadAlgorithmError = self._errorMsg(e)
             print(e)
 
+    @staticmethod
+    def _getEntryPoint(entry):
+        splits = os.path.splitext(entry)
+        entryPoint = splits[0] if splits[-1] == '.py' else entry
+        entryPoint = entryPoint.replace("/", ".")
+        return entryPoint
+
     def loadAlgorithm(self, options):
         try:
             cwd = os.getcwd()
             algOptions = options.algorithm
             package = algOptions["path"]
             entry = algOptions["entryPoint"]
-            entryPoint = entry.replace("/", ".")
-            entryPoint = os.path.splitext(entryPoint)[0]
+            entryPoint = Algorunner._getEntryPoint(entry)
             __import__(package)
             os.chdir('{cwd}/{package}'.format(cwd=cwd, package=package))
             print('loading {entry}'.format(entry=entry))
