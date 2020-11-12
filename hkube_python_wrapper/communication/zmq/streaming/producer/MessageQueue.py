@@ -1,4 +1,6 @@
 from collections import OrderedDict
+
+
 class MessageQueue(object):
     def __init__(self, consumerTypes):
         self.consumerTypes = consumerTypes
@@ -37,7 +39,7 @@ class MessageQueue(object):
 
     def loseMessage(self):
         out = self.queue.pop(0)
-        _,msg = out
+        _, msg = out
         self.sizeSum -= len(msg)
         self.lostMessages += 1
 
