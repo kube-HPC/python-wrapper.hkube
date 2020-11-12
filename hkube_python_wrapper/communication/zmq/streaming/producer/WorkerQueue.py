@@ -1,5 +1,5 @@
 from collections import OrderedDict
-
+import time
 
 class WorkerQueue(object):
     def __init__(self, consumerTypes):
@@ -26,4 +26,3 @@ class WorkerQueue(object):
     def next(self, type):
         address, worker = self.queues[type].popitem(False)  # pylint: disable=unused-variable
         return address
-

@@ -31,7 +31,7 @@ class HKubeApi:
         self.messageProducer = MessageProducer(producerConfig, nextNodes)
         self.messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
-            runThread = Thread(name="MessageProducer", target=self.messageProducer.start, daemon=True)
+            runThread = Thread(name="MessageProducer", target=self.messageProducer.start, daemon=True) # pylint: disable=unexpected-keyword-arg
             runThread.start()
 
     def sendError(self, e):
@@ -52,7 +52,7 @@ class HKubeApi:
                 listener.registerMessageListener(self._onMessage)
                 self._messageListeners[remoteAddress] = listener
                 if (self.listeningToMessages):
-                    runThread = Thread(name="MessageListener", target=listener.start, daemon=True)
+                    runThread = Thread(name="MessageListener", target=listener.start, daemon=True) # pylint: disable=unexpected-keyword-arg
                     runThread.start()
             if (predecessor['type'] == 'Del'):
                 if (self.listeningToMessages):
@@ -72,7 +72,7 @@ class HKubeApi:
     def startMessageListening(self):
         self.listeningToMessages = True
         for listener in self._messageListeners.values():
-            runThread = Thread(name="MessageListener", target=listener.start, daemon=True)
+            runThread = Thread(name="MessageListener", target=listener.start, daemon=True) # pylint: disable=unexpected-keyword-arg
             runThread.start()
 
     def sendMessage(self, msg):

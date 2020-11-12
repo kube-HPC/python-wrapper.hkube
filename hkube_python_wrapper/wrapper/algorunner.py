@@ -187,7 +187,7 @@ class Algorunner:
         print('connecting to {url}'.format(url=self._url))
         self._wsc.start()
         self._dataServer and self._dataServer.listen()
-        runThread = Thread(name="WorkerListener", target=self.run, daemon=True)
+        runThread = Thread(name="WorkerListener", target=self.run, daemon=True)  # pylint: disable=unexpected-keyword-arg
         runThread.start()
         return [self._wsc, runThread]
 
@@ -215,7 +215,7 @@ class Algorunner:
         while self._active:
             try:
                 (command, data) = self.get_message()
-                runThread = Thread(name=command + "Thread", target=self.handle, args=[command, data], daemon=True)
+                runThread = Thread(name=command + "Thread", target=self.handle, args=[command, data], daemon=True)  # pylint: disable=unexpected-keyword-arg
                 runThread.start()
             except Empty:
                 pass
@@ -342,8 +342,6 @@ class Algorunner:
     def _handle_responseV1(self, algorithmData, span):
         if (span):
             Tracer.instance.finish_span(span)
-        if (self.isStreamingPipeLine()):
-            self._hkubeApi.stopStreaming()
         self._sendCommand(messages.outgoing.done, algorithmData)
 
     def _handle_responseV2_V3(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
@@ -452,6 +450,6 @@ class Algorunner:
         return str(error)
 
     def isStreamingPipeLine(self):
-        if (self._input.get('kind') == 'stream'):
+        if (self._input and self._input.get('kind') == 'stream'):
             return True
         return False

@@ -1,7 +1,7 @@
 import time
 from threading import Thread
 
-from hkube_python_wrapper.communication.zmq.streaming.ZMQProducer import ZMQProducer
+from hkube_python_wrapper.communication.zmq.streaming.producer.ZMQProducer import ZMQProducer
 from hkube_python_wrapper.communication.zmq.streaming.ZMQListener import ZMQListener
 from hkube_python_wrapper.util.encoding import Encoding
 
