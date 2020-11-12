@@ -32,7 +32,7 @@ class MessageProducer(object):
                 time.sleep(interval)
 
         if (self.nodeNames):
-            runThread = Thread(name="Statistics", target=sendStatisticsEvery, args=[statisticsInterval], daemon=True)
+            runThread = Thread(name="Statistics", target=sendStatisticsEvery, args=[statisticsInterval], daemon=True)  # pylint: disable=unexpected-keyword-arg
             runThread.start()
 
     def produce(self, obj):
