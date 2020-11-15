@@ -41,7 +41,7 @@ class Algorunner(DaemonThread):
         self._nodeName = None
         self.runningStartThread = None
         self.stopped = False
-        DaemonThread.__init__(self, "WorkdrListener")
+        DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):
@@ -325,8 +325,7 @@ class Algorunner(DaemonThread):
             method = self._getMethod('start')
             algorithmData = method(self._input, self._hkubeApi)
             if not (self.stopped):
-                self._handle_response(algorithmData, jobId,
-                                      taskId, nodeName, savePaths, span)
+                self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)
             self.runningStartThread = None
 
         except Exception as e:
@@ -336,8 +335,7 @@ class Algorunner(DaemonThread):
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         if (self._storage == 'v3'):
-            self._handle_responseV2_V3(
-                algorithmData, jobId, taskId, nodeName, savePaths, span)
+            self._handle_responseV2_V3(algorithmData, jobId, taskId, nodeName, savePaths, span)
         else:
             self._handle_responseV1(algorithmData, span)
 
