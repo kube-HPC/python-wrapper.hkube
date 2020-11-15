@@ -4,10 +4,10 @@ import time
 from hkube_python_wrapper.util.encoding import Encoding
 
 #
-from hkube_python_wrapper.util.DeamonThread import DeamonThread
+from hkube_python_wrapper.util.DaemonThread import DaemonThread
 
 
-class MessageListener(DeamonThread):
+class MessageListener(DaemonThread):
 
     def __init__(self, options, receiverNode, errorHandler=None):
         self.errorHandler = errorHandler
@@ -17,7 +17,7 @@ class MessageListener(DeamonThread):
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
         self.messageListeners = []
-        DeamonThread.__init__(self, "MessageListener-"+ str(self.messageOriginNodeName))
+        DaemonThread.__init__(self, "MessageListener-"+ str(self.messageOriginNodeName))
 
     def registerMessageListener(self, listener):
         self.messageListeners.append(listener)

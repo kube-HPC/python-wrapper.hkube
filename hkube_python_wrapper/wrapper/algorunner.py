@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
-from hkube_python_wrapper.util.DeamonThread import DeamonThread
+from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from .statelessAlgoWrapper import statelessAlgoWrapper
 from ..config import config
 from .wc import WebsocketClient
@@ -19,7 +19,7 @@ import traceback
 from threading import Thread, current_thread
 
 
-class Algorunner(DeamonThread):
+class Algorunner(DaemonThread):
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self._url = None
@@ -41,7 +41,7 @@ class Algorunner(DeamonThread):
         self._nodeName = None
         self.runningStartThread = None
         self.stopped = False
-        DeamonThread.__init__(self, "WorkdrListener")
+        DaemonThread.__init__(self, "WorkdrListener")
 
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):

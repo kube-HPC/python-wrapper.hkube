@@ -1,14 +1,14 @@
 import zmq
 from .consts import consts
-from hkube_python_wrapper.util.DeamonThread import DeamonThread
+from hkube_python_wrapper.util.DaemonThread import DaemonThread
 
-class ZMQPingServer(DeamonThread):
+class ZMQPingServer(DaemonThread):
     def __init__(self, context, workerUrl, name):
         self._active = True
         self._socket = None
         self._workerUrl = workerUrl
         self._context = context
-        DeamonThread.__init__(self, name=name)
+        DaemonThread.__init__(self, name=name)
 
     def run(self):
         self._socket = self._context.socket(zmq.REP)
