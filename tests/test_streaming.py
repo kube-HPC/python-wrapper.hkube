@@ -25,8 +25,7 @@ def test_Messaging():
             asserts['field1'] = msg['field1']
         time.sleep(1)
 
-    runThread = Thread(name="producer", target=messageProducer.start)
-    runThread.start()
+    messageProducer.start()
 
     messageProducer.produce({'field1': 'value1'})
     messageProducer.produce({'field1': 'value1'})
@@ -36,8 +35,7 @@ def test_Messaging():
     assert asserts['stats'][0]['sent'] == 0
     messageListener = MessageListener(listenr_config, receiverNode='a')
     messageListener.registerMessageListener(onMessage)
-    runThread = Thread(name="listen", target=messageListener.start)
-    runThread.start()
+    messageListener.start()
     time.sleep(4.2)
     assert asserts['field1'] == 'value1'
     assert asserts['stats'][0]['queueSize'] == 0

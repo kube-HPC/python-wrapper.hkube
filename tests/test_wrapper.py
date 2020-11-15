@@ -41,7 +41,7 @@ def test_load_algorithm_streaming_then_batch():
     algorunner._init(mockdata.streamingInitData)
     thrd = Thread(target=algorunner._originalAlgorithm['start'], args=[{'input': mockdata.streamingInitData}, algorunner._hkubeApi])
     thrd.start()
-    algorunner._stop(mockdata.initData)
+    algorunner._stopAlgorithm(mockdata.initData)
     result1 = algorunner._originalAlgorithm['start']({'input': mockdata.initData}, algorunner._hkubeApi)
     result2 = startCallback({'input': mockdata.initData})
     assert result1 == result2

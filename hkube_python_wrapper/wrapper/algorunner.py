@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
+from util.DeamonThread import DeamonThread
 from .statelessAlgoWrapper import statelessAlgoWrapper
 from ..config import config
 from .wc import WebsocketClient
@@ -18,7 +19,7 @@ import traceback
 from threading import Thread, current_thread
 
 
-class Algorunner:
+class Algorunner(DeamonThread):
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self._url = None
@@ -40,6 +41,7 @@ class Algorunner:
         self._nodeName = None
         self.runningStartThread = None
         self.stopped = False
+        DeamonThread.__init__(self, "WorkdrListener")
 
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):
@@ -187,10 +189,8 @@ class Algorunner:
         print('connecting to {url}'.format(url=self._url))
         self._wsc.start()
         self._dataServer and self._dataServer.listen()
-        runThread = Thread(name="WorkerListener", target=self.run)
-        runThread.daemon = True
-        runThread.start()
-        return [self._wsc, runThread]
+        self.start()
+        return [self._wsc, self]
 
     def handle(self, command, data):
         if (command == messages.incoming.initialize):
@@ -198,7 +198,7 @@ class Algorunner:
         if (command == messages.incoming.start):
             self._start(data)
         if (command == messages.incoming.stop):
-            self._stop(data)
+            self._stopAlgorithm(data)
         if (command == messages.incoming.serviceDiscoveryUpdate):
             self._discovery_update(data)
         if (command == messages.incoming.exit):
@@ -394,7 +394,7 @@ class Algorunner:
         if (isServing):
             self._sendCommand(messages.outgoing.servingStatus, True)
 
-    def _stop(self, options):
+    def _stopAlgorithm(self, options):
         self.stopped = True
         try:
             method = self._getMethod('stop')

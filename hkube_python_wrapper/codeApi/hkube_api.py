@@ -31,9 +31,7 @@ class HKubeApi:
         self.messageProducer = MessageProducer(producerConfig, nextNodes)
         self.messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
-            runThread = Thread(name="MessageProducer", target=self.messageProducer.start)
-            runThread.daemon = True
-            runThread.start()
+            self.messageProducer.start()
 
     def sendError(self, e):
         self._wrapper.sendError(e)
@@ -53,9 +51,7 @@ class HKubeApi:
                 listener.registerMessageListener(self._onMessage)
                 self._messageListeners[remoteAddress] = listener
                 if (self.listeningToMessages):
-                    runThread = Thread(name="MessageListener", target=listener.start)
-                    runThread.daemon = True
-                    runThread.start()
+                    listener.start()
             if (predecessor['type'] == 'Del'):
                 if (self.listeningToMessages):
                     self._messageListeners[remoteAddress].close()
@@ -74,9 +70,8 @@ class HKubeApi:
     def startMessageListening(self):
         self.listeningToMessages = True
         for listener in self._messageListeners.values():
-            runThread = Thread(name="MessageListener", target=listener.start)
-            runThread.daemon = True
-            runThread.start()
+            if not (listener.is_alive()):
+                listener.start()
 
     def sendMessage(self, msg):
         if (self.messageProducer is None):
@@ -88,6 +83,7 @@ class HKubeApi:
         if (self.listeningToMessages):
             for listener in self._messageListeners.values():
                 listener.close()
+            self._messageListeners = {}
         self.listeningToMessages = False
         self._inputListener = []
         if (self.messageProducer is not None):

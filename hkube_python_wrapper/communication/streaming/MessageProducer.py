@@ -4,11 +4,12 @@ from threading import Thread
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.communication.zmq.streaming.producer.ZMQProducer import ZMQProducer
 from hkube_python_wrapper.util.fifo_array import FifoArray
+from  hkube_python_wrapper.util.DeamonThread import DeamonThread
 
 RESPONSE_CACHE = 2000
 
 
-class MessageProducer(object):
+class MessageProducer(DeamonThread):
     def __init__(self, options, nodeNames):
         self.nodeNames = nodeNames
         port = options['port']
@@ -35,6 +36,7 @@ class MessageProducer(object):
             runThread = Thread(name="Statistics", target=sendStatisticsEvery, args=[statisticsInterval])
             runThread.daemon = True
             runThread.start()
+        DeamonThread.__init__(self,"MessageProducer")
 
     def produce(self, obj):
         header, encodedMessage = self._encoding.encode(obj)
@@ -75,7 +77,7 @@ class MessageProducer(object):
             print("statistics " + str(statistics))
         self.printStatistics += 1
 
-    def start(self):
+    def run(self):
         self.adapter.start()
 
     def close(self):
