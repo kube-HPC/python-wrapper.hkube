@@ -29,10 +29,17 @@ discovery = {
     "num_threads": getIntEnv('DISCOVERY_SERVER_NUM_THREADS', 5),
     "num_ping_threads": getIntEnv('DISCOVERY_SERVER_NUM_PING_THREADS', 5),
     "servingReportInterval": getIntEnv('DISCOVERY_SERVING_REPORT_INTERVAL', 5000),
+    "streaming": {
+        "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_MB', 1500),
+        "port": os.environ.get('STREAMING_DISCOVERY_PORT', 9022),
+        "statisticsInterval": os.environ.get('STREAMING_STATISTICS_INTERVAL', 2),
+        "stateful": getBoolEnv('STREAMING_STATEFUL', 'True')
+    }
+
 }
 algorithm = {
     "path": os.environ.get('ALGORITHM_PATH', "algorithm_unique_folder"),
-    "entryPoint": os.environ.get('ALGORITHM_ENTRY_POINT', "main.py")
+    "entryPoint": os.environ.get('ALGORITHM_ENTRY_POINT', "main.py"),
 }
 storage = {
     "clusterName": os.environ.get('CLUSTER_NAME', 'local'),
