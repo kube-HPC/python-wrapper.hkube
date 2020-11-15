@@ -32,7 +32,7 @@ class MessageQueue(object):
             if not (anyZero):
                 self.queue.pop(0)
                 self.sentToAll += 1
-                _,msg = out
+                _, msg = out
                 self.sizeSum -= len(msg)
                 for key in self.indexPerConsumer.keys():
                     self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
