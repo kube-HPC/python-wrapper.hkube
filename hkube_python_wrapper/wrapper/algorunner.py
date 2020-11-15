@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
-from util.DeamonThread import DeamonThread
+from hkube_python_wrapper.util.DeamonThread import DeamonThread
 from .statelessAlgoWrapper import statelessAlgoWrapper
 from ..config import config
 from .wc import WebsocketClient

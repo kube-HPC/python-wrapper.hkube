@@ -4,7 +4,7 @@ import time
 from hkube_python_wrapper.util.encoding import Encoding
 
 #
-from util.DeamonThread import DeamonThread
+from hkube_python_wrapper.util.DeamonThread import DeamonThread
 
 
 class MessageListener(DeamonThread):

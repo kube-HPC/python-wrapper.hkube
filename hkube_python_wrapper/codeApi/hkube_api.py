@@ -1,8 +1,5 @@
 from __future__ import print_function, division, absolute_import
 import time
-
-from threading import Thread
-
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.messages import messages
 from .execution import Execution
