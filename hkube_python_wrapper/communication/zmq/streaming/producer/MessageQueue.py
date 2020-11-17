@@ -2,11 +2,12 @@ from collections import OrderedDict
 
 
 class MessageQueue(object):
-    def __init__(self, consumerTypes):
-        self.consumerTypes = consumerTypes
+    def __init__(self, defaultConsumers, optionalConsumers):
+        self.defaultConsumers = defaultConsumers
+        self.consumerTypes = defaultConsumers + optionalConsumers
 
         self.indexPerConsumer = OrderedDict()
-        for consumerType in consumerTypes:
+        for consumerType in self.consumerTypes:
             self.indexPerConsumer[consumerType] = 0
         self.sizeSum = 0
         self.sentToAll = 0
@@ -16,12 +17,27 @@ class MessageQueue(object):
     def hasItems(self, consumerType):
         return self.indexPerConsumer[consumerType] < len(self.queue)
 
+    def nextMessageIndex(self, consumerType):
+        index = self.indexPerConsumer[consumerType]
+        foundMessage = False
+        isDefaultConsumer = consumerType in self.defaultConsumers
+        while (not foundMessage) and index < len(self.queue):
+            envelope, _, _ = self.queue[index]
+            if (envelope and (envelope and envelope[0] == consumerType or (isDefaultConsumer and envelope[0] == 'ALL'))):
+                foundMessage = True
+            else:
+                index += 1
+
+        if (foundMessage):
+            return index
+        else:
+            return None
+
     # Messages are kept in the queue until consumers of all types popped out the message.
     # An index per consumer type is maintained, to know which messages the consumer already received and conclude which message should he get now.
-    def pop(self, consumerType):
-        index = self.indexPerConsumer[consumerType]
-        out = self.queue[index]
-        index += 1
+    def pop(self, consumerType, nextItemIndex):
+        out = self.queue[nextItemIndex]
+        index = nextItemIndex + 1
         self.indexPerConsumer[consumerType] = index
         if (index == 1):
             anyZero = False
@@ -32,7 +48,7 @@ class MessageQueue(object):
             if not (anyZero):
                 self.queue.pop(0)
                 self.sentToAll += 1
-                _, msg = out
+                _, _, msg = out
                 self.sizeSum -= len(msg)
                 for key in self.indexPerConsumer.keys():
                     self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
@@ -40,13 +56,13 @@ class MessageQueue(object):
 
     def loseMessage(self):
         out = self.queue.pop(0)
-        _, msg = out
+        _, _, msg = out
         self.sizeSum -= len(msg)
         self.lostMessages += 1
 
-    def append(self, header, msg):
+    def append(self, envelope, header, msg):
         self.sizeSum += len(msg)
-        return self.queue.append((header, msg))
+        return self.queue.append((envelope, header, msg))
 
     def size(self, consumerType):
         index = self.indexPerConsumer[consumerType]

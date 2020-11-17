@@ -1,3 +1,4 @@
+import threading
 import time
 from threading import Thread
 
@@ -10,21 +11,29 @@ RESPONSE_CACHE = 2000
 
 
 class MessageProducer(DaemonThread):
-    def __init__(self, options, nodeNames):
-        self.nodeNames = nodeNames
+    def __init__(self, options, nodes):
+        self.nodes = nodes
         port = options['port']
         maxMemorySize = options['messagesMemoryBuff'] * 1024 * 1024
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
-        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=nodeNames)
+        mainFlowNodeNames = []
+        optionalConsumers = []
+        for node in nodes:
+            if (node["isMainFlow"]):
+                mainFlowNodeNames.append(node["nodeName"])
+            else:
+                optionalConsumers.append(node["nodeName"])
+
+        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, defaultConsumers=mainFlowNodeNames, optionalConsumers=optionalConsumers)
         self.responsesCache = {}
         self.responseCount = {}
         self.active = True
         self.printStatistics = 0
-        for nodeName in nodeNames:
-            self.responsesCache[nodeName] = FifoArray(RESPONSE_CACHE)
-            self.responseCount[nodeName] = 0
+        for node in nodes:
+            self.responsesCache[node["nodeName"]] = FifoArray(RESPONSE_CACHE)
+            self.responseCount[node["nodeName"]] = 0
         self.listeners = []
 
         def sendStatisticsEvery(interval):
@@ -32,15 +41,15 @@ class MessageProducer(DaemonThread):
                 self.sendStatistics()
                 time.sleep(interval)
 
-        if (self.nodeNames):
+        if (self.nodes):
             runThread = Thread(name="Statistics", target=sendStatisticsEvery, args=[statisticsInterval])
             runThread.daemon = True
             runThread.start()
         DaemonThread.__init__(self, "MessageProducer")
 
-    def produce(self, obj):
+    def produce(self, envelope, obj):
         header, encodedMessage = self._encoding.encode(obj)
-        self.adapter.produce(header, encodedMessage)
+        self.adapter.produce(header, encodedMessage,envelope=envelope)
 
     def responseAccumulator(self, response, consumerType):
         decodedResponse = self._encoding.decode(value=response, plainEncode=True)
@@ -61,12 +70,12 @@ class MessageProducer(DaemonThread):
 
     def sendStatistics(self):
         statistics = []
-        for nodeName in self.nodeNames:
-            queueSize = self.adapter.queueSize(nodeName)
-            sent = self.adapter.sent(nodeName)
-            singleNodeStatistics = {"nodeName": nodeName, "sent": sent, "queueSize": queueSize,
-                                    "durations": self.resetResponseCache(nodeName),
-                                    "responses": self.getResponseCount(nodeName),
+        for node in self.nodes:
+            queueSize = self.adapter.queueSize(node["nodeName"])
+            sent = self.adapter.sent(node["nodeName"])
+            singleNodeStatistics = {"nodeName": node["nodeName"], "sent": sent, "queueSize": queueSize,
+                                    "durations": self.resetResponseCache(node["nodeName"]),
+                                    "responses": self.getResponseCount(node["nodeName"]),
                                     "dropped": self.adapter.messageQueue.lostMessages}
             statistics.append(singleNodeStatistics)
         for listener in self.listeners:

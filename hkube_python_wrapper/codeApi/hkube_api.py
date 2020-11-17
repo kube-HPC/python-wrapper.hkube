@@ -7,6 +7,7 @@ from .waitFor import WaitForData
 from hkube_python_wrapper.util.queueImpl import Empty
 from ..communication.streaming.MessageListener import MessageListener
 from ..communication.streaming.MessageProducer import MessageProducer
+import threading
 
 
 class HKubeApi:
@@ -57,7 +58,9 @@ class HKubeApi:
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
 
-    def _onMessage(self, msg, origin):
+    def _onMessage(self, envelope, msg, origin):
+        localStorage = threading.local()
+        localStorage.envelope = envelope
         for listener in self._inputListener:
             try:
                 listener(msg, origin)
@@ -73,8 +76,12 @@ class HKubeApi:
     def sendMessage(self, msg):
         if (self.messageProducer is None):
             raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
-        if (self.messageProducer.nodeNames):
-            self.messageProducer.produce(msg)
+        if (self.messageProducer.nodes):
+            if hasattr(threading.local(), 'envelope') and threading.local().envelope:
+                envelope = threading.local().envelope
+            else:
+                envelope = ['ALL']
+            self.messageProducer.produce(envelope, msg)
 
     def stopStreaming(self):
         if (self.listeningToMessages):

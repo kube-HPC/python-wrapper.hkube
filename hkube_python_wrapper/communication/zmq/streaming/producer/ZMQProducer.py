@@ -19,23 +19,24 @@ PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
 
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize, responseAcumulator, consumerTypes):
+    def __init__(self, port, maxMemorySize, responseAcumulator, defaultConsumers, optionalConsumers):
         self.responseAcumulator = responseAcumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
-        self.messageQueue = MessageQueue(consumerTypes)
-        self.consumerTypes = consumerTypes
+        self.defaultConsumers = defaultConsumers
+        self.consumerTypes = defaultConsumers + optionalConsumers
+        self.messageQueue = MessageQueue(defaultConsumers, optionalConsumers)
         context = zmq.Context(1)
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers
         print("Producer listening on " + "tcp://*:" + str(port))
         self.active = True
 
-    def produce(self, header, message):
+    def produce(self, header, message, envelope=['ALL']):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
             print('Loosing a message, queue filled up ')
             self.messageQueue.loseMessage()
-        self.messageQueue.append(header, message)
+        self.messageQueue.append(envelope, header, message)
 
     def start(self):  # pylint: disable=too-many-branches
         poll_workers = zmq.Poller()
@@ -83,9 +84,11 @@ class ZMQProducer(object):
                                     print(e)
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
             for type, workerQueu in workers.queues.items():
-                if (workerQueu and self.messageQueue.hasItems(type)):
-                    header, payload = self.messageQueue.pop(type)
-                    frames = [header, payload]
+                nextItemIndex = self.messageQueue.nextMessageIndex(type)
+                if (workerQueu and (nextItemIndex is not None)):
+                    envelope, header, payload = self.messageQueue.pop(type, nextItemIndex)
+                    envelope.pop()
+                    frames = [bytes(envelope), header, payload]
                     frames.insert(0, workers.next(type))
                     try:
                         self._backend.send_multipart(frames)

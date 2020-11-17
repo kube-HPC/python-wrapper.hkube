@@ -63,9 +63,9 @@ class ZMQListener(object):
                     if (self.active):
                         raise Exception("Connection to producer on " + self.remoteAddress + " interrupted")
 
-                if len(frames) == 2:
+                if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
-                    result = self.onMessage(frames[0], frames[1])
+                    result = self.onMessage(frames[0], frames[1], frames[2])
                     newFrames = [result, msgpack.packb(self.consumerType)]
                     try:
                         self.worker.send_multipart(newFrames)
