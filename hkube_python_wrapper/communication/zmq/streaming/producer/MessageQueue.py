@@ -1,8 +1,11 @@
 from collections import OrderedDict
 
+from communication.zmq.streaming.producer.CustomFlow import CustomFlow
+
 
 class MessageQueue(object):
-    def __init__(self, defaultConsumers, optionalConsumers):
+    def __init__(self, defaultConsumers, optionalConsumers, me):
+        self.me = me
         self.defaultConsumers = defaultConsumers
         self.consumerTypes = defaultConsumers + optionalConsumers
 
@@ -23,7 +26,8 @@ class MessageQueue(object):
         isDefaultConsumer = consumerType in self.defaultConsumers
         while (not foundMessage) and index < len(self.queue):
             envelope, _, _ = self.queue[index]
-            if (envelope and (envelope and envelope[0] == consumerType or (isDefaultConsumer and envelope[0] == 'ALL'))):
+            flow = CustomFlow(envelope, self.me)
+            if (flow.isNextInFlow(consumerType)):
                 foundMessage = True
             else:
                 index += 1

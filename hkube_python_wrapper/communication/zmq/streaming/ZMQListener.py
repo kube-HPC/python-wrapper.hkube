@@ -65,7 +65,8 @@ class ZMQListener(object):
 
                 if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
-                    result = self.onMessage(frames[0], frames[1], frames[2])
+                    envelope = msgpack.unpackb(frames[0])
+                    result = self.onMessage(envelope, frames[1], frames[2])
                     newFrames = [result, msgpack.packb(self.consumerType)]
                     try:
                         self.worker.send_multipart(newFrames)

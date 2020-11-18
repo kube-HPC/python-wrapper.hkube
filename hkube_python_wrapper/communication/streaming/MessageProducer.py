@@ -11,7 +11,7 @@ RESPONSE_CACHE = 2000
 
 
 class MessageProducer(DaemonThread):
-    def __init__(self, options, nodes):
+    def __init__(self, options, nodes, me):
         self.nodes = nodes
         port = options['port']
         maxMemorySize = options['messagesMemoryBuff'] * 1024 * 1024
@@ -26,7 +26,7 @@ class MessageProducer(DaemonThread):
             else:
                 optionalConsumers.append(node["nodeName"])
 
-        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, defaultConsumers=mainFlowNodeNames, optionalConsumers=optionalConsumers)
+        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, defaultConsumers=mainFlowNodeNames, optionalConsumers=optionalConsumers, me=me)
         self.responsesCache = {}
         self.responseCount = {}
         self.active = True
@@ -49,7 +49,7 @@ class MessageProducer(DaemonThread):
 
     def produce(self, envelope, obj):
         header, encodedMessage = self._encoding.encode(obj)
-        self.adapter.produce(header, encodedMessage,envelope=envelope)
+        self.adapter.produce(header, encodedMessage, envelope=envelope)
 
     def responseAccumulator(self, response, consumerType):
         decodedResponse = self._encoding.decode(value=response, plainEncode=True)

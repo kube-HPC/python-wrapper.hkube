@@ -15,15 +15,19 @@ class statelessAlgoWrapper(object):
         if not (self.originalAlgorithm.get('init') is None):
             self.originalAlgorithm['init'](msg)
             #TODO should init be called upon every message
+        foundInInput = False
         input = copy.copy(self.options['input'])
-
         flatInput = self.options.get('flatInput')
         for k, v in flatInput.items():
             if (v == '@' + origin):
+                foundInInput = True
                 setPath(input, k, msg)
         options = {}
         options.update(self.options)
-        options['input'] = input
+        if (foundInInput):
+            options['input'] = input
+        else:
+            options['input'] = [msg]
         try:
             result = self.originalAlgorithm['start'](options, self._hkubeApi)
             self._hkubeApi.sendMessage(result)

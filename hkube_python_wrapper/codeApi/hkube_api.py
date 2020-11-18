@@ -24,9 +24,13 @@ class HKubeApi:
         self._messageListeners = dict()
         self._inputListener = []
         self.listeningToMessages = False
+        self.parsedFlows = {}
 
-    def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes):
-        self.messageProducer = MessageProducer(producerConfig, nextNodes)
+    def setParsedFlows(self, flows):
+        self.parsedFlows = flows
+
+    def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, me):
+        self.messageProducer = MessageProducer(producerConfig, nextNodes, me)
         self.messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
             self.messageProducer.start()
@@ -73,15 +77,20 @@ class HKubeApi:
             if not (listener.is_alive()):
                 listener.start()
 
-    def sendMessage(self, msg):
+    def sendMessage(self, msg, customFlow=None):
         if (self.messageProducer is None):
             raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
         if (self.messageProducer.nodes):
-            if hasattr(threading.local(), 'envelope') and threading.local().envelope:
-                envelope = threading.local().envelope
+            if  (customFlow == None):
+                if hasattr(threading.local(), 'envelope') and threading.local().envelope:
+                    flow = threading.local().envelope
+                else:
+                    flow = []
             else:
-                envelope = ['ALL']
-            self.messageProducer.produce(envelope, msg)
+                flow = self.parsedFlows.get(customFlow)
+                if (flow is None):
+                    raise Exception("No such flow " + customFlow)
+            self.messageProducer.produce(flow, msg)
 
     def stopStreaming(self):
         if (self.listeningToMessages):
