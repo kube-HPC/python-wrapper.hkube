@@ -10,6 +10,7 @@ from ..communication.streaming.MessageProducer import MessageProducer
 import threading
 
 
+
 class HKubeApi:
     """Hkube interface for code-api operations"""
 
@@ -30,7 +31,7 @@ class HKubeApi:
         self.parsedFlows = flows
 
     def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, me):
-        self.messageProducer = MessageProducer(producerConfig, nextNodes, me)
+        self.messageProducer = MessageProducer(producerConfig, nextNodes)
         self.messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
             self.messageProducer.start()
@@ -76,7 +77,6 @@ class HKubeApi:
         for listener in self._messageListeners.values():
             if not (listener.is_alive()):
                 listener.start()
-
     def sendMessage(self, msg, customFlow=None):
         if (self.messageProducer is None):
             raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
@@ -91,7 +91,6 @@ class HKubeApi:
                 if (flow is None):
                     raise Exception("No such flow " + customFlow)
             self.messageProducer.produce(flow, msg)
-
     def stopStreaming(self):
         if (self.listeningToMessages):
             for listener in self._messageListeners.values():

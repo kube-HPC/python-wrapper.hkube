@@ -4,7 +4,6 @@
 #   Author: Daniel Lundin <dln(at)eintr(dot)org>
 #
 import time
-
 from .CustomFlow import CustomFlow
 from .Worker import Worker
 from .WorkerQueue import WorkerQueue
@@ -34,6 +33,7 @@ class ZMQProducer(object):
         self._backend.bind("tcp://*:" + str(port))  # For workers
         print("Producer listening on " + "tcp://*:" + str(port))
         self.active = True
+
 
     def produce(self, header, message, envelope=[]):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
@@ -92,6 +92,7 @@ class ZMQProducer(object):
                     envelope, header, payload = self.messageQueue.pop(type, nextItemIndex)
                     flow = CustomFlow(envelope,self.me)
                     frames = [msgpack.packb(flow.getRestOfFlow()), header, payload]
+
                     frames.insert(0, workers.next(type))
                     try:
                         self._backend.send_multipart(frames)

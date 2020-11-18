@@ -20,6 +20,7 @@ class MessageQueue(object):
     def hasItems(self, consumerType):
         return self.indexPerConsumer[consumerType] < len(self.queue)
 
+
     def nextMessageIndex(self, consumerType):
         index = self.indexPerConsumer[consumerType]
         foundMessage = False
@@ -53,6 +54,7 @@ class MessageQueue(object):
                 self.queue.pop(0)
                 self.sentToAll += 1
                 _, _, msg = out
+
                 self.sizeSum -= len(msg)
                 for key in self.indexPerConsumer.keys():
                     self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
@@ -67,6 +69,7 @@ class MessageQueue(object):
     def append(self, envelope, header, msg):
         self.sizeSum += len(msg)
         return self.queue.append((envelope, header, msg))
+
 
     def size(self, consumerType):
         index = self.indexPerConsumer[consumerType]

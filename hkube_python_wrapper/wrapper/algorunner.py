@@ -288,6 +288,7 @@ class Algorunner(DaemonThread):
             messageListenerConfig, discovery, self._nodeName)
 
     def _setupStreamingProducer(self,me):
+
         def onStatistics(statistics):
             self._sendCommand(
                 messages.outgoing.streamingStatistics, statistics)

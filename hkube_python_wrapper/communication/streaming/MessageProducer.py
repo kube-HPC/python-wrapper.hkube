@@ -51,7 +51,7 @@ class MessageProducer(DaemonThread):
         header, encodedMessage = self._encoding.encode(obj)
         self.adapter.produce(header, encodedMessage, envelope=envelope)
 
-    def responseAccumulator(self, response, consumerType):
+        def responseAccumulator(self, response, consumerType):
         decodedResponse = self._encoding.decode(value=response, plainEncode=True)
         self.responseCount[consumerType] += 1
         duration = decodedResponse['duration']
@@ -76,6 +76,7 @@ class MessageProducer(DaemonThread):
             singleNodeStatistics = {"nodeName": node["nodeName"], "sent": sent, "queueSize": queueSize,
                                     "durations": self.resetResponseCache(node["nodeName"]),
                                     "responses": self.getResponseCount(node["nodeName"]),
+
                                     "dropped": self.adapter.messageQueue.lostMessages}
             statistics.append(singleNodeStatistics)
         for listener in self.listeners:
