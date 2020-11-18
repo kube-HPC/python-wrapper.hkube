@@ -51,7 +51,7 @@ class MessageProducer(DaemonThread):
         header, encodedMessage = self._encoding.encode(obj)
         self.adapter.produce(header, encodedMessage, envelope=envelope)
 
-        def responseAccumulator(self, response, consumerType):
+    def responseAccumulator(self, response, consumerType):
         decodedResponse = self._encoding.decode(value=response, plainEncode=True)
         self.responseCount[consumerType] += 1
         duration = decodedResponse['duration']
