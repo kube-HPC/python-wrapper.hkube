@@ -20,20 +20,19 @@ PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
 
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize, responseAcumulator, defaultConsumers, optionalConsumers,me):
+    def __init__(self, port, maxMemorySize, responseAcumulator, defaultConsumers, optionalConsumers, me):
         self.me = me
         self.responseAcumulator = responseAcumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
         self.defaultConsumers = defaultConsumers
         self.consumerTypes = defaultConsumers + optionalConsumers
-        self.messageQueue = MessageQueue(defaultConsumers, optionalConsumers,self.me)
+        self.messageQueue = MessageQueue(defaultConsumers, optionalConsumers, self.me)
         context = zmq.Context(1)
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers
         print("Producer listening on " + "tcp://*:" + str(port))
         self.active = True
-
 
     def produce(self, header, message, envelope=[]):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
@@ -90,7 +89,7 @@ class ZMQProducer(object):
                 nextItemIndex = self.messageQueue.nextMessageIndex(type)
                 if (workerQueu and (nextItemIndex is not None)):
                     envelope, header, payload = self.messageQueue.pop(type, nextItemIndex)
-                    flow = CustomFlow(envelope,self.me)
+                    flow = CustomFlow(envelope, self.me)
                     frames = [msgpack.packb(flow.getRestOfFlow()), header, payload]
 
                     frames.insert(0, workers.next(type))
