@@ -16,23 +16,23 @@ def test_queue():
         return b'5'
 
     count = [0, 0, 0]
-    producer = ZMQProducer(port=5556, maxMemorySize=5000, responseAcumulator=doNothing, defaultConsumers=['a', 'b'])
+    producer = ZMQProducer(port=5556, maxMemorySize=5000, responseAcumulator=doNothing, defaultConsumers=['a', 'b'], optionalConsumers=[], me='a')
     runThread = Thread(name="Producer", target=producer.start)
     runThread.start()
 
     time.sleep(1)
 
-    def doSomething(header, msg):
+    def doSomething(env,header, msg):
         count[0] = count[0] + 1
         time.sleep(0.1)
         return b'5'
 
-    def doSomething2(header, msg):
+    def doSomething2(env,header, msg):
         count[1] = count[1] + 1
         time.sleep(0.1)
         return b'5'
 
-    def doSomething3(header, msg):
+    def doSomething3(env,header, msg):
         count[2] = count[2] + 1
         time.sleep(0.1)
         return b'5'

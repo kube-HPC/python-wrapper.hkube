@@ -31,7 +31,7 @@ class HKubeApi:
         self.parsedFlows = flows
 
     def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, me):
-        self.messageProducer = MessageProducer(producerConfig, nextNodes)
+        self.messageProducer = MessageProducer(producerConfig, nextNodes, me)
         self.messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
             self.messageProducer.start()
@@ -81,7 +81,7 @@ class HKubeApi:
         if (self.messageProducer is None):
             raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
         if (self.messageProducer.nodes):
-            if  (customFlow == None):
+            if  (customFlow is None):
                 if hasattr(threading.local(), 'envelope') and threading.local().envelope:
                     flow = threading.local().envelope
                 else:

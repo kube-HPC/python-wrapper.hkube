@@ -10,7 +10,7 @@ listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack'
 def test_Messaging():
     asserts = {}
     asserts['responses'] = 0
-    messageProducer = MessageProducer(producer_config, ['a'])
+    messageProducer = MessageProducer(producer_config, [{'nodeName': 'a', "isMainFlow": True}], 'b')
 
     def onStatistics(statistics):
         asserts['stats'] = statistics
@@ -19,7 +19,7 @@ def test_Messaging():
     messageProducer.registerStatisticsListener(onStatistics)
     time.sleep(3)
 
-    def onMessage(msg, origin):
+    def onMessage(envelope, msg, origin):
         # pylint: disable=unused-argument
         if (type(msg) == type(dict())):
             asserts['field1'] = msg['field1']
@@ -27,9 +27,9 @@ def test_Messaging():
 
     messageProducer.start()
 
-    messageProducer.produce({'field1': 'value1'})
-    messageProducer.produce({'field1': 'value1'})
-    messageProducer.produce({'field1': 'value1'})
+    messageProducer.produce([], {'field1': 'value1'})
+    messageProducer.produce([], {'field1': 'value1'})
+    messageProducer.produce([], {'field1': 'value1'})
     time.sleep(0.5)
     assert asserts['stats'][0]['queueSize'] == 3
     assert asserts['stats'][0]['sent'] == 0
@@ -43,12 +43,12 @@ def test_Messaging():
     assert asserts['responses'] == 3
     print('done\n')
 
-    def getHello(msg, origin):
+    def getHello(env, msg, origin):
         if (msg == b'Hello'):
             asserts['gotHello'] = True
 
     messageListener.registerMessageListener(getHello)
-    messageProducer.produce(b'Hello')
+    messageProducer.produce([], b'Hello')
     time.sleep(3)
     assert asserts['gotHello']
 

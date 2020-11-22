@@ -29,7 +29,7 @@ class MessageListener(DaemonThread):
             try:
                 listener(envelope,decodedMsg, self.messageOriginNodeName)
             except Exception as e:
-                print('Error during MessageListener onMessage' + e)
+                print('Error during MessageListener onMessage' + str(e))
 
         end = time.time()
         duration = int((end - start) * 1000)
@@ -40,7 +40,8 @@ class MessageListener(DaemonThread):
         try:
             self.adapater.start()
         except Exception as e:
-            self.errorHandler.sendError(e)
+            if (self.errorHandler):
+                self.errorHandler.sendError(e)
 
 
     def close(self):

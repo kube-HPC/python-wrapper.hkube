@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from communication.zmq.streaming.producer.CustomFlow import CustomFlow
+from hkube_python_wrapper.communication.zmq.streaming.producer.CustomFlow import CustomFlow
 
 
 class MessageQueue(object):
@@ -24,7 +24,6 @@ class MessageQueue(object):
     def nextMessageIndex(self, consumerType):
         index = self.indexPerConsumer[consumerType]
         foundMessage = False
-        isDefaultConsumer = consumerType in self.defaultConsumers
         while (not foundMessage) and index < len(self.queue):
             envelope, _, _ = self.queue[index]
             flow = CustomFlow(envelope, self.me)
@@ -35,8 +34,7 @@ class MessageQueue(object):
 
         if (foundMessage):
             return index
-        else:
-            return None
+        return None
 
     # Messages are kept in the queue until consumers of all types popped out the message.
     # An index per consumer type is maintained, to know which messages the consumer already received and conclude which message should he get now.
