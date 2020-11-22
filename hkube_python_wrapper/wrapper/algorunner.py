@@ -287,7 +287,7 @@ class Algorunner(DaemonThread):
         self._hkubeApi.setupStreamingListeners(
             messageListenerConfig, discovery, self._nodeName)
 
-    def _setupStreamingProducer(self,me):
+    def _setupStreamingProducer(self, me):
 
         def onStatistics(statistics):
             self._sendCommand(
@@ -299,7 +299,7 @@ class Algorunner(DaemonThread):
         producerConfig['encoding'] = config.discovery['encoding']
         producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
         self._hkubeApi.setupStreamingProducer(
-            onStatistics, producerConfig, self._input['childs'],me)
+            onStatistics, producerConfig, self._input['childs'], me)
 
     def _start(self, options):
         self._hkubeApi.setParsedFlows(self._input.get('parsedFlow'))
