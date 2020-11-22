@@ -17,17 +17,17 @@ class MessageListener(DaemonThread):
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
         self.messageListeners = []
-        DaemonThread.__init__(self, "MessageListener-"+ str(self.messageOriginNodeName))
+        DaemonThread.__init__(self, "MessageListener-" + str(self.messageOriginNodeName))
 
     def registerMessageListener(self, listener):
         self.messageListeners.append(listener)
 
-    def onMessage(self,envelope, header, msg):
+    def onMessage(self, envelope, header, msg):
         start = time.time()
         decodedMsg = self._encoding.decode(header=header, value=msg)
         for listener in self.messageListeners:
             try:
-                listener(envelope,decodedMsg, self.messageOriginNodeName)
+                listener(envelope, decodedMsg, self.messageOriginNodeName)
             except Exception as e:
                 print('Error during MessageListener onMessage' + str(e))
 
@@ -42,7 +42,6 @@ class MessageListener(DaemonThread):
         except Exception as e:
             if (self.errorHandler):
                 self.errorHandler.sendError(e)
-
 
     def close(self):
         self.messageListeners = []
