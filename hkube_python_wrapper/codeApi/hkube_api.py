@@ -13,7 +13,7 @@ import threading
 
 class HKubeApi:
     """Hkube interface for code-api operations"""
-
+    threadLocalStorage = threading.local()
     def __init__(self, wc, wrapper, dataAdapter, storage):
         self._wc = wc
         self._wrapper = wrapper
@@ -64,13 +64,14 @@ class HKubeApi:
         self._inputListener.append(onMessage)
 
     def _onMessage(self, envelope, msg, origin):
-        localStorage = threading.local()
-        localStorage.envelope = envelope
+        self.threadLocalStorage.envelope = envelope
         for listener in self._inputListener:
             try:
                 listener(msg, origin)
             except Exception as e:
                 print("hkube_api message listener through exception: " + str(e))
+        self.threadLocalStorage.envelope = []
+
 
     def startMessageListening(self):
         self.listeningToMessages = True
@@ -82,8 +83,8 @@ class HKubeApi:
             raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
         if (self.messageProducer.nodes):
             if  (customFlow is None):
-                if hasattr(threading.local(), 'envelope') and threading.local().envelope:
-                    flow = threading.local().envelope
+                if hasattr(self.threadLocalStorage, 'envelope') and self.threadLocalStorage.envelope:
+                    flow = self.threadLocalStorage.envelope
                 else:
                     flow = []
             else:

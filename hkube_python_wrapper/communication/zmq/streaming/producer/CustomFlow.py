@@ -9,10 +9,12 @@ class CustomFlow:
 
     def isNextInFlow(self, next):
         if (self.me is None):
-            return True
+            return False
         return next in self.me['next']
 
     def getRestOfFlow(self):
         if (self.me is None):
             return []
-        return self.flow.copy().remove(self.me)
+        flowcopy = self.flow.copy()
+        flowcopy.remove(self.me)
+        return flowcopy
