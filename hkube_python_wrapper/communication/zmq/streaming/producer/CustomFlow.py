@@ -15,6 +15,6 @@ class CustomFlow:
     def getRestOfFlow(self):
         if (self.me is None):
             return []
-        flowcopy = self.flow.copy()
+        flowcopy = self.flow[:]
         flowcopy.remove(self.me)
         return flowcopy
