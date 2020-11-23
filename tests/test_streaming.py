@@ -10,7 +10,7 @@ listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack'
 def test_Messaging():
     asserts = {}
     asserts['responses'] = 0
-    messageProducer = MessageProducer(producer_config, [{'nodeName': 'a', "isMainFlow": True}], 'b')
+    messageProducer = MessageProducer(producer_config, [{'nodeName': 'a', "isMainFlow": False}], 'b')
 
     def onStatistics(statistics):
         asserts['stats'] = statistics
@@ -26,10 +26,15 @@ def test_Messaging():
         time.sleep(1)
 
     messageProducer.start()
-
-    messageProducer.produce([], {'field1': 'value1'})
-    messageProducer.produce([], {'field1': 'value1'})
-    messageProducer.produce([], {'field1': 'value1'})
+    env = [{
+        "source": "b",
+        "next": [
+            "a"
+        ]
+    }]
+    messageProducer.produce(env, {'field1': 'value1'})
+    messageProducer.produce(env, {'field1': 'value1'})
+    messageProducer.produce(env, {'field1': 'value1'})
     time.sleep(0.5)
     assert asserts['stats'][0]['queueSize'] == 3
     assert asserts['stats'][0]['sent'] == 0
@@ -48,7 +53,7 @@ def test_Messaging():
             asserts['gotHello'] = True
 
     messageListener.registerMessageListener(getHello)
-    messageProducer.produce([], b'Hello')
+    messageProducer.produce(env, b'Hello')
     time.sleep(3)
     assert asserts['gotHello']
 
