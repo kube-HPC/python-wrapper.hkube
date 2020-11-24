@@ -10,7 +10,7 @@ listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack'
 def test_Messaging():
     asserts = {}
     asserts['responses'] = 0
-    messageProducer = MessageProducer(producer_config, [{'nodeName': 'a', "isMainFlow": False}], 'b')
+    messageProducer = MessageProducer(producer_config, [{'nodeName': 'a'}], 'b')
 
     def onStatistics(statistics):
         asserts['stats'] = statistics
@@ -31,6 +31,11 @@ def test_Messaging():
         "next": [
             "a"
         ]
+    }, {
+        "source": "a",
+        "next": [
+            "c"
+        ]
     }]
     messageProducer.produce(env, {'field1': 'value1'})
     messageProducer.produce(env, {'field1': 'value1'})
@@ -48,14 +53,17 @@ def test_Messaging():
     assert asserts['responses'] == 3
     print('done\n')
 
-    def getHello(env, msg, origin):
+    def getHello(envelope, msg, origin):
         if (msg == b'Hello'):
             asserts['gotHello'] = True
+            asserts['envelope'] = envelope
 
     messageListener.registerMessageListener(getHello)
     messageProducer.produce(env, b'Hello')
     time.sleep(3)
     assert asserts['gotHello']
+    assert len(asserts['envelope']) == 1
+    assert asserts['envelope'][0]['source'] == 'a'
 
     messageProducer.close()
     messageListener.close()

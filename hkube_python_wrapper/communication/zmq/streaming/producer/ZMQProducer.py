@@ -20,14 +20,13 @@ PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
 
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize, responseAcumulator, defaultConsumers, optionalConsumers, me):
+    def __init__(self, port, maxMemorySize, responseAcumulator, consumerTypes, me):
         self.me = me
         self.responseAcumulator = responseAcumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
-        self.defaultConsumers = defaultConsumers
-        self.consumerTypes = defaultConsumers + optionalConsumers
-        self.messageQueue = MessageQueue(defaultConsumers, optionalConsumers, self.me)
+        self.consumerTypes = consumerTypes
+        self.messageQueue = MessageQueue(consumerTypes, self.me)
         context = zmq.Context(1)
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers

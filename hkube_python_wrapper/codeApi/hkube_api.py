@@ -26,9 +26,12 @@ class HKubeApi:
         self._inputListener = []
         self.listeningToMessages = False
         self.parsedFlows = {}
+        self.defaultFlow = None
 
-    def setParsedFlows(self, flows):
+    def setParsedFlows(self, flows , defaultFlow):
         self.parsedFlows = flows
+        self.defaultFlow = defaultFlow
+
 
     def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, me):
         self.messageProducer = MessageProducer(producerConfig, nextNodes, me)
@@ -79,6 +82,8 @@ class HKubeApi:
             if not (listener.is_alive()):
                 listener.start()
     def sendMessage(self, msg, customFlow=None):
+        if (customFlow is None):
+            customFlow = self.defaultFlow
         if (self.messageProducer is None):
             raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
         if (self.messageProducer.nodes):

@@ -4,10 +4,9 @@ from hkube_python_wrapper.communication.zmq.streaming.producer.CustomFlow import
 
 
 class MessageQueue(object):
-    def __init__(self, defaultConsumers, optionalConsumers, me):
+    def __init__(self, consumerTypes, me):
         self.me = me
-        self.defaultConsumers = defaultConsumers
-        self.consumerTypes = defaultConsumers + optionalConsumers
+        self.consumerTypes =  consumerTypes
 
         self.indexPerConsumer = OrderedDict()
         for consumerType in self.consumerTypes:

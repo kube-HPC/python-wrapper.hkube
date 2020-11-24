@@ -16,7 +16,7 @@ def test_queue():
         return b'5'
 
     count = [0, 0]
-    producer = ZMQProducer(port=5556, maxMemorySize=5000, responseAcumulator=doNothing, defaultConsumers=[], optionalConsumers=['b','c'], me='a')
+    producer = ZMQProducer(port=5556, maxMemorySize=5000, responseAcumulator=doNothing, consumerTypes=['b', 'c'], me='a')
     runThread = Thread(name="Producer", target=producer.start)
     runThread.start()
 

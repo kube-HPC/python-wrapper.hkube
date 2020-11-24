@@ -302,7 +302,7 @@ class Algorunner(DaemonThread):
             onStatistics, producerConfig, self._input['childs'], me)
 
     def _start(self, options):
-        self._hkubeApi.setParsedFlows(self._input.get('parsedFlow'))
+        self._hkubeApi.setParsedFlows(self._input.get('parsedFlow'), self._input.get('defaultFlow'))
         if (self.isStreamingPipeLine()):
             self._setupStreamingProducer(self._input.get("nodeName"))
         # pylint: disable=unused-argument

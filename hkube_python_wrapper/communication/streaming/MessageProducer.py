@@ -10,27 +10,23 @@ RESPONSE_CACHE = 2000
 
 
 class MessageProducer(DaemonThread):
-    def __init__(self, options, nodes, me):
-        self.nodes = nodes
+    def __init__(self, options, consumerNodes, me):
+        self.nodes = consumerNodes
         port = options['port']
         maxMemorySize = options['messagesMemoryBuff'] * 1024 * 1024
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
-        mainFlowNodeNames = []
-        optionalConsumers = []
-        for node in nodes:
-            if (node["isMainFlow"]):
-                mainFlowNodeNames.append(node["nodeName"])
-            else:
-                optionalConsumers.append(node["nodeName"])
+        nodeNames = []
+        for node in consumerNodes:
+            nodeNames.append(node["nodeName"])
 
-        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, defaultConsumers=mainFlowNodeNames, optionalConsumers=optionalConsumers, me=me)
+        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=nodeNames, me=me)
         self.responsesCache = {}
         self.responseCount = {}
         self.active = True
         self.printStatistics = 0
-        for node in nodes:
+        for node in consumerNodes:
             self.responsesCache[node["nodeName"]] = FifoArray(RESPONSE_CACHE)
             self.responseCount[node["nodeName"]] = 0
         self.listeners = []
