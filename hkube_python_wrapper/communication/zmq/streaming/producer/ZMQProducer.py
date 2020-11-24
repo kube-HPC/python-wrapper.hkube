@@ -60,6 +60,8 @@ class ZMQProducer(object):
                 except Exception as e:
                     if (self.active):
                         print(e)
+                    else:
+                        break
                 if not frames:
                     if (self.active):
                         raise Exception("Unexpected router no frames on receive, no address frame")

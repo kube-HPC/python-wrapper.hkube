@@ -44,23 +44,22 @@ class HKubeApi:
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
         print("parents" + str(parents))
         for predecessor in parents:
-            remoteAddress = 'tcp://' + \
-                            predecessor['address']['host'] + ':' + \
-                            str(predecessor['address']['port'])
+            remoteAddress =  predecessor['address']
+            remoteAddressUrl =  'tcp://{host}:{port}'.format(host = remoteAddress['host'],port=remoteAddress['port'])
             if (predecessor['type'] == 'Add'):
                 options = {}
                 options.update(listenerConfig)
-                options['remoteAddress'] = remoteAddress
+                options['remoteAddress'] = remoteAddressUrl
                 options['messageOriginNodeName'] = predecessor['nodeName']
                 listener = MessageListener(options, nodeName, self)
                 listener.registerMessageListener(self._onMessage)
-                self._messageListeners[remoteAddress] = listener
+                self._messageListeners[remoteAddressUrl] = listener
                 if (self.listeningToMessages):
                     listener.start()
             if (predecessor['type'] == 'Del'):
                 if (self.listeningToMessages):
-                    self._messageListeners[remoteAddress].close()
-                del self._messageListeners[remoteAddress]
+                    self._messageListeners[remoteAddressUrl].close()
+                del self._messageListeners[remoteAddressUrl]
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
