@@ -4,7 +4,7 @@
 #   Author: Daniel Lundin <dln(at)eintr(dot)org>
 #
 import time
-from .CustomFlow import CustomFlow
+from .Flow import Flow
 from .Worker import Worker
 from .WorkerQueue import WorkerQueue
 from .MessageQueue import MessageQueue
@@ -88,7 +88,7 @@ class ZMQProducer(object):
                 nextItemIndex = self.messageQueue.nextMessageIndex(type)
                 if (workerQueu and (nextItemIndex is not None)):
                     envelope, header, payload = self.messageQueue.pop(type, nextItemIndex)
-                    flow = CustomFlow(envelope, self.me)
+                    flow = Flow(envelope, self.me)
                     frames = [msgpack.packb(flow.getRestOfFlow()), header, payload]
 
                     frames.insert(0, workers.next(type))

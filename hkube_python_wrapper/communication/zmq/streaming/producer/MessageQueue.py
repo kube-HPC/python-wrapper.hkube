@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from hkube_python_wrapper.communication.zmq.streaming.producer.CustomFlow import CustomFlow
+from hkube_python_wrapper.communication.zmq.streaming.producer.Flow import Flow
 
 
 class MessageQueue(object):
@@ -24,7 +24,7 @@ class MessageQueue(object):
         foundMessage = False
         while (not foundMessage) and index < len(self.queue):
             envelope, _, _ = self.queue[index]
-            flow = CustomFlow(envelope, self.me)
+            flow = Flow(envelope, self.me)
             if (flow.isNextInFlow(consumerType)):
                 foundMessage = True
             else:
