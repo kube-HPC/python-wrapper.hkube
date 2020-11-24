@@ -10,10 +10,10 @@ from ..communication.streaming.MessageProducer import MessageProducer
 import threading
 
 
-
 class HKubeApi:
     """Hkube interface for code-api operations"""
     threadLocalStorage = threading.local()
+
     def __init__(self, wc, wrapper, dataAdapter, storage):
         self._wc = wc
         self._wrapper = wrapper
@@ -28,10 +28,9 @@ class HKubeApi:
         self.parsedFlows = {}
         self.defaultFlow = None
 
-    def setParsedFlows(self, flows , defaultFlow):
+    def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
         self.defaultFlow = defaultFlow
-
 
     def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, me):
         self.messageProducer = MessageProducer(producerConfig, nextNodes, me)
@@ -75,19 +74,19 @@ class HKubeApi:
                 print("hkube_api message listener through exception: " + str(e))
         self.threadLocalStorage.envelope = []
 
-
     def startMessageListening(self):
         self.listeningToMessages = True
         for listener in self._messageListeners.values():
             if not (listener.is_alive()):
                 listener.start()
+
     def sendMessage(self, msg, customFlow=None):
         if (customFlow is None):
             customFlow = self.defaultFlow
         if (self.messageProducer is None):
             raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
         if (self.messageProducer.nodes):
-            if  (customFlow is None):
+            if (customFlow is None):
                 if hasattr(self.threadLocalStorage, 'envelope') and self.threadLocalStorage.envelope:
                     flow = self.threadLocalStorage.envelope
                 else:
@@ -97,6 +96,7 @@ class HKubeApi:
                 if (flow is None):
                     raise Exception("No such flow " + customFlow)
             self.messageProducer.produce(flow, msg)
+
     def stopStreaming(self):
         if (self.listeningToMessages):
             for listener in self._messageListeners.values():

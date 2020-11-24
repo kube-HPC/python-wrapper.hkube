@@ -6,7 +6,7 @@ from hkube_python_wrapper.communication.zmq.streaming.producer.CustomFlow import
 class MessageQueue(object):
     def __init__(self, consumerTypes, me):
         self.me = me
-        self.consumerTypes =  consumerTypes
+        self.consumerTypes = consumerTypes
 
         self.indexPerConsumer = OrderedDict()
         for consumerType in self.consumerTypes:
@@ -18,7 +18,6 @@ class MessageQueue(object):
 
     def hasItems(self, consumerType):
         return self.indexPerConsumer[consumerType] < len(self.queue)
-
 
     def nextMessageIndex(self, consumerType):
         index = self.indexPerConsumer[consumerType]
@@ -66,7 +65,6 @@ class MessageQueue(object):
     def append(self, envelope, header, msg):
         self.sizeSum += len(msg)
         return self.queue.append((envelope, header, msg))
-
 
     def size(self, consumerType):
         index = self.indexPerConsumer[consumerType]
