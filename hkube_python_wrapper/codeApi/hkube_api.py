@@ -44,8 +44,8 @@ class HKubeApi:
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
         print("parents" + str(parents))
         for predecessor in parents:
-            remoteAddress =  predecessor['address']
-            remoteAddressUrl =  'tcp://{host}:{port}'.format(host = remoteAddress['host'],port=remoteAddress['port'])
+            remoteAddress = predecessor['address']
+            remoteAddressUrl = 'tcp://{host}:{port}'.format(host=remoteAddress['host'], port=remoteAddress['port'])
             if (predecessor['type'] == 'Add'):
                 options = {}
                 options.update(listenerConfig)
