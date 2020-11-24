@@ -83,7 +83,7 @@ class HKubeApi:
     def sendMessage(self, msg, flow=None):
         if (flow is None):
             if (self.defaultFlow is None):
-                    raise Exception("Default flow is None")
+                raise Exception("Default flow is None")
             flow = self.defaultFlow
         if (self.messageProducer is None):
             raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
