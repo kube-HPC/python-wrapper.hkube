@@ -1,4 +1,4 @@
-class CustomFlow:
+class Flow:
     def __init__(self, flow, meName):
         self.flow = flow
         self.me = None
