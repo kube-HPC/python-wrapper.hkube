@@ -79,18 +79,19 @@ class HKubeApi:
             if not (listener.is_alive()):
                 listener.start()
 
-    def sendMessage(self, msg, flow=None):
-        if (flow is None):
-            if (self.defaultFlow is None):
-                raise Exception("Default flow is None")
-            flow = self.defaultFlow
+    def sendMessage(self, msg, flowName=None):
         if (self.messageProducer is None):
-            raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
-        if (self.messageProducer.nodes):
-            flow = self.parsedFlows.get(flow)
-            if (flow is None):
-                raise Exception("No such flow " + flow)
-            self.messageProducer.produce(flow, msg)
+            raise Exception('Trying to send a message from a none stream pipeline or after close had been applied on algorithm')
+        if (self.messageProducer.nodeNames):
+            if (flowName is None):
+                if (self.defaultFlow is None):
+                    raise Exception("Streaming default flow is None")
+                flowName = self.defaultFlow
+            parsedFlow = self.parsedFlows.get(flowName)
+            if (parsedFlow is None):
+                raise Exception("No such flow " + flowName)
+            self.messageProducer.produce(parsedFlow, msg)
+
 
     def stopStreaming(self):
         if (self.listeningToMessages):

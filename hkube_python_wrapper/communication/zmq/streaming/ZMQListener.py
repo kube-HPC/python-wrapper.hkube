@@ -47,6 +47,7 @@ class ZMQListener(object):
                 if (self.active):
                     print(e)
                     raise e
+                break
             # Handle worker activity on backend
             if result == zmq.POLLIN:
                 #  Get message
@@ -59,9 +60,11 @@ class ZMQListener(object):
                     if (self.active):
                         print(e)
                         raise e
+                    break
                 if not frames:
                     if (self.active):
                         raise Exception("Connection to producer on " + self.remoteAddress + " interrupted")
+                    break
 
                 if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
@@ -74,7 +77,7 @@ class ZMQListener(object):
                         if (self.active):
                             print(e)
                             raise e
-
+                        break
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
                     liveness = HEARTBEAT_LIVENESS
                 else:
@@ -97,6 +100,8 @@ class ZMQListener(object):
                     except Exception as e:
                         if (self.active):
                             print(e)
+                        else:
+                            break
                     self.worker = self.worker_socket(context, self.remoteAddress)
                     liveness = HEARTBEAT_LIVENESS
 
@@ -107,6 +112,8 @@ class ZMQListener(object):
                 except Exception as e:
                     if (self.active):
                         print(e)
+                    else:
+                        break
 
     def close(self):
         if not (self.active):

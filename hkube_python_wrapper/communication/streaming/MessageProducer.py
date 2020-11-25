@@ -11,24 +11,20 @@ RESPONSE_CACHE = 2000
 
 class MessageProducer(DaemonThread):
     def __init__(self, options, consumerNodes, me):
-        self.nodes = consumerNodes
+        self.nodeNames = consumerNodes
         port = options['port']
         maxMemorySize = options['messagesMemoryBuff'] * 1024 * 1024
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
-        nodeNames = []
-        for node in consumerNodes:
-            nodeNames.append(node["nodeName"])
-
-        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=nodeNames, me=me)
+        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=self.nodeNames, me=me)
         self.responsesCache = {}
         self.responseCount = {}
         self.active = True
         self.printStatistics = 0
-        for node in consumerNodes:
-            self.responsesCache[node["nodeName"]] = FifoArray(RESPONSE_CACHE)
-            self.responseCount[node["nodeName"]] = 0
+        for nodeName in consumerNodes:
+            self.responsesCache[nodeName] = FifoArray(RESPONSE_CACHE)
+            self.responseCount[nodeName] = 0
         self.listeners = []
 
         def sendStatisticsEvery(interval):
@@ -36,7 +32,7 @@ class MessageProducer(DaemonThread):
                 self.sendStatistics()
                 time.sleep(interval)
 
-        if (self.nodes):
+        if (self.nodeNames):
             runThread = Thread(name="Statistics", target=sendStatisticsEvery, args=[statisticsInterval])
             runThread.daemon = True
             runThread.start()
@@ -65,13 +61,12 @@ class MessageProducer(DaemonThread):
 
     def sendStatistics(self):
         statistics = []
-        for node in self.nodes:
-            queueSize = self.adapter.queueSize(node["nodeName"])
-            sent = self.adapter.sent(node["nodeName"])
-            singleNodeStatistics = {"nodeName": node["nodeName"], "sent": sent, "queueSize": queueSize,
-                                    "durations": self.resetResponseCache(node["nodeName"]),
-                                    "responses": self.getResponseCount(node["nodeName"]),
-
+        for nodeName in self.nodeNames:
+            queueSize = self.adapter.queueSize(nodeName)
+            sent = self.adapter.sent(nodeName)
+            singleNodeStatistics = {"nodeName": nodeName, "sent": sent, "queueSize": queueSize,
+                                    "durations": self.resetResponseCache(nodeName),
+                                    "responses": self.getResponseCount(nodeName),
                                     "dropped": self.adapter.messageQueue.lostMessages}
             statistics.append(singleNodeStatistics)
         for listener in self.listeners:

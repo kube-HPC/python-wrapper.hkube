@@ -52,6 +52,8 @@ class ZMQProducer(object):
             except Exception as e:
                 if (self.active):
                     print(e)
+                else:
+                    break
             # Handle worker activity on self._backend
             if socks.get(self._backend) == zmq.POLLIN:
                 # Use worker address for LRU routing
@@ -65,6 +67,7 @@ class ZMQProducer(object):
                 if not frames:
                     if (self.active):
                         raise Exception("Unexpected router no frames on receive, no address frame")
+                    break
                 address = frames[0]
                 consumerType = msgpack.unpackb(frames[2])
                 if not consumerType in self.consumerTypes:
@@ -85,6 +88,8 @@ class ZMQProducer(object):
                             except Exception as e:
                                 if (self.active):
                                     print(e)
+                                else:
+                                    break
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
             for type, workerQueu in workers.queues.items():
                 nextItemIndex = self.messageQueue.nextMessageIndex(type)
@@ -99,6 +104,8 @@ class ZMQProducer(object):
                     except Exception as e:
                         if (self.active):
                             print(e)
+                        else:
+                            break
             workers.purge()
 
     def queueSize(self, consumerSize):

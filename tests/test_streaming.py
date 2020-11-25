@@ -10,7 +10,7 @@ listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack'
 def test_Messaging():
     asserts = {}
     asserts['responses'] = 0
-    messageProducer = MessageProducer(producer_config, [{'nodeName': 'a'}], 'b')
+    messageProducer = MessageProducer(producer_config, ['a'], 'b')
 
     def onStatistics(statistics):
         asserts['stats'] = statistics
