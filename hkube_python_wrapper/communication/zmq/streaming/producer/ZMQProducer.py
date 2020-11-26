@@ -9,7 +9,6 @@ from .Worker import Worker
 from .WorkerQueue import WorkerQueue
 from .MessageQueue import MessageQueue
 import zmq
-import msgpack
 
 HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
 HEARTBEAT_INTERVAL = 1.0  # Seconds
@@ -20,8 +19,9 @@ PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
 
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize, responseAcumulator, consumerTypes, me):
+    def __init__(self, port, maxMemorySize, responseAcumulator, consumerTypes, encoding, me):
         self.me = me
+        self.encoding = encoding
         self.responseAcumulator = responseAcumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
@@ -68,7 +68,7 @@ class ZMQProducer(object):
                         raise Exception("Unexpected router no frames on receive, no address frame")
                     break
                 address = frames[0]
-                consumerType = msgpack.unpackb(frames[2])
+                consumerType = self.encoding.decode(value=frames[2], plainEncode=True)
                 if not consumerType in self.consumerTypes:
                     print("Producer got message from unknown consumer: " + consumerType + ", dropping the message")
                     continue
@@ -96,7 +96,7 @@ class ZMQProducer(object):
                     if (nextItemIndex is not None):
                         envelope, header, payload = self.messageQueue.pop(type, nextItemIndex)
                         flow = Flow(envelope, self.me)
-                        frames = [msgpack.packb(flow.getRestOfFlow()), header, payload]
+                        frames = [self.encoding.encode(flow.getRestOfFlow(), plainEncode=True), header, payload]
 
                         frames.insert(0, workers.next(type))
                         try:

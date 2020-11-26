@@ -1,6 +1,5 @@
 import time
 import zmq
-import msgpack
 import uuid
 
 HEARTBEAT_LIVENESS = 3
@@ -14,7 +13,8 @@ PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
 
 class ZMQListener(object):
 
-    def __init__(self, remoteAddress, onMessage, consumerType):
+    def __init__(self, remoteAddress, onMessage, encoding, consumerType):
+        self.encoding = encoding
         self.onMessage = onMessage
         self.consumerType = consumerType
         self.remoteAddress = remoteAddress
@@ -29,7 +29,7 @@ class ZMQListener(object):
         worker.setsockopt(zmq.IDENTITY, identity)
         worker.connect(remoteAddress)
         print("zmq listener connecting to " + remoteAddress)
-        worker.send_multipart([PPP_READY, msgpack.packb(self.consumerType)])
+        worker.send_multipart([PPP_READY, self.encoding.encode(self.consumerType, plainEncode=True)])
         return worker
 
     def start(self):  # pylint: disable=too-many-branches
@@ -68,9 +68,9 @@ class ZMQListener(object):
 
                 if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
-                    envelope = msgpack.unpackb(frames[0])
+                    envelope = self.encoding.decode(value=frames[0], plainEncode=True)
                     result = self.onMessage(envelope, frames[1], frames[2])
-                    newFrames = [result, msgpack.packb(self.consumerType)]
+                    newFrames = [result, self.encoding.encode(self.consumerType, plainEncode=True)]
                     try:
                         self.worker.send_multipart(newFrames)
                     except Exception as e:
@@ -108,7 +108,7 @@ class ZMQListener(object):
             if time.time() > heartbeat_at:
                 heartbeat_at = time.time() + HEARTBEAT_INTERVAL
                 try:
-                    self.worker.send_multipart([PPP_HEARTBEAT, msgpack.packb(self.consumerType)])
+                    self.worker.send_multipart([PPP_HEARTBEAT, self.encoding.encode(self.consumerType, plainEncode=True)])
                 except Exception as e:
                     if (self.active):
                         print(e)

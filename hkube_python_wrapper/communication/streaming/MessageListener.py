@@ -9,10 +9,11 @@ class MessageListener(DaemonThread):
     def __init__(self, options, receiverNode, errorHandler=None):
         self.errorHandler = errorHandler
         remoteAddress = options['remoteAddress']
-        self.adapater = ZMQListener(remoteAddress, self.onMessage, receiverNode)
-        self.messageOriginNodeName = options['messageOriginNodeName']
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
+        self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode)
+        self.messageOriginNodeName = options['messageOriginNodeName']
+
         self.messageListeners = []
         DaemonThread.__init__(self, "MessageListener-" + str(self.messageOriginNodeName))
 
