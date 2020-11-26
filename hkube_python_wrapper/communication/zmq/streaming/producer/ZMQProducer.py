@@ -35,7 +35,6 @@ class ZMQProducer(object):
 
     def produce(self, header, message, envelope=[]):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
-            print('Loosing a message, queue filled up ')
             self.messageQueue.loseMessage()
         self.messageQueue.append(envelope, header, message)
 
@@ -92,20 +91,21 @@ class ZMQProducer(object):
                                     break
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
             for type, workerQueu in workers.queues.items():
-                nextItemIndex = self.messageQueue.nextMessageIndex(type)
-                if (workerQueu and (nextItemIndex is not None)):
-                    envelope, header, payload = self.messageQueue.pop(type, nextItemIndex)
-                    flow = Flow(envelope, self.me)
-                    frames = [msgpack.packb(flow.getRestOfFlow()), header, payload]
+                if (workerQueu):
+                    nextItemIndex = self.messageQueue.nextMessageIndex(type)
+                    if (nextItemIndex is not None):
+                        envelope, header, payload = self.messageQueue.pop(type, nextItemIndex)
+                        flow = Flow(envelope, self.me)
+                        frames = [msgpack.packb(flow.getRestOfFlow()), header, payload]
 
-                    frames.insert(0, workers.next(type))
-                    try:
-                        self._backend.send_multipart(frames)
-                    except Exception as e:
-                        if (self.active):
-                            print(e)
-                        else:
-                            break
+                        frames.insert(0, workers.next(type))
+                        try:
+                            self._backend.send_multipart(frames)
+                        except Exception as e:
+                            if (self.active):
+                                print(e)
+                            else:
+                                break
             workers.purge()
 
     def queueSize(self, consumerSize):

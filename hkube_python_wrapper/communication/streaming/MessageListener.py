@@ -1,10 +1,7 @@
 from hkube_python_wrapper.communication.zmq.streaming.ZMQListener import ZMQListener
-import time
-
 from hkube_python_wrapper.util.encoding import Encoding
-
-#
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
+import time
 
 
 class MessageListener(DaemonThread):
