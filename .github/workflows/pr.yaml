@@ -37,3 +37,5 @@ jobs:
           python-version: '3.7'
           architecture: x64
       - run: ./tools/ci/coverage.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
