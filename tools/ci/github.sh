@@ -2,62 +2,58 @@
 
 set -e
 
-if ([ "$TRAVIS_BRANCH" == "master" ] || [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-      git config --global user.email "travis@travis-ci.org"
-      git config --global user.name "Travis CI"
-      git remote set-url --push origin "https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git"
-      git remote -v
-      git checkout -f -b version-branch
+git config --global user.email "travis@travis-ci.org"
+git config --global user.name "Travis CI"
+# git remote set-url --push origin "https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git"
+# git remote -v
+git checkout -f -b version-branch
 
-      pip install --upgrade bump2version
-      bump2version build
+pip install --upgrade bump2version
+bump2version build
 
-      git commit -am "$(git log -1 --pretty=%B) .... bump version [skip ci]"
-      git push origin version-branch:master --follow-tags
+git commit -am "$(git log -1 --pretty=%B) .... bump version [skip ci]"
+git push origin version-branch:master --follow-tags
 
-      file_sha=$(curl -s --request GET \
-        --url https://api.github.com/repos/kube-hpc/hkube/contents/core/algorithm-builder/environments/python/wrapper/requirements.txt \
-        --header 'accept: application/vnd.github.v3+json' \
-        --header "authorization: token ${GH_TOKEN}" | jq -r .sha)
-        echo $file_sha
-      master_sha=$(curl -s --request GET \
-        --url https://api.github.com/repos/kube-hpc/hkube/commits/master \
-        --header 'accept: application/vnd.github.v3+json' \
-        --header "authorization: token ${GH_TOKEN}" | jq -r .sha)
-        echo $master_sha
-      version=$(python setup.py --version)
-      branch_name="update_python_wrapper_to_${version//./_}"
-      echo $branch_name
-      curl --request POST \
-        --url https://api.github.com/repos/kube-hpc/hkube/git/refs \
-        --header 'accept: application/vnd.github.v3+json' \
-        --header "authorization: token ${GH_TOKEN}" \
-        --header 'content-type: application/json' \
-        --data '{
-            "sha": "'"$master_sha"'",
-            "ref":"refs/heads/'"$branch_name"'"
+file_sha=$(curl -s --request GET \
+  --url https://api.github.com/repos/kube-hpc/hkube/contents/core/algorithm-builder/environments/python/wrapper/requirements.txt \
+  --header 'accept: application/vnd.github.v3+json' \
+  --header "authorization: token ${GH_TOKEN}" | jq -r .sha)
+  echo $file_sha
+master_sha=$(curl -s --request GET \
+  --url https://api.github.com/repos/kube-hpc/hkube/commits/master \
+  --header 'accept: application/vnd.github.v3+json' \
+  --header "authorization: token ${GH_TOKEN}" | jq -r .sha)
+  echo $master_sha
+version=$(python setup.py --version)
+branch_name="update_python_wrapper_to_${version//./_}"
+echo $branch_name
+curl --request POST \
+  --url https://api.github.com/repos/kube-hpc/hkube/git/refs \
+  --header 'accept: application/vnd.github.v3+json' \
+  --header "authorization: token ${GH_TOKEN}" \
+  --header 'content-type: application/json' \
+  --data '{
+      "sha": "'"$master_sha"'",
+      "ref":"refs/heads/'"$branch_name"'"
+  }'
+content=$(echo "hkube-python-wrapper==$version" | base64)
+curl --request PUT \
+  --url https://api.github.com/repos/kube-hpc/hkube/contents/core/algorithm-builder/environments/python/wrapper/requirements.txt \
+  --header 'accept: application/vnd.github.v3+json' \
+  --header "authorization: token ${GH_TOKEN}" \
+  --data '{
+      "message":"update python wrapper in builder to version '"$version"'",
+      "content": "'"$content"'",
+      "branch": "'"$branch_name"'",
+      "sha": "'"$file_sha"'"
+  }'
+
+  curl --request POST \
+  --url https://api.github.com/repos/kube-hpc/hkube/pulls \
+  --header 'accept: application/vnd.github.v3+json' \
+  --header "authorization: token ${GH_TOKEN}" \
+  --data '{
+      "title":"update python wrapper in builder to version '"$version"'",
+      "head": "'"$branch_name"'",
+      "base": "master"
         }'
-      content=$(echo "hkube-python-wrapper==$version" | base64)
-      curl --request PUT \
-        --url https://api.github.com/repos/kube-hpc/hkube/contents/core/algorithm-builder/environments/python/wrapper/requirements.txt \
-        --header 'accept: application/vnd.github.v3+json' \
-        --header "authorization: token ${GH_TOKEN}" \
-        --data '{
-            "message":"update python wrapper in builder to version '"$version"'",
-            "content": "'"$content"'",
-            "branch": "'"$branch_name"'",
-            "sha": "'"$file_sha"'"
-        }'
-
-        curl --request POST \
-        --url https://api.github.com/repos/kube-hpc/hkube/pulls \
-        --header 'accept: application/vnd.github.v3+json' \
-        --header "authorization: token ${GH_TOKEN}" \
-        --data '{
-            "title":"update python wrapper in builder to version '"$version"'",
-            "head": "'"$branch_name"'",
-            "base": "master"
-             }'
-else
-      echo "version skiped!"
-fi

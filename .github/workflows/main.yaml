@@ -1,0 +1,58 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI-MAIN
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [master]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  test:
+    # The type of runner that the job will run on
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    name: Python ${{ matrix.python-version }}
+    strategy:
+      matrix:
+        python-version: ["2.7", "3.5", "3.6", "3.7", "3.8"]
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+      - run: ./tools/ci/tests.sh
+  coverage:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+          architecture: x64
+      - run: ./tools/ci/coverage.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  deploy:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+          architecture: x64
+      - run: ./tools/ci/github.sh
+        env:
+          GH_TOKEN: '${{ secrets.GH_TOKEN }}'
