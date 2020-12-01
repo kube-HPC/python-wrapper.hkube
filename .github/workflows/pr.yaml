@@ -2,11 +2,11 @@
 
 name: CI-PR
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -17,7 +17,7 @@ jobs:
     name: Python ${{ matrix.python-version }}
     strategy:
       matrix:
-        python-version: [ '2.7', '3.7' ]
+        python-version: ["2.7", "3.4", "3.5", "3.6", "3.7", "3.8"]
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v2
@@ -27,4 +27,3 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
       - run: ./tools/ci/tests.sh
-      
