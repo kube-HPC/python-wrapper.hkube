@@ -14,6 +14,9 @@ bump2version build
 git commit -am "$(git log -1 --pretty=%B) .... bump version [skip ci]"
 git push origin version-branch:master --follow-tags
 
+rm -rf ./dist
+python setup.py sdist bdist_wheel
+
 file_sha=$(curl -s --request GET \
   --url https://api.github.com/repos/kube-hpc/hkube/contents/core/algorithm-builder/environments/python/wrapper/requirements.txt \
   --header 'accept: application/vnd.github.v3+json' \
