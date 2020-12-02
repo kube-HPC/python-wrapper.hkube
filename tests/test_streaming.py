@@ -1,10 +1,38 @@
+from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.communication.streaming.MessageListener import MessageListener
 from hkube_python_wrapper.communication.streaming.MessageProducer import MessageProducer
 import time
-from threading import Thread
 
-producer_config = {'port': 5557, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 0.1}
-listenr_config = {'remoteAddress': 'tcp://localhost:5557', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
+producer_config = {'port': 9026, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
+listenr_config = {'remoteAddress': 'tcp://localhost:9026', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
+parsedFlows = {'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}], 'master': [{'source': 'A', 'next': ['B', 'C']}, {'source': 'C', 'next': ['D']}]}
+parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9026'}, 'type': 'Add'}]
+
+
+def test_streaming_manager():
+    parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9026'}, 'type': 'Add'}]
+    streamingManagaer = StreamingManager()
+    streamingManagaer.setParsedFlows(parsedFlows, 'analyze')
+    results = {}
+    def onMessage(flow,msg, origin):
+        results['flowLength'] = len(flow)
+        results['flowFirstSource'] = flow[0]['source']
+
+    streamingManagaer.setupStreamingProducer(lambda args: print('stats'), producer_config, ['B'], 'A')
+
+    messageListener = MessageListener(listenr_config, receiverNode='B')
+    messageListener.registerMessageListener(onMessage)
+    messageListener.start()
+    streamingManagaer.sendMessage('klum')
+    time.sleep(1)
+
+    assert results['flowLength'] == 2
+    assert results['flowFirstSource'] == 'B'
+    streamingManagaer.sendMessage('klum','master')
+    time.sleep(1)
+    assert results['flowLength'] == 1
+    assert results['flowFirstSource'] == 'C'
+    streamingManagaer.stopStreaming()
 
 
 def test_Messaging():

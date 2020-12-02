@@ -331,13 +331,13 @@ class Algorunner(DaemonThread):
             algorithmData = method(self._input, self._hkubeApi)
             if not (self.stopped):
                 self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)
-            self.runningStartThread = None
 
         except Exception as e:
             traceback.print_exc()
             Tracer.instance.finish_span(span, e)
-            self.runningStartThread = None
             self.sendError(e)
+        finally:
+            self.runningStartThread = None
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         if (self._storage == 'v3'):
