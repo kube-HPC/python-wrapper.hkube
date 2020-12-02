@@ -8,7 +8,7 @@ git config --global user.name "Travis CI"
 # git remote -v
 git checkout -f -b version-branch
 
-pip install --upgrade bump2version
+pip install --upgrade bump2version wheel
 bump2version build
 
 git commit -am "$(git log -1 --pretty=%B) .... bump version [skip ci]"
