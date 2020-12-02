@@ -17,7 +17,7 @@ class MessageProducer(DaemonThread):
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
-        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=self.nodeNames,encoding=self._encoding, me=me)
+        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=self.nodeNames, encoding=self._encoding, me=me)
         self.responsesCache = {}
         self.responseCount = {}
         self.active = True
