@@ -33,10 +33,10 @@ class ZMQProducer(object):
         print("Producer listening on " + "tcp://*:" + str(port))
         self.active = True
 
-    def produce(self, header, message, envelope=[]):
+    def produce(self, header, message, messageFlowPattern=[]):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
             self.messageQueue.loseMessage()
-        self.messageQueue.append(envelope, header, message)
+        self.messageQueue.append(messageFlowPattern, header, message)
 
     def start(self):  # pylint: disable=too-many-branches
         poll_workers = zmq.Poller()
@@ -94,8 +94,8 @@ class ZMQProducer(object):
                 if (workerQueu):
                     nextItemIndex = self.messageQueue.nextMessageIndex(type)
                     if (nextItemIndex is not None):
-                        envelope, header, payload = self.messageQueue.pop(type, nextItemIndex)
-                        flow = Flow(envelope, self.me)
+                        messageFlowPattern, header, payload = self.messageQueue.pop(type, nextItemIndex)
+                        flow = Flow(messageFlowPattern, self.me)
                         frames = [self.encoding.encode(flow.getRestOfFlow(), plainEncode=True), header, payload]
 
                         frames.insert(0, workers.next(type))

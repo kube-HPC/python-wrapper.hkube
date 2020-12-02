@@ -1,5 +1,5 @@
 import time
-
+import threading
 
 class statelessAlgoWrapper(object):
     def __init__(self, algo):
@@ -8,6 +8,7 @@ class statelessAlgoWrapper(object):
         self.options = None
         self.active = False
         self.error = None
+        self.threadLocalStorage = threading.local()
 
     def _invokeAlgorithm(self, msg, origin):
         if not (self.originalAlgorithm.get('init') is None):
@@ -18,7 +19,8 @@ class statelessAlgoWrapper(object):
         options['streamInput'] = {'message': msg, 'origin': origin}
         try:
             result = self.originalAlgorithm['start'](options, self._hkubeApi)
-            self._hkubeApi.sendMessage(result)
+            if (self.options['childs']):
+                self._hkubeApi.sendMessage(result)
         except Exception as e:
             self.error = e
 
@@ -44,5 +46,5 @@ class statelessAlgoWrapper(object):
 
     def stop(self, data):
         self.active = False
-        if not (self.originalAlgorithm.get('stop') is None):
+        if self.originalAlgorithm.get('stop'):
             self.originalAlgorithm['stop'](data)

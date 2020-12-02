@@ -38,9 +38,9 @@ class MessageProducer(DaemonThread):
             runThread.start()
         DaemonThread.__init__(self, "MessageProducer")
 
-    def produce(self, envelope, obj):
+    def produce(self, meesageFlowPattern, obj):
         header, encodedMessage = self._encoding.encode(obj)
-        self.adapter.produce(header, encodedMessage, envelope=envelope)
+        self.adapter.produce(header, encodedMessage, messageFlowPattern=meesageFlowPattern)
 
     def responseAccumulator(self, response, consumerType):
         decodedResponse = self._encoding.decode(value=response, plainEncode=True)

@@ -20,12 +20,12 @@ class MessageListener(DaemonThread):
     def registerMessageListener(self, listener):
         self.messageListeners.append(listener)
 
-    def onMessage(self, envelope, header, msg):
+    def onMessage(self, messageFlowPattern, header, msg):
         start = time.time()
         decodedMsg = self._encoding.decode(header=header, value=msg)
         for listener in self.messageListeners:
             try:
-                listener(envelope, decodedMsg, self.messageOriginNodeName)
+                listener(messageFlowPattern, decodedMsg, self.messageOriginNodeName)
             except Exception as e:
                 print('Error during MessageListener onMessage' + str(e))
 
