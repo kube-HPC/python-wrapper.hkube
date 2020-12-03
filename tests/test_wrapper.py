@@ -5,6 +5,8 @@ import pytest
 # from mock import patch
 from time import sleep
 from threading import Thread
+
+from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper import Algorunner
 from tests.configs import config
 from tests.mocks import mockdata
@@ -37,7 +39,8 @@ def test_load_algorithm_callbacks():
 def test_load_algorithm_streaming_then_batch():
     algorunner = Algorunner()
     algorunner.loadAlgorithmCallbacks(startCallback, options=config)
-    algorunner._hkubeApi = HKubeApi(None, algorunner, None, None)
+    algorunner.streamingManager = StreamingManager(None)
+    algorunner._hkubeApi = HKubeApi(None, algorunner, None, None,algorunner.streamingManager)
     algorunner._init(mockdata.streamingInitData)
     thrd = Thread(target=algorunner._originalAlgorithm['start'], args=[{'input': mockdata.streamingInitData}, algorunner._hkubeApi])
     thrd.start()

@@ -15,53 +15,51 @@ def test_queue():
     def doNothing(header, msg):
         return b'5'
 
-    count = [0, 0, 0]
-    producer = ZMQProducer(port=5556, maxMemorySize=5000, responseAcumulator=doNothing, consumerTypes=['a', 'b'])
+    count = [0, 0]
+    producer = ZMQProducer(port=5556, maxMemorySize=5000, responseAcumulator=doNothing, consumerTypes=['b', 'c'], encoding=encoding, me='a')
     runThread = Thread(name="Producer", target=producer.start)
     runThread.start()
 
     time.sleep(1)
 
-    def doSomething(header, msg):
+    def doSomething(env, header, msg):
         count[0] = count[0] + 1
         time.sleep(0.1)
         return b'5'
 
-    def doSomething2(header, msg):
+    def doSomething2(env, header, msg):
         count[1] = count[1] + 1
         time.sleep(0.1)
         return b'5'
 
-    def doSomething3(header, msg):
-        count[2] = count[2] + 1
-        time.sleep(0.1)
-        return b'5'
-
-    listener1 = ZMQListener('tcp://localhost:5556', doSomething, 'a')
-    listener2 = ZMQListener('tcp://localhost:5556', doSomething2, 'b')
-    listener3 = ZMQListener('tcp://localhost:5556', doSomething3, 'a')
+    listener1 = ZMQListener('tcp://localhost:5556', doSomething, encoding, 'b')
+    listener2 = ZMQListener('tcp://localhost:5556', doSomething2, encoding, 'c')
     runThread = Thread(name="Listener1", target=listener1.start)
     runThread.start()
     runThread = Thread(name="Listener2", target=listener2.start)
     runThread.start()
-    runThread = Thread(name="Listener3", target=listener3.start)
-    runThread.start()
-    time.sleep(1)
-    producer.produce(header, b'bb1')
-    producer.produce(header, b'bb2')
-    producer.produce(header, b'bb3')
-    producer.produce(header, b'bb4')
-    producer.produce(header, b'bb5')
+    time.sleep(4)
+    env = [{
+        "source": "a",
+        "next": [
+            "b", "c"
+        ]
+    }]
+    producer.produce(header, b'bb1', env)
+    producer.produce(header, b'bb2', env)
+    producer.produce(header, b'bb3', env)
+    producer.produce(header, b'bb4', env)
+    producer.produce(header, b'bb5', env)
     time.sleep(3)
-    producer.close()
+
     listener1.close()
     listener2.close()
-    listener3.close()
     time.sleep(1)
+    producer.close()
     print(str(count[0]))
     print(str(count[1]))
-    print(str(count[2]))
-    assert count[0] + count[1] + count[2] == 10
+
+    assert count[0] + count[1] == 10
 
 
 if __name__ == '__main__':

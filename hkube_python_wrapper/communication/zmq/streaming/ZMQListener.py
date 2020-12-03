@@ -1,6 +1,5 @@
 import time
 import zmq
-import msgpack
 import uuid
 
 HEARTBEAT_LIVENESS = 3
@@ -14,7 +13,8 @@ PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
 
 class ZMQListener(object):
 
-    def __init__(self, remoteAddress, onMessage, consumerType):
+    def __init__(self, remoteAddress, onMessage, encoding, consumerType):
+        self.encoding = encoding
         self.onMessage = onMessage
         self.consumerType = consumerType
         self.remoteAddress = remoteAddress
@@ -29,7 +29,7 @@ class ZMQListener(object):
         worker.setsockopt(zmq.IDENTITY, identity)
         worker.connect(remoteAddress)
         print("zmq listener connecting to " + remoteAddress)
-        worker.send_multipart([PPP_READY, msgpack.packb(self.consumerType)])
+        worker.send_multipart([PPP_READY, self.encoding.encode(self.consumerType, plainEncode=True)])
         return worker
 
     def start(self):  # pylint: disable=too-many-branches
@@ -47,6 +47,7 @@ class ZMQListener(object):
                 if (self.active):
                     print(e)
                     raise e
+                break
             # Handle worker activity on backend
             if result == zmq.POLLIN:
                 #  Get message
@@ -59,21 +60,25 @@ class ZMQListener(object):
                     if (self.active):
                         print(e)
                         raise e
+                    break
                 if not frames:
                     if (self.active):
                         raise Exception("Connection to producer on " + self.remoteAddress + " interrupted")
+                    break
 
-                if len(frames) == 2:
+                if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
-                    result = self.onMessage(frames[0], frames[1])
-                    newFrames = [result, msgpack.packb(self.consumerType)]
+                    encodedMessageFlowPattern, header, message = frames
+                    messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
+                    result = self.onMessage(messageFlowPattern, header, message)
+                    newFrames = [result, self.encoding.encode(self.consumerType, plainEncode=True)]
                     try:
                         self.worker.send_multipart(newFrames)
                     except Exception as e:
                         if (self.active):
                             print(e)
                             raise e
-
+                        break
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
                     liveness = HEARTBEAT_LIVENESS
                 else:
@@ -96,16 +101,20 @@ class ZMQListener(object):
                     except Exception as e:
                         if (self.active):
                             print(e)
+                        else:
+                            break
                     self.worker = self.worker_socket(context, self.remoteAddress)
                     liveness = HEARTBEAT_LIVENESS
 
             if time.time() > heartbeat_at:
                 heartbeat_at = time.time() + HEARTBEAT_INTERVAL
                 try:
-                    self.worker.send_multipart([PPP_HEARTBEAT, msgpack.packb(self.consumerType)])
+                    self.worker.send_multipart([PPP_HEARTBEAT, self.encoding.encode(self.consumerType, plainEncode=True)])
                 except Exception as e:
                     if (self.active):
                         print(e)
+                    else:
+                        break
 
     def close(self):
         if not (self.active):

@@ -5,87 +5,32 @@ from hkube_python_wrapper.wrapper.messages import messages
 from .execution import Execution
 from .waitFor import WaitForData
 from hkube_python_wrapper.util.queueImpl import Empty
-from ..communication.streaming.MessageListener import MessageListener
-from ..communication.streaming.MessageProducer import MessageProducer
+
 
 
 class HKubeApi:
     """Hkube interface for code-api operations"""
 
-    def __init__(self, wc, wrapper, dataAdapter, storage):
+    def __init__(self, wc, wrapper, dataAdapter, storage, streamingManager):
         self._wc = wc
         self._wrapper = wrapper
         self._dataAdapter = dataAdapter
         self._storage = storage
         self._executions = {}
         self._lastExecId = 0
-        self.messageProducer = None
-        self._messageListeners = dict()
-        self._inputListener = []
-        self.listeningToMessages = False
-
-    def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes):
-        self.messageProducer = MessageProducer(producerConfig, nextNodes)
-        self.messageProducer.registerStatisticsListener(onStatistics)
-        if (nextNodes):
-            self.messageProducer.start()
-
-    def sendError(self, e):
-        self._wrapper.sendError(e)
-
-    def setupStreamingListeners(self, listenerConfig, parents, nodeName):
-        print("parents" + str(parents))
-        for predecessor in parents:
-            remoteAddress = 'tcp://' + \
-                            predecessor['address']['host'] + ':' + \
-                            str(predecessor['address']['port'])
-            if (predecessor['type'] == 'Add'):
-                options = {}
-                options.update(listenerConfig)
-                options['remoteAddress'] = remoteAddress
-                options['messageOriginNodeName'] = predecessor['nodeName']
-                listener = MessageListener(options, nodeName, self)
-                listener.registerMessageListener(self._onMessage)
-                self._messageListeners[remoteAddress] = listener
-                if (self.listeningToMessages):
-                    listener.start()
-            if (predecessor['type'] == 'Del'):
-                if (self.listeningToMessages):
-                    self._messageListeners[remoteAddress].close()
-                del self._messageListeners[remoteAddress]
+        self.streamingManager = streamingManager
 
     def registerInputListener(self, onMessage):
-        self._inputListener.append(onMessage)
-
-    def _onMessage(self, msg, origin):
-        for listener in self._inputListener:
-            try:
-                listener(msg, origin)
-            except Exception as e:
-                print("hkube_api message listener through exception: " + str(e))
+        self.streamingManager.registerInputListener(onMessage)
 
     def startMessageListening(self):
-        self.listeningToMessages = True
-        for listener in self._messageListeners.values():
-            if not (listener.is_alive()):
-                listener.start()
+        self.streamingManager.startMessageListening()
 
-    def sendMessage(self, msg):
-        if (self.messageProducer is None):
-            raise Exception('Trying to send a message from a none stream pipeline or after close had been sent to algorithm')
-        if (self.messageProducer.nodeNames):
-            self.messageProducer.produce(msg)
+    def sendMessage(self, msg, flowName=None):
+        self.streamingManager.sendMessage(msg, flowName)
 
     def stopStreaming(self):
-        if (self.listeningToMessages):
-            for listener in self._messageListeners.values():
-                listener.close()
-            self._messageListeners = dict()
-        self.listeningToMessages = False
-        self._inputListener = []
-        if (self.messageProducer is not None):
-            self.messageProducer.close()
-            self.messageProducer = None
+        self.streamingManager.stopStreaming()
 
     def _generateExecId(self):
         self._lastExecId += 1

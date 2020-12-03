@@ -1,7 +1,5 @@
-import copy
 import time
-
-from hkube_python_wrapper.util.object_path import setPath
+import threading
 
 class statelessAlgoWrapper(object):
     def __init__(self, algo):
@@ -10,23 +8,19 @@ class statelessAlgoWrapper(object):
         self.options = None
         self.active = False
         self.error = None
+        self.threadLocalStorage = threading.local()
 
     def _invokeAlgorithm(self, msg, origin):
         if not (self.originalAlgorithm.get('init') is None):
             self.originalAlgorithm['init'](msg)
-            #TODO should init be called upon every message
-        input = copy.copy(self.options['input'])
-
-        flatInput = self.options.get('flatInput')
-        for k, v in flatInput.items():
-            if (v == '@' + origin):
-                setPath(input, k, msg)
+            # TODO should init be called upon every message
         options = {}
         options.update(self.options)
-        options['input'] = input
+        options['streamInput'] = {'message': msg, 'origin': origin}
         try:
             result = self.originalAlgorithm['start'](options, self._hkubeApi)
-            self._hkubeApi.sendMessage(result)
+            if (self.options['childs']):
+                self._hkubeApi.sendMessage(result)
         except Exception as e:
             self.error = e
 
@@ -52,5 +46,5 @@ class statelessAlgoWrapper(object):
 
     def stop(self, data):
         self.active = False
-        if not (self.originalAlgorithm.get('stop') is None):
+        if self.originalAlgorithm.get('stop'):
             self.originalAlgorithm['stop'](data)

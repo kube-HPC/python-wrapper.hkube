@@ -10,19 +10,19 @@ RESPONSE_CACHE = 2000
 
 
 class MessageProducer(DaemonThread):
-    def __init__(self, options, nodeNames):
-        self.nodeNames = nodeNames
+    def __init__(self, options, consumerNodes, me):
+        self.nodeNames = consumerNodes
         port = options['port']
         maxMemorySize = options['messagesMemoryBuff'] * 1024 * 1024
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
-        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=nodeNames)
+        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=self.nodeNames, encoding=self._encoding, me=me)
         self.responsesCache = {}
         self.responseCount = {}
         self.active = True
         self.printStatistics = 0
-        for nodeName in nodeNames:
+        for nodeName in consumerNodes:
             self.responsesCache[nodeName] = FifoArray(RESPONSE_CACHE)
             self.responseCount[nodeName] = 0
         self.listeners = []
@@ -38,9 +38,9 @@ class MessageProducer(DaemonThread):
             runThread.start()
         DaemonThread.__init__(self, "MessageProducer")
 
-    def produce(self, obj):
+    def produce(self, meesageFlowPattern, obj):
         header, encodedMessage = self._encoding.encode(obj)
-        self.adapter.produce(header, encodedMessage)
+        self.adapter.produce(header, encodedMessage, messageFlowPattern=meesageFlowPattern)
 
     def responseAccumulator(self, response, consumerType):
         decodedResponse = self._encoding.decode(value=response, plainEncode=True)

@@ -4,11 +4,11 @@
 #   Author: Daniel Lundin <dln(at)eintr(dot)org>
 #
 import time
+from .Flow import Flow
 from .Worker import Worker
 from .WorkerQueue import WorkerQueue
 from .MessageQueue import MessageQueue
 import zmq
-import msgpack
 
 HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
 HEARTBEAT_INTERVAL = 1.0  # Seconds
@@ -19,23 +19,24 @@ PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
 
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize, responseAcumulator, consumerTypes):
+    def __init__(self, port, maxMemorySize, responseAcumulator, consumerTypes, encoding, me):
+        self.me = me
+        self.encoding = encoding
         self.responseAcumulator = responseAcumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
-        self.messageQueue = MessageQueue(consumerTypes)
         self.consumerTypes = consumerTypes
+        self.messageQueue = MessageQueue(consumerTypes, self.me)
         context = zmq.Context(1)
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers
         print("Producer listening on " + "tcp://*:" + str(port))
         self.active = True
 
-    def produce(self, header, message):
+    def produce(self, header, message, messageFlowPattern=[]):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
-            print('Loosing a message, queue filled up ')
             self.messageQueue.loseMessage()
-        self.messageQueue.append(header, message)
+        self.messageQueue.append(messageFlowPattern, header, message)
 
     def start(self):  # pylint: disable=too-many-branches
         poll_workers = zmq.Poller()
@@ -50,6 +51,8 @@ class ZMQProducer(object):
             except Exception as e:
                 if (self.active):
                     print(e)
+                else:
+                    break
             # Handle worker activity on self._backend
             if socks.get(self._backend) == zmq.POLLIN:
                 # Use worker address for LRU routing
@@ -58,11 +61,14 @@ class ZMQProducer(object):
                 except Exception as e:
                     if (self.active):
                         print(e)
+                    else:
+                        break
                 if not frames:
                     if (self.active):
                         raise Exception("Unexpected router no frames on receive, no address frame")
+                    break
                 address = frames[0]
-                consumerType = msgpack.unpackb(frames[2])
+                consumerType = self.encoding.decode(value=frames[2], plainEncode=True)
                 if not consumerType in self.consumerTypes:
                     print("Producer got message from unknown consumer: " + consumerType + ", dropping the message")
                     continue
@@ -81,17 +87,25 @@ class ZMQProducer(object):
                             except Exception as e:
                                 if (self.active):
                                     print(e)
+                                else:
+                                    break
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-            for type, workerQueu in workers.queues.items():
-                if (workerQueu and self.messageQueue.hasItems(type)):
-                    header, payload = self.messageQueue.pop(type)
-                    frames = [header, payload]
-                    frames.insert(0, workers.next(type))
-                    try:
-                        self._backend.send_multipart(frames)
-                    except Exception as e:
-                        if (self.active):
-                            print(e)
+            for type, workerQueue in workers.queues.items():
+                if (workerQueue):
+                    nextItemIndex = self.messageQueue.nextMessageIndex(type)
+                    if (nextItemIndex is not None):
+                        messageFlowPattern, header, payload = self.messageQueue.pop(type, nextItemIndex)
+                        flow = Flow(messageFlowPattern, self.me)
+                        frames = [self.encoding.encode(flow.getRestOfFlow(), plainEncode=True), header, payload]
+
+                        frames.insert(0, workers.next(type))
+                        try:
+                            self._backend.send_multipart(frames)
+                        except Exception as e:
+                            if (self.active):
+                                print(e)
+                            else:
+                                break
             workers.purge()
 
     def queueSize(self, consumerSize):

@@ -10,6 +10,7 @@ from .messages import messages
 from hkube_python_wrapper.tracing import Tracer
 from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
 from hkube_python_wrapper.communication.DataServer import DataServer
+from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
 from hkube_python_wrapper.util.timerImpl import Timer
 import os
@@ -30,6 +31,7 @@ class Algorunner(DaemonThread):
         self._loadAlgorithmError = None
         self._connected = False
         self._hkubeApi = None
+        self.streamingManager = None
         self._msg_queue = Queue()
         self._dataAdapter = None
         self._dataServer = None
@@ -183,7 +185,8 @@ class Algorunner(DaemonThread):
 
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initStorage(options)
-        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage)
+        self.streamingManager = StreamingManager(self)
+        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage, self.streamingManager)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
@@ -284,10 +287,11 @@ class Algorunner(DaemonThread):
     def _discovery_update(self, discovery):
         print('Got discovery update' + str(discovery))
         messageListenerConfig = {'encoding': config.discovery['encoding']}
-        self._hkubeApi.setupStreamingListeners(
+        self.streamingManager.setupStreamingListeners(
             messageListenerConfig, discovery, self._nodeName)
 
-    def _setupStreamingProducer(self):
+    def _setupStreamingProducer(self, me):
+
         def onStatistics(statistics):
             self._sendCommand(
                 messages.outgoing.streamingStatistics, statistics)
@@ -297,12 +301,13 @@ class Algorunner(DaemonThread):
         producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
         producerConfig['encoding'] = config.discovery['encoding']
         producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
-        self._hkubeApi.setupStreamingProducer(
-            onStatistics, producerConfig, self._input['childs'])
+        self.streamingManager.setupStreamingProducer(
+            onStatistics, producerConfig, self._input['childs'], me)
 
     def _start(self, options):
-        if (self.isStreamingPipeLine()):
-            self._setupStreamingProducer()
+        self.streamingManager.setParsedFlows(self._input.get('parsedFlow'), self._input.get('defaultFlow'))
+        if (self.isStreamingPipeLine() and self._input['childs']):
+            self._setupStreamingProducer(self._input.get("nodeName"))
         # pylint: disable=unused-argument
         span = None
         self.runningStartThread = current_thread()
@@ -326,12 +331,13 @@ class Algorunner(DaemonThread):
             algorithmData = method(self._input, self._hkubeApi)
             if not (self.stopped):
                 self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)
-            self.runningStartThread = None
 
         except Exception as e:
             traceback.print_exc()
             Tracer.instance.finish_span(span, e)
             self.sendError(e)
+        finally:
+            self.runningStartThread = None
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         if (self._storage == 'v3'):
@@ -421,7 +427,7 @@ class Algorunner(DaemonThread):
             sys.exit(code)
 
         except Exception as e:
-            print('Got error during exit: ' + e)
+            print('Got error during exit: ' + str(e))
             # pylint: disable=protected-access
             os._exit(0)
 
