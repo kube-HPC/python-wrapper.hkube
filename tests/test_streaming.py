@@ -3,7 +3,7 @@ from hkube_python_wrapper.communication.streaming.MessageListener import Message
 from hkube_python_wrapper.communication.streaming.MessageProducer import MessageProducer
 import time
 
-parsedFlows = {'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}], 'master': [{'source': 'A', 'next': ['B', 'C']}, {'source': 'C', 'next': ['D']}]}
+parsedFlows = {'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}], 'master': [{'source': 'B', 'next': ['A', 'C']}, {'source': 'C', 'next': ['D']},{'source': 'D', 'next': ['E']}]}
 parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9326'}, 'type': 'Add'}]
 
 
@@ -22,7 +22,7 @@ def test_streaming_manager():
     messageListener = MessageListener(listen_toB_config, receiverNode='C')
     resultsAtC = {}
 
-    def onMessage(flow, msg, origin):
+    def onMessageB2C(flow, msg, origin):
         resultsAtC['flowLength'] = len(flow)
         resultsAtC['flowFirstSource'] = flow[0]['source']
         resultsAtC['msg'] = msg
@@ -40,20 +40,20 @@ def test_streaming_manager():
         streamingManagaerB.setupStreamingListeners(listen_config, parents, 'B')
         streamingManagaerB.registerInputListener(onMessageAtB)
         time.sleep(1)
-        messageListener.registerMessageListener(onMessage)
+        messageListener.registerMessageListener(onMessageB2C)
         streamingManagaerB.startMessageListening()
 
         messageListener.start()
         time.sleep(1)
         streamingManagaerA.sendMessage('klum')
-        time.sleep(1)
+        time.sleep(2)
         assert resultsAtC['flowLength'] == 1
         assert resultsAtC['flowFirstSource'] == 'C'
         assert resultsAtC['msg'] == 'stam_klum'
-
-        streamingManagaerA.sendMessage('klum', 'master')
+# send to none default flow
+        streamingManagaerB.sendMessage('klum', 'master')
         time.sleep(1)
-        assert resultsAtC['flowLength'] == 1
+        assert resultsAtC['flowLength'] == 2
         assert resultsAtC['flowFirstSource'] == 'C'
     except Exception as e:
         raise e
@@ -63,8 +63,8 @@ def test_streaming_manager():
 
 
 def test_Messaging():
-    producer_config = {'port': 9426, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
-    listenr_config = {'remoteAddress': 'tcp://localhost:9426', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
+    producer_config = {'port': 9526, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
+    listenr_config = {'remoteAddress': 'tcp://localhost:9526', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
     asserts = {}
     asserts['responses'] = 0
     messageProducer = MessageProducer(producer_config, ['a'], 'b')
