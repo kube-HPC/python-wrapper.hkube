@@ -39,7 +39,7 @@ def test_load_algorithm_callbacks():
 def test_load_algorithm_streaming_then_batch():
     algorunner = Algorunner()
     algorunner.loadAlgorithmCallbacks(startCallback, options=config)
-    algorunner.streamingManager = StreamingManager()
+    algorunner.streamingManager = StreamingManager(None)
     algorunner._hkubeApi = HKubeApi(None, algorunner, None, None,algorunner.streamingManager)
     algorunner._init(mockdata.streamingInitData)
     thrd = Thread(target=algorunner._originalAlgorithm['start'], args=[{'input': mockdata.streamingInitData}, algorunner._hkubeApi])
