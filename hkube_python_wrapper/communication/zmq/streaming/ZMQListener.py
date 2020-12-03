@@ -68,9 +68,9 @@ class ZMQListener(object):
 
                 if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
-                    encodedMessageFlowPattern,header,message = frames
+                    encodedMessageFlowPattern, header, message = frames
                     messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
-                    result = self.onMessage(messageFlowPattern,header,message)
+                    result = self.onMessage(messageFlowPattern, header, message)
                     newFrames = [result, self.encoding.encode(self.consumerType, plainEncode=True)]
                     try:
                         self.worker.send_multipart(newFrames)
