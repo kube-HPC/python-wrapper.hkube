@@ -6,7 +6,8 @@ from .MessageProducer import MessageProducer
 
 class StreamingManager():
     threadLocalStorage = threading.local()
-    def __init__(self):
+    def __init__(self, errorHandler):
+        self.errorHandler = errorHandler
         self.messageProducer = None
         self._messageListeners = dict()
         self._inputListener = []
@@ -17,6 +18,9 @@ class StreamingManager():
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
         self.defaultFlow = defaultFlow
+
+    def sendError(self, e):
+        self.errorHandler.sendError(e)
 
     def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, me):
         self.messageProducer = MessageProducer(producerConfig, nextNodes, me)
@@ -66,11 +70,16 @@ class StreamingManager():
         if (self.messageProducer is None):
             raise Exception('Trying to send a message from a none stream pipeline or after close had been applied on algorithm')
         if (self.messageProducer.nodeNames):
+            parsedFlow = None
             if (flowName is None):
-                if (self.defaultFlow is None):
-                    raise Exception("Streaming default flow is None")
-                flowName = self.defaultFlow
-            parsedFlow = self.parsedFlows.get(flowName)
+                if hasattr(self.threadLocalStorage, 'messageFlowPattern') and self.threadLocalStorage.messageFlowPattern:
+                    parsedFlow = self.threadLocalStorage.messageFlowPattern
+                else:
+                    if (self.defaultFlow is None):
+                        raise Exception("Streaming default flow is None")
+                    flowName = self.defaultFlow
+            if not (parsedFlow):
+                parsedFlow = self.parsedFlows.get(flowName)
             if (parsedFlow is None):
                 raise Exception("No such flow " + flowName)
             self.messageProducer.produce(parsedFlow, msg)

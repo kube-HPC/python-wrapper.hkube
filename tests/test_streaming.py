@@ -12,17 +12,15 @@ def test_streaming_manager():
     producer_config = {'port': 9326, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
     listenr_config = {'remoteAddress': 'tcp://localhost:9326', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
     parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9326'}, 'type': 'Add'}]
-    streamingManagaer = StreamingManager()
+    streamingManagaer = StreamingManager(None)
     streamingManagaer.setParsedFlows(parsedFlows, 'analyze')
     messageListener = MessageListener(listenr_config, receiverNode='B')
     results = {}
     def onMessage(flow,msg, origin):
         results['flowLength'] = len(flow)
         results['flowFirstSource'] = flow[0]['source']
-
     def statsInvoked(args):
         print('stats')
-
     try:
         streamingManagaer.setupStreamingProducer(statsInvoked , producer_config, ['B'], 'A')
         time.sleep(1)

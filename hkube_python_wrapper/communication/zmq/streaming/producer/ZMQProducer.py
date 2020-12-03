@@ -90,8 +90,8 @@ class ZMQProducer(object):
                                 else:
                                     break
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-            for type, workerQueu in workers.queues.items():
-                if (workerQueu):
+            for type, workerQueue in workers.queues.items():
+                if (workerQueue):
                     nextItemIndex = self.messageQueue.nextMessageIndex(type)
                     if (nextItemIndex is not None):
                         messageFlowPattern, header, payload = self.messageQueue.pop(type, nextItemIndex)

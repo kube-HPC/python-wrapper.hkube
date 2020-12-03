@@ -20,9 +20,6 @@ class HKubeApi:
         self._lastExecId = 0
         self.streamingManager = streamingManager
 
-    def sendError(self, e):
-        self._wrapper.sendError(e)
-
     def registerInputListener(self, onMessage):
         self.streamingManager.registerInputListener(onMessage)
 
