@@ -21,17 +21,17 @@ def test_streaming_manager():
     def statsInvoked():
         print('stats')
     streamingManagaer.setupStreamingProducer(statsInvoked , producer_config, ['B'], 'A')
-
+    time.sleep(0.5)
     messageListener = MessageListener(listenr_config, receiverNode='B')
     messageListener.registerMessageListener(onMessage)
     messageListener.start()
+    time.sleep(0.5)
     streamingManagaer.sendMessage('klum')
-    time.sleep(1)
-
+    time.sleep(0.5)
     assert results['flowLength'] == 2
     assert results['flowFirstSource'] == 'B'
     streamingManagaer.sendMessage('klum','master')
-    time.sleep(1)
+    time.sleep(0.5)
     assert results['flowLength'] == 1
     assert results['flowFirstSource'] == 'C'
     streamingManagaer.stopStreaming()
