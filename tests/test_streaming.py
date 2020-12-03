@@ -3,13 +3,14 @@ from hkube_python_wrapper.communication.streaming.MessageListener import Message
 from hkube_python_wrapper.communication.streaming.MessageProducer import MessageProducer
 import time
 
-producer_config = {'port': 9326, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
-listenr_config = {'remoteAddress': 'tcp://localhost:9326', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
+
 parsedFlows = {'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}], 'master': [{'source': 'A', 'next': ['B', 'C']}, {'source': 'C', 'next': ['D']}]}
 parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9326'}, 'type': 'Add'}]
 
 
 def test_streaming_manager():
+    producer_config = {'port': 9326, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
+    listenr_config = {'remoteAddress': 'tcp://localhost:9326', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
     parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9326'}, 'type': 'Add'}]
     streamingManagaer = StreamingManager()
     streamingManagaer.setParsedFlows(parsedFlows, 'analyze')
@@ -36,14 +37,16 @@ def test_streaming_manager():
         time.sleep(1)
         assert results['flowLength'] == 1
         assert results['flowFirstSource'] == 'C'
-        streamingManagaer.stopStreaming()
     except Exception as e:
+        raise e
+    finally:
         streamingManagaer.stopStreaming()
         messageListener.close()
-        raise e
 
 
 def test_Messaging():
+    producer_config = {'port': 9426, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
+    listenr_config = {'remoteAddress': 'tcp://localhost:9426', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
     asserts = {}
     asserts['responses'] = 0
     messageProducer = MessageProducer(producer_config, ['a'], 'b')
@@ -76,7 +79,7 @@ def test_Messaging():
     messageProducer.produce(env, {'field1': 'value1'})
     messageProducer.produce(env, {'field1': 'value1'})
     messageProducer.produce(env, {'field1': 'value1'})
-    time.sleep(0.5)
+    time.sleep(2)
     assert asserts['stats'][0]['queueSize'] == 3
     assert asserts['stats'][0]['sent'] == 0
     messageListener = MessageListener(listenr_config, receiverNode='a')
