@@ -3,42 +3,62 @@ from hkube_python_wrapper.communication.streaming.MessageListener import Message
 from hkube_python_wrapper.communication.streaming.MessageProducer import MessageProducer
 import time
 
-
 parsedFlows = {'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}], 'master': [{'source': 'A', 'next': ['B', 'C']}, {'source': 'C', 'next': ['D']}]}
 parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9326'}, 'type': 'Add'}]
 
 
 def test_streaming_manager():
-    producer_config = {'port': 9326, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
-    listenr_config = {'remoteAddress': 'tcp://localhost:9326', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
+    producer_configA = {'port': 9326, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
+    producer_configB = {'port': 9426, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
+    listen_toB_config = {'remoteAddress': 'tcp://localhost:9426', 'encoding': 'msgpack', 'messageOriginNodeName': 'B'}
+    listen_config = {'encoding': 'msgpack'}
     parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9326'}, 'type': 'Add'}]
-    streamingManagaer = StreamingManager(None)
-    streamingManagaer.setParsedFlows(parsedFlows, 'analyze')
-    messageListener = MessageListener(listenr_config, receiverNode='B')
-    results = {}
-    def onMessage(flow,msg, origin):
-        results['flowLength'] = len(flow)
-        results['flowFirstSource'] = flow[0]['source']
+    streamingManagaerA = StreamingManager(None)
+    streamingManagaerA.setParsedFlows(parsedFlows, 'analyze')
+
+    streamingManagaerB = StreamingManager(None)
+    streamingManagaerB.setParsedFlows(parsedFlows, 'analyze')
+
+    messageListener = MessageListener(listen_toB_config, receiverNode='C')
+    resultsAtC = {}
+
+    def onMessage(flow, msg, origin):
+        resultsAtC['flowLength'] = len(flow)
+        resultsAtC['flowFirstSource'] = flow[0]['source']
+        resultsAtC['msg'] = msg
+        print("atOnmessageC")
+    def onMessageAtB(msg,origin):
+        print('atOnmessageB')
+        streamingManagaerB.sendMessage('stam_klum')
+
     def statsInvoked(args):
         print('stats')
+
     try:
-        streamingManagaer.setupStreamingProducer(statsInvoked , producer_config, ['B'], 'A')
+        streamingManagaerA.setupStreamingProducer(statsInvoked, producer_configA, ['B'], 'A')
+        streamingManagaerB.setupStreamingProducer(statsInvoked, producer_configB, ['C'], 'B')
+        streamingManagaerB.setupStreamingListeners(listen_config, parents, 'B')
+        streamingManagaerB.registerInputListener(onMessageAtB)
         time.sleep(1)
         messageListener.registerMessageListener(onMessage)
+        streamingManagaerB.startMessageListening()
+
         messageListener.start()
         time.sleep(1)
-        streamingManagaer.sendMessage('klum')
+        streamingManagaerA.sendMessage('klum')
         time.sleep(1)
-        assert results['flowLength'] == 2
-        assert results['flowFirstSource'] == 'B'
-        streamingManagaer.sendMessage('klum','master')
+        assert resultsAtC['flowLength'] == 1
+        assert resultsAtC['flowFirstSource'] == 'C'
+        assert resultsAtC['msg'] == 'stam_klum'
+
+        streamingManagaerA.sendMessage('klum', 'master')
         time.sleep(1)
-        assert results['flowLength'] == 1
-        assert results['flowFirstSource'] == 'C'
+        assert resultsAtC['flowLength'] == 1
+        assert resultsAtC['flowFirstSource'] == 'C'
     except Exception as e:
         raise e
     finally:
-        streamingManagaer.stopStreaming()
+        streamingManagaerA.stopStreaming()
         messageListener.close()
 
 
