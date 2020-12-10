@@ -92,11 +92,11 @@ class ZMQProducer(object):
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
             for type, workerQueue in workers.queues.items():
                 if (workerQueue):
-                    nextItemIndex = self.messageQueue.nextMessageIndex(type)
-                    if (nextItemIndex is not None):
-                        messageFlowPattern, header, payload = self.messageQueue.pop(type, nextItemIndex)
-                        flow = Flow(messageFlowPattern, self.me)
-                        frames = [self.encoding.encode(flow.getRestOfFlow(), plainEncode=True), header, payload]
+                    poped = self.messageQueue.pop(type)
+                    if (poped):
+                        messageFlowPattern, header, payload = poped
+                        flow = Flow(messageFlowPattern)
+                        frames = [self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
 
                         frames.insert(0, workers.next(type))
                         try:
@@ -111,8 +111,8 @@ class ZMQProducer(object):
     def queueSize(self, consumerSize):
         return self.messageQueue.size(consumerSize)
 
-    def sent(self, consumerSize):
-        return self.messageQueue.sent(consumerSize)
+    def sent(self, consumerType):
+        return self.messageQueue.sent[consumerType]
 
     def close(self):
         self.active = False

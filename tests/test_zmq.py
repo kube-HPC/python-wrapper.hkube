@@ -11,7 +11,7 @@ encoding = Encoding('msgpack')
 header = encoding.createHeader(DATA_TYPE_RAW, PROTOCOL_TYPE_MSGPACK)
 
 
-def test_queue():
+def test_zmq_streaming():
     def doNothing(header, msg):
         return b'5'
 
@@ -63,4 +63,4 @@ def test_queue():
 
 
 if __name__ == '__main__':
-    test_queue()
+    test_zmq_streaming()

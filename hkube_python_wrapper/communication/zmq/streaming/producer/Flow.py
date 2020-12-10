@@ -1,20 +1,26 @@
 class Flow:
-    def __init__(self, flow, meName):
+    def __init__(self, flow):
         self.flow = flow
-        self.me = None
-        for node in flow:
-            if self.me is None:
-                if node['source'] == meName:
-                    self.me = node
 
-    def isNextInFlow(self, next):
-        if (self.me is None):
+    def isNextInFlow(self, next, currentName):
+        current = self._getCurrent(currentName)
+        if (current is None):
             return False
-        return next in self.me['next']
+        return next in current['next']
 
-    def getRestOfFlow(self):
-        if (self.me is None):
+    def getRestOfFlow(self, currentName):
+        current = self._getCurrent(currentName)
+        if (current is None):
             return []
         flowcopy = self.flow[:]
-        flowcopy.remove(self.me)
+        flowcopy.remove(current)
         return flowcopy
+
+    def _getCurrent(self, currentName):
+        current = None
+        for node in self.flow:
+            if current is None:
+                if node['source'] == currentName:
+                    current = node
+                    return current
+        return None
