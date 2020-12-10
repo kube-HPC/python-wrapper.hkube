@@ -60,9 +60,7 @@ class MessageQueue(object):
                     for key in self.indexPerConsumer.keys():
                         self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
             return out
-        else:
-            return None
-
+        return None
 
     def loseMessage(self):
         out = self.queue.pop(0)
@@ -82,7 +80,3 @@ class MessageQueue(object):
         everAppended = self.everAppended[consumerType]
         size = everAppended - self.sent[consumerType]
         return size
-
-    def sent(self, consumerType):
-        sent = self.sent[consumerType]
-        return sent
