@@ -22,7 +22,7 @@ requires = [
     "wsaccel",
     "six",
     "pyzmq",
-    "jaeger-client==4",
+    "jaeger-client==4.3.0",
     "pympler"
 ]
 
