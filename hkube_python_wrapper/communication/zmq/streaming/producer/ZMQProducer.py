@@ -79,7 +79,7 @@ class ZMQProducer(object):
                 # Validate control message, or return reply to client
                 msg = frames[1:]
                 if time.time() >= heartbeat_at:
-                    for type, workersOfType in workers.queues.items():
+                    for consumerType, workersOfType in workers.queues.items():
                         for worker in workersOfType:
                             msg = [worker, PPP_HEARTBEAT]
                             try:
@@ -90,15 +90,15 @@ class ZMQProducer(object):
                                 else:
                                     break
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-            for type, workerQueue in workers.queues.items():
+            for consumerType, workerQueue in workers.queues.items():
                 if (workerQueue):
-                    poped = self.messageQueue.pop(type)
+                    poped = self.messageQueue.pop(consumerType)
                     if (poped):
                         messageFlowPattern, header, payload = poped
                         flow = Flow(messageFlowPattern)
                         frames = [self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
 
-                        frames.insert(0, workers.next(type))
+                        frames.insert(0, workers.next(consumerType))
                         try:
                             self._backend.send_multipart(frames)
                         except Exception as e:
