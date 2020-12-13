@@ -13,8 +13,8 @@ class BaseStorageManager(object):
         try:
             data = self.adapter.get(options)
             return data
-        except Exception:
-            raise Exception('Failed to read data from storage')
+        except Exception as e:
+            raise Exception('Failed to read data from storage' + str(e))
 
 
     def list(self, options):

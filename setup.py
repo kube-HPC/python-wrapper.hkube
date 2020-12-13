@@ -20,7 +20,7 @@ requires = [
     'pymongo>=3.10.1',
     'msgpack',
     'boto3',
-    "wsaccel",
+    "wsaccel==0.6.2",
     "six",
     "pyzmq",
     "jaeger-client==4",

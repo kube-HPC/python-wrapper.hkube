@@ -1,5 +1,4 @@
 import threading
-import pytest
 from hkube_python_wrapper.communication.DataRequest import DataRequest
 from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.util.encoding import Encoding
