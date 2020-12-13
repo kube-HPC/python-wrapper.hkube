@@ -17,10 +17,8 @@ class Flow:
         return flowcopy
 
     def _getCurrent(self, currentName):
-        current = None
         for node in self.flow:
-            if current is None:
-                if node['source'] == currentName:
-                    current = node
-                    return current
+            if node['source'] == currentName:
+                current = node
+                return current
         return None
