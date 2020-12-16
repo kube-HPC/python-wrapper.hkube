@@ -9,6 +9,7 @@ class Outgoing(object):
         self.progress = "progress"
         self.error = "errorMessage"
         self.storing = "storing"
+        self.streamingStatistics = "streamingStatistics"
         self.done = "done"
         self.servingStatus = "servingStatus"
         self.startAlgorithmExecution = "startAlgorithmExecution"
@@ -30,6 +31,7 @@ class Incoming(object):
         self.subPipelineError = "subPipelineError"
         self.subPipelineDone = "subPipelineDone"
         self.subPipelineStopped = "subPipelineStopped"
+        self.serviceDiscoveryUpdate = "serviceDiscoveryUpdate"
 
 
 class Messages(object):

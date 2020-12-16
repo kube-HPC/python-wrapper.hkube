@@ -1,6 +1,5 @@
 from __future__ import print_function, division, absolute_import
 import time
-
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.messages import messages
 from .execution import Execution
@@ -8,16 +7,30 @@ from .waitFor import WaitForData
 from hkube_python_wrapper.util.queueImpl import Empty
 
 
+
 class HKubeApi:
     """Hkube interface for code-api operations"""
 
-    def __init__(self, wc, wrapper, dataAdapter, storage):
+    def __init__(self, wc, wrapper, dataAdapter, storage, streamingManager):
         self._wc = wc
         self._wrapper = wrapper
         self._dataAdapter = dataAdapter
         self._storage = storage
         self._executions = {}
         self._lastExecId = 0
+        self.streamingManager = streamingManager
+
+    def registerInputListener(self, onMessage):
+        self.streamingManager.registerInputListener(onMessage)
+
+    def startMessageListening(self):
+        self.streamingManager.startMessageListening()
+
+    def sendMessage(self, msg, flowName=None):
+        self.streamingManager.sendMessage(msg, flowName)
+
+    def stopStreaming(self):
+        self.streamingManager.stopStreaming()
 
     def _generateExecId(self):
         self._lastExecId += 1
@@ -36,14 +49,15 @@ class HKubeApi:
 
         try:
             error = data.get('error')
-            if(error):
+            if (error):
                 execution.waiter.set(error)
 
-            elif(execution.includeResult):
+            elif (execution.includeResult):
                 response = data.get('response')
                 result = response
-                if(typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v2'):
-                    result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
+                if (typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v3'):
+                    result = self._dataAdapter.tryGetDataFromPeerOrStorage(
+                        response)
                 execution.waiter.set(result)
             else:
                 execution.waiter.set(None)

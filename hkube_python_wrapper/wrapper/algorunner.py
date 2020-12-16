@@ -1,5 +1,7 @@
 from __future__ import print_function, division, absolute_import
 
+from hkube_python_wrapper.util.DaemonThread import DaemonThread
+from .statelessAlgoWrapper import statelessAlgoWrapper
 from ..config import config
 from .wc import WebsocketClient
 from .data_adapter import DataAdapter
@@ -8,26 +10,28 @@ from .messages import messages
 from hkube_python_wrapper.tracing import Tracer
 from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
 from hkube_python_wrapper.communication.DataServer import DataServer
+from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
 from hkube_python_wrapper.util.timerImpl import Timer
 import os
 import sys
 import importlib
 import traceback
-import platform
-from events import Events
-from threading import Thread
+from threading import Thread, current_thread
 
 
-class Algorunner:
+class Algorunner(DaemonThread):
+    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self._url = None
-        self._algorithm = dict()
+        self._originalAlgorithm = dict()
+        self._statelessWrapped = dict()
+        self._algorithm = None
         self._input = None
-        self._events = Events()
         self._loadAlgorithmError = None
         self._connected = False
         self._hkubeApi = None
+        self.streamingManager = None
         self._msg_queue = Queue()
         self._dataAdapter = None
         self._dataServer = None
@@ -36,6 +40,10 @@ class Algorunner:
         self.tracer = None
         self._storage = None
         self._active = True
+        self._nodeName = None
+        self.runningStartThread = None
+        self.stopped = False
+        DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
     def Run(start=None, init=None, stop=None, exit=None, options=None):
@@ -56,7 +64,8 @@ class Algorunner:
         """
         algorunner = Algorunner()
         if (start):
-            algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
+            algorunner.loadAlgorithmCallbacks(
+                start, init=init, stop=stop, exit=exit, options=options or config)
         else:
             algorunner.loadAlgorithm(config)
         jobs = algorunner.connectToWorker(config)
@@ -108,16 +117,17 @@ class Algorunner:
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None, options=None):
         try:
             print('Initializing algorithm callbacks')
-            self._algorithm['start'] = start
-            self._algorithm['init'] = init
-            self._algorithm['stop'] = stop
-            self._algorithm['exit'] = exit
+            self._originalAlgorithm['start'] = start
+            self._originalAlgorithm['init'] = init
+            self._originalAlgorithm['stop'] = stop
+            self._originalAlgorithm['exit'] = exit
             for k, v in methods.items():
                 methodName = k
                 method = v
                 isMandatory = method["mandatory"]
-                if self._algorithm[methodName] is not None:
-                    print('found method {methodName}'.format(methodName=methodName))
+                if self._originalAlgorithm[methodName] is not None:
+                    print('found method {methodName}'.format(
+                        methodName=methodName))
                 else:
                     mandatory = "mandatory" if isMandatory else "optional"
                     error = 'unable to find {mandatory} method {methodName}'.format(
@@ -127,7 +137,8 @@ class Algorunner:
                     print(error)
             # fix start if it has only one argument
             if start.__code__.co_argcount == 1:
-                self._algorithm['start'] = lambda args, api: start(args)
+                self._originalAlgorithm['start'] = lambda args, api: start(args)
+            self._wrapStateless()
             self.tracer = Tracer(options.tracer)
 
         except Exception as e:
@@ -160,11 +171,11 @@ class Algorunner:
                 method = v
                 isMandatory = method["mandatory"]
                 try:
-                    self._algorithm[methodName] = getattr(mod, methodName)
+                    self._originalAlgorithm[methodName] = getattr(mod, methodName)
                     # fix start if it has only one argument
-                    if methodName == 'start' and self._algorithm['start'].__code__.co_argcount == 1:
-                        self._algorithm['startOrig'] = self._algorithm['start']
-                        self._algorithm['start'] = lambda args, api: self._algorithm['startOrig'](
+                    if methodName == 'start' and self._originalAlgorithm['start'].__code__.co_argcount == 1:
+                        self._originalAlgorithm['startOrig'] = self._originalAlgorithm['start']
+                        self._originalAlgorithm['start'] = lambda args, api: self._originalAlgorithm['startOrig'](
                             args)
                     print('found method {methodName}'.format(
                         methodName=methodName))
@@ -175,11 +186,19 @@ class Algorunner:
                     if (isMandatory):
                         raise Exception(error)
                     print(error)
+            self._wrapStateless()
             self.tracer = Tracer(options.tracer)
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)
             traceback.print_exc()
             print(e)
+
+    def _wrapStateless(self):
+        wrapper = statelessAlgoWrapper(self._originalAlgorithm)
+        self._statelessWrapped['start'] = wrapper.start
+        self._statelessWrapped['init'] = wrapper.init
+        self._statelessWrapped['stop'] = wrapper.stop
+        self._statelessWrapped['exit'] = wrapper.exit
 
     def connectToWorker(self, options):
         socket = options.socket
@@ -198,15 +217,15 @@ class Algorunner:
             self._url += '&name={name}'.format(name=options.algorithm['name'])
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initStorage(options)
-        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage)
+        self.streamingManager = StreamingManager(self)
+        self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage, self.streamingManager)
         self._registerToWorkerEvents()
 
         print('connecting to {url}'.format(url=self._url))
         self._wsc.start()
         self._dataServer and self._dataServer.listen()
-        runThread = Thread(name="RunThread", target=self.run)
-        runThread.start()
-        return [self._wsc, runThread]
+        self.start()
+        return [self._wsc, self]
 
     def handle(self, command, data):
         if (command == messages.incoming.initialize):
@@ -214,7 +233,9 @@ class Algorunner:
         if (command == messages.incoming.start):
             self._start(data)
         if (command == messages.incoming.stop):
-            self._stop(data)
+            self._stopAlgorithm(data)
+        if (command == messages.incoming.serviceDiscoveryUpdate):
+            self._discovery_update(data)
         if (command == messages.incoming.exit):
             # call exit on different thread to prevent deadlock
             Timer(0.1, lambda: self._exit(data), name="Exit timer").start()
@@ -230,7 +251,9 @@ class Algorunner:
         while self._active:
             try:
                 (command, data) = self.get_message()
-                self.handle(command, data)
+                runThread = Thread(name=command + "Thread", target=self.handle, args=[command, data])
+                runThread.daemon = True
+                runThread.start()
             except Empty:
                 pass
         print('Exiting run loop')
@@ -277,21 +300,50 @@ class Algorunner:
     def _init(self, options):
         try:
             if (self._loadAlgorithmError):
-                self._sendError(self._loadAlgorithmError)
+                self.sendError(self._loadAlgorithmError)
             else:
                 self._input = options
+                if self.isStreamingPipeLine() and options.get('stateType') == 'stateless':
+                    self._algorithm = self._statelessWrapped
+                else:
+                    self._algorithm = self._originalAlgorithm
+                self._nodeName = options.get('nodeName')
                 method = self._getMethod('init')
                 if (method is not None):
                     method(options)
-
                 self._sendCommand(messages.outgoing.initialized, None)
 
         except Exception as e:
-            self._sendError(e)
+            self.sendError(e)
+
+    def _discovery_update(self, discovery):
+        print('Got discovery update' + str(discovery))
+        messageListenerConfig = {'encoding': config.discovery['encoding']}
+        self.streamingManager.setupStreamingListeners(
+            messageListenerConfig, discovery, self._nodeName)
+
+    def _setupStreamingProducer(self, me):
+
+        def onStatistics(statistics):
+            self._sendCommand(
+                messages.outgoing.streamingStatistics, statistics)
+
+        producerConfig = {}
+        producerConfig["port"] = config.discovery['streaming']['port']
+        producerConfig['messagesMemoryBuff'] = config.discovery['streaming']['messagesMemoryBuff']
+        producerConfig['encoding'] = config.discovery['encoding']
+        producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
+        self.streamingManager.setupStreamingProducer(
+            onStatistics, producerConfig, self._input['childs'], me)
 
     def _start(self, options):
+        self.streamingManager.setParsedFlows(self._input.get('parsedFlow'), self._input.get('defaultFlow'))
+        if (self.isStreamingPipeLine() and self._input['childs']):
+            self._setupStreamingProducer(self._input.get("nodeName"))
         # pylint: disable=unused-argument
         span = None
+        self.runningStartThread = current_thread()
+        self.stopped = False
         try:
             self._sendCommand(messages.outgoing.started, None)
             # TODO: add parent span from worker
@@ -300,23 +352,28 @@ class Algorunner:
             nodeName = self._input.get("nodeName")
             info = self._input.get("info", {})
             savePaths = info.get("savePaths", [])
-            topSpan = options.get('spanId') if options else self._input.get('spanId')
+            if (options):
+                topSpan = options.get('spanId')
+            else:
+                topSpan = self._input.get('spanId')
             span = Tracer.instance.create_span("start", topSpan, jobId, taskId, nodeName)
-
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
             method = self._getMethod('start')
             algorithmData = method(self._input, self._hkubeApi)
-            self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)
+            if not (self.stopped):
+                self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)
 
         except Exception as e:
             traceback.print_exc()
             Tracer.instance.finish_span(span, e)
-            self._sendError(e)
+            self.sendError(e)
+        finally:
+            self.runningStartThread = None
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
-        if (self._storage == 'v2'):
-            self._handle_responseV2(algorithmData, jobId, taskId, nodeName, savePaths, span)
+        if (self._storage == 'v3'):
+            self._handle_responseV2_V3(algorithmData, jobId, taskId, nodeName, savePaths, span)
         else:
             self._handle_responseV1(algorithmData, span)
 
@@ -325,8 +382,9 @@ class Algorunner:
             Tracer.instance.finish_span(span)
         self._sendCommand(messages.outgoing.done, algorithmData)
 
-    def _handle_responseV2(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
+    def _handle_responseV2_V3(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         header, encodedData = self._dataAdapter.encode(algorithmData)
+
         data = {
             'jobId': jobId,
             'taskId': taskId,
@@ -350,6 +408,8 @@ class Algorunner:
             self._sendCommand(messages.outgoing.storing, storingData)
         if (span):
             Tracer.instance.finish_span(span)
+        if (self.isStreamingPipeLine()):
+            self._hkubeApi.stopStreaming()
         self._sendCommand(messages.outgoing.done, None)
 
     def _reportServing(self, interval=None):
@@ -370,16 +430,19 @@ class Algorunner:
         if (isServing):
             self._sendCommand(messages.outgoing.servingStatus, True)
 
-    def _stop(self, options):
+    def _stopAlgorithm(self, options):
+        self.stopped = True
         try:
             method = self._getMethod('stop')
             if (method is not None):
                 method(options)
-
+            if (self.isStreamingPipeLine()):
+                self._hkubeApi.stopStreaming()
+            if (self.runningStartThread):
+                self.runningStartThread.join()
             self._sendCommand(messages.outgoing.stopped, None)
-
         except Exception as e:
-            self._sendError(e)
+            self.sendError(e)
 
     def _exit(self, options):
         try:
@@ -396,7 +459,7 @@ class Algorunner:
             sys.exit(code)
 
         except Exception as e:
-            print('Got error during exit: '+e)
+            print('Got error during exit: ' + str(e))
             # pylint: disable=protected-access
             os._exit(0)
 
@@ -404,9 +467,9 @@ class Algorunner:
         try:
             self._wsc.send({'command': command, 'data': data})
         except Exception as e:
-            self._sendError(e)
+            self.sendError(e)
 
-    def _sendError(self, error):
+    def sendError(self, error):
         try:
             print(error)
             self._wsc.send({
@@ -416,8 +479,15 @@ class Algorunner:
                     'message': self._errorMsg(error)
                 }
             })
+            if (self.isStreamingPipeLine()):
+                self._hkubeApi.stopStreaming()
         except Exception as e:
             print(e)
 
     def _errorMsg(self, error):
         return str(error)
+
+    def isStreamingPipeLine(self):
+        if (self._input and self._input.get('kind') == 'stream'):
+            return True
+        return False

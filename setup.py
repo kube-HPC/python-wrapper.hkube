@@ -6,7 +6,8 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = '2.0.30'
+VERSION = '2.1.0-dev8'
+
 
 
 
@@ -19,7 +20,7 @@ requires = [
     'pymongo>=3.10.1',
     'msgpack',
     'boto3',
-    "wsaccel",
+    "wsaccel==0.6.2",
     "six",
     "pyzmq",
     "jaeger-client==4",

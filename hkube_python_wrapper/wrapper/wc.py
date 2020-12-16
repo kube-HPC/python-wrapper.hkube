@@ -6,7 +6,7 @@ import websocket
 from hkube_python_wrapper.util.encoding import Encoding
 from threading import Thread
 from ratelimit import limits
-
+from hkube_python_wrapper.wrapper.messages import messages
 
 class WebsocketClient(Thread):
     def __init__(self, msg_queue, encoding, url):
@@ -18,6 +18,9 @@ class WebsocketClient(Thread):
         self._reconnectInterval = 0.1
         self._active = True
         self._firstConnect = False
+        self._printThrottleMessages = {
+            messages.outgoing.streamingStatistics: {"delay": 30, "lastPrint": None}
+        }
         self._encoding = Encoding(encoding)
         self._ws_opcode = ABNF.OPCODE_BINARY if self._encoding.isBinary else ABNF.OPCODE_TEXT
         self._url = url
@@ -43,8 +46,25 @@ class WebsocketClient(Thread):
         self.events.on_connection()
 
     def send(self, message):
-        print('sending message to worker: {command}'.format(**message))
+        self._printThrottle(message)
         self._ws.send(self._encoding.encode(message, plainEncode=True), opcode=self._ws_opcode)
+
+    def _printThrottle(self, message):
+        command = message["command"]
+        setting = self._printThrottleMessages.get(command)
+        shouldPrint = True
+        if(setting):
+            delay = setting["delay"]
+            lastPrint = setting["lastPrint"]
+
+            if(lastPrint is None or time.time() - lastPrint > delay):
+                shouldPrint = True
+                setting.update({"lastPrint": time.time()})
+            else:
+                shouldPrint = False
+
+        if(shouldPrint):
+            print('sending message to worker: {command}'.format(command=command))
 
     def run(self):
         self._startWS(self._url)
