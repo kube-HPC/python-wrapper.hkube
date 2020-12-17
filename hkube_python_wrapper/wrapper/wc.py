@@ -4,9 +4,10 @@ from events import Events
 from websocket import ABNF
 import websocket
 from hkube_python_wrapper.util.encoding import Encoding
+from hkube_python_wrapper.wrapper.messages import messages
 from threading import Thread
 from ratelimit import limits
-from hkube_python_wrapper.wrapper.messages import messages
+
 
 class WebsocketClient(Thread):
     def __init__(self, msg_queue, encoding, url):
@@ -33,7 +34,7 @@ class WebsocketClient(Thread):
         print('got message from worker: {command}'.format(command=command))
         self._msg_queue.put((command, data))
 
-    @limits(calls=1,period=5,raise_on_limit=False)
+    @limits(calls=1, period=5, raise_on_limit=False)
     def on_error(self, error):
         if self._firstConnect:
             print(error)
@@ -46,7 +47,8 @@ class WebsocketClient(Thread):
         self.events.on_connection()
 
     def send(self, message):
-        self._printThrottle(message)
+        if (message.get('command') != messages.outgoing.logData):
+            self._printThrottle(message)
         self._ws.send(self._encoding.encode(message, plainEncode=True), opcode=self._ws_opcode)
 
     def _printThrottle(self, message):

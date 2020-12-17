@@ -13,6 +13,7 @@ from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
 from hkube_python_wrapper.util.timerImpl import Timer
+from hkube_python_wrapper.util.stdout_redirector import stdout_redirector
 import os
 import sys
 import importlib
@@ -43,6 +44,7 @@ class Algorunner(DaemonThread):
         self._nodeName = None
         self.runningStartThread = None
         self.stopped = False
+        self._redirectLogs = False
         DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
@@ -92,7 +94,8 @@ class Algorunner(DaemonThread):
         algorunner = Algorunner()
         options = options or config
         options.storage['mode'] = 'v1'
-        options.discovery["enable"] = False
+        options.discovery['enable'] = False
+        options.algorithm['redirectLogs'] = True
         if name:
             options.algorithm['name'] = name
         if (start):
@@ -104,12 +107,30 @@ class Algorunner(DaemonThread):
             j.join()
 
     @staticmethod
-    def Debug(debug_url, start, init=None, stop=None, exit=None, options=None):
+    def Debug(debug_url, start, init=None, stop=None, exit=None, options=None, logs=False):
+        """Starts the algorunner wrapper and registers for local run.
+
+        Convenience method to start the algorithm. Pass the algorithm methods
+        This method blocks forever
+
+        Args:
+            start (function): The entry point of the algorithm. Called for every invocation.
+            init (function): Optional init method. Called for every invocation before the start.
+            stop (function): Optional stop method. Called when the parent pipeline is stopped.
+            exit (function): Optional exit handler. Called before the algorithm is forced to exit.
+                    Can be used to clean up resources.
+            logs (bool): Optional. If True will send logs to the cluster. Default: False
+
+        Returns:
+            Never returns.
+        """
         algorunner = Algorunner()
-        config.socket['url'] = debug_url
-        config.storage['mode'] = 'v1'
-        config.discovery["enable"] = False
-        algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options or config)
+        options = options or config
+        options.socket['url'] = debug_url
+        options.storage['mode'] = 'v1'
+        options.discovery["enable"] = False
+        options.algorithm['redirectLogs'] = logs
+        algorunner.loadAlgorithmCallbacks(start, init=init, stop=stop, exit=exit, options=options)
         jobs = algorunner.connectToWorker(config)
         for j in jobs:
             j.join()
@@ -204,6 +225,7 @@ class Algorunner(DaemonThread):
         socket = options.socket
         encoding = socket.get("encoding")
         self._storage = options.storage.get("mode")
+        self._redirectLogs = options.algorithm.get("redirectLogs")
         url = socket.get("url")
 
         if (url is not None):
@@ -294,6 +316,12 @@ class Algorunner(DaemonThread):
             print('disconnected from ' + self._url)
         self._connected = False
 
+    def _log_message(self, data):
+        try:
+            self._sendCommand(messages.outgoing.logData, data)
+        except Exception:
+            pass
+
     def _getMethod(self, name):
         return self._algorithm.get(name)
 
@@ -344,8 +372,12 @@ class Algorunner(DaemonThread):
         span = None
         self.runningStartThread = current_thread()
         self.stopped = False
+        redirector = None
         try:
             self._sendCommand(messages.outgoing.started, None)
+            if (self._redirectLogs):
+                redirector = stdout_redirector()
+                redirector.events.on_data += self._log_message
             # TODO: add parent span from worker
             jobId = self._input.get("jobId")
             taskId = self._input.get("taskId")
@@ -369,6 +401,10 @@ class Algorunner(DaemonThread):
             Tracer.instance.finish_span(span, e)
             self.sendError(e)
         finally:
+            if (redirector):
+                redirector.flush()
+                redirector.events.on_data -= self._log_message
+                redirector.cleanup()
             self.runningStartThread = None
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
