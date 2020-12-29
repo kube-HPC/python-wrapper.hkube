@@ -46,19 +46,18 @@ class MessageQueue(object):
             index = nextItemIndex + 1
             self.indexPerConsumer[consumerType] = index
             self.sent[consumerType] += 1
-            if (index == 1):
-                anyZero = False
-                for value in self.indexPerConsumer.values():
-                    if (value == 0):
-                        anyZero = True
-                        break
+            anyZero = False
+            for value in self.indexPerConsumer.values():
+                if (value == 0):
+                    anyZero = True
+                    break
 
-                if not (anyZero):
-                    self.queue.pop(0)
-                    _, _, msg = out
-                    self.sizeSum -= len(msg)
-                    for key in self.indexPerConsumer.keys():
-                        self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
+            if not (anyZero):
+                self.queue.pop(0)
+                _, _, msg = out
+                self.sizeSum -= len(msg)
+                for key in self.indexPerConsumer.keys():
+                    self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
             return out
         return None
 
