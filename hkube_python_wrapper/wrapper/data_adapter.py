@@ -177,6 +177,12 @@ class DataAdapter:
         if (data is None):
             size, data = self._getFromStorage(options)
             self._setToCache(cacheID, data, size)
+            if options['path'].endswith('result.json') :
+                if hasattr(data, "__len__"):
+                    for node in data:
+                        if node.get('info') !=None and node['info']['isBigData']:
+                            result = self._getFromCacheOrStorage(node['info'],'',node['info']['path'])
+                            node['result'] = result
             data = self._getPath(data, dataPath)
 
         return data
