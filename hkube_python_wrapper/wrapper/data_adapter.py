@@ -180,7 +180,7 @@ class DataAdapter:
             if options['path'].endswith('result.json'):
                 if hasattr(data, "__len__"):
                     for node in data:
-                        if node.get('info') != None and node['info']['isBigData']:
+                        if node.get('info') is not None and node['info']['isBigData']:
                             result = self._getFromCacheOrStorage(node['info'], '', node['info']['path'])
                             node['result'] = result
             data = self._getPath(data, dataPath)
