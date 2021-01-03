@@ -59,7 +59,7 @@ class HKubeApi:
                         response)
                 if hasattr(result, "__len__"):
                     for node in result:
-                        if node.get('info') is not None and node['info']['isBigData']:
+                        if hasattr(node,'get') and node.get('info') is not None and node['info']['isBigData']:
                             result = self._dataAdapter.tryGetDataFromPeerOrStorage({"storageInfo": node['info']})
                             node['result'] = result
                 execution.waiter.set(result)
