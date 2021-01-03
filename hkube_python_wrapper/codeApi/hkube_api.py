@@ -45,7 +45,7 @@ class HKubeApi:
 
     def _handleExecutionDone(self, execId, data):
         execution = self._executions.get(execId)
-
+        # pylint: disable=too-many-nested-blocks
         try:
             error = data.get('error')
             if (error):
