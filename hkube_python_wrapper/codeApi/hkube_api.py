@@ -42,8 +42,13 @@ class HKubeApi:
             elif(execution.includeResult):
                 response = data.get('response')
                 result = response
-                if(typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v2'):
-                    result = self._dataAdapter.tryGetDataFromPeerOrStorage(response)
+                if (typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v2'):
+                    result = self._dataAdapter.tryGetDataFromPeerOrStorage(
+                        response)
+                for node in result:
+                    if node.get('info') is not None and node['info']['isBigData']:
+                        result = self._dataAdapter.tryGetDataFromPeerOrStorage({"storageInfo": node['info']})
+                        node['result'] = result
                 execution.waiter.set(result)
             else:
                 execution.waiter.set(None)
