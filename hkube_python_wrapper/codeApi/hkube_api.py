@@ -7,7 +7,6 @@ from .waitFor import WaitForData
 from hkube_python_wrapper.util.queueImpl import Empty
 
 
-
 class HKubeApi:
     """Hkube interface for code-api operations"""
 
@@ -58,6 +57,10 @@ class HKubeApi:
                 if (typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v3'):
                     result = self._dataAdapter.tryGetDataFromPeerOrStorage(
                         response)
+                for node in result:
+                    if node.get('info') is not None and node['info']['isBigData']:
+                        result = self._dataAdapter.tryGetDataFromPeerOrStorage({"storageInfo": node['info']})
+                        node['result'] = result
                 execution.waiter.set(result)
             else:
                 execution.waiter.set(None)
