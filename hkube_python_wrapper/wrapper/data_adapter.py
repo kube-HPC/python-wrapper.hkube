@@ -247,7 +247,7 @@ class DataAdapter:
     def _getPath(self, data, dataPath):
         if (data and dataPath):
             newData = getPath(data, dataPath)
-            if(newData == 'DEFAULT'):
+            if (newData == 'DEFAULT'):
                 newData = data
         else:
             newData = data
