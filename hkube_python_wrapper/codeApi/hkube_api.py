@@ -61,8 +61,8 @@ class HKubeApi:
                 if typeCheck.isList(result):
                     for node in result:
                         if typeCheck.isDict(node) and node.get('info') is not None and node['info']['isBigData']:
-                            result = self._dataAdapter.tryGetDataFromPeerOrStorage({"storageInfo": node['info']})
-                            node['result'] = result
+                            nodeResult = self._dataAdapter.tryGetDataFromPeerOrStorage({"storageInfo": node['info']})
+                            node['result'] = nodeResult
                 execution.waiter.set(result)
             else:
                 execution.waiter.set(None)
