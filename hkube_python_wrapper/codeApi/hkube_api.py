@@ -1,11 +1,11 @@
 from __future__ import print_function, division, absolute_import
 import time
+from hkube_python_wrapper.util.object_path import getPath
 import hkube_python_wrapper.util.type_check as typeCheck
 from hkube_python_wrapper.wrapper.messages import messages
 from .execution import Execution
 from .waitFor import WaitForData
 from hkube_python_wrapper.util.queueImpl import Empty
-
 
 
 class HKubeApi:
@@ -60,7 +60,7 @@ class HKubeApi:
                         response)
                 if typeCheck.isList(result):
                     for node in result:
-                        if typeCheck.isDict(node) and node.get('info') is not None and node['info']['isBigData']:
+                        if typeCheck.isDict(node) and getPath(node, 'info.isBigData') is True:
                             nodeResult = self._dataAdapter.tryGetDataFromPeerOrStorage({"storageInfo": node['info']})
                             node['result'] = nodeResult
                 execution.waiter.set(result)
