@@ -8,6 +8,7 @@ from .data_adapter import DataAdapter
 from .methods import methods
 from .messages import messages
 from hkube_python_wrapper.tracing import Tracer
+from hkube_python_wrapper.util.object_path import getPath, setPath
 from hkube_python_wrapper.codeApi.hkube_api import HKubeApi
 from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
@@ -45,6 +46,8 @@ class Algorunner(DaemonThread):
         self.runningStartThread = None
         self.stopped = False
         self._redirectLogs = False
+        self._localRunExecOptions=None
+        self._singleRun=False
         DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
@@ -75,7 +78,7 @@ class Algorunner(DaemonThread):
             j.join()
 
     @staticmethod
-    def RunLocal(name=None, start=None, init=None, stop=None, exit=None, options=None):
+    def RunLocal(name=None, start=None, init=None, stop=None, exit=None, options=None, exec=None, single_run=True):
         """Starts the algorunner wrapper and registers for local run.
 
         Convenience method to start the algorithm. Pass the algorithm methods
@@ -96,6 +99,8 @@ class Algorunner(DaemonThread):
         options.storage['mode'] = 'v1'
         options.discovery['enable'] = False
         options.algorithm['redirectLogs'] = True
+        options.algorithm['exec']=exec
+        options.algorithm['single_run']=single_run
         if name:
             options.algorithm['name'] = name
         if (start):
@@ -237,6 +242,10 @@ class Algorunner(DaemonThread):
             storage=self._storage, encoding=encoding)
         if (options.algorithm['name']):
             self._url += '&name={name}'.format(name=options.algorithm['name'])
+        self._localRunExecOptions = options.algorithm.get('exec')
+        self._singleRun = options.algorithm.get('single_run')
+        if (self._localRunExecOptions):
+            self._url += '&exec={exec}'.format(exec='true')
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initStorage(options)
         self.streamingManager = StreamingManager(self)
@@ -331,6 +340,8 @@ class Algorunner(DaemonThread):
                 self.sendError(self._loadAlgorithmError)
             else:
                 self._input = options
+                if (getPath(self._localRunExecOptions,'input',None)):
+                    setPath(self._input, 'input', getPath(self._localRunExecOptions,'input',None))
                 if self.isStreamingPipeLine() and options.get('stateType') == 'stateless':
                     self._algorithm = self._statelessWrapped
                 else:
@@ -406,6 +417,8 @@ class Algorunner(DaemonThread):
                 redirector.events.on_data -= self._log_message
                 redirector.cleanup()
             self.runningStartThread = None
+            if (self._singleRun):
+                self._exit(None)
 
     def _handle_response(self, algorithmData, jobId, taskId, nodeName, savePaths, span):
         if (self._storage == 'v3'):
