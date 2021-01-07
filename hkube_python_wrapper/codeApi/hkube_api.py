@@ -45,7 +45,7 @@ class HKubeApi:
                 if (typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v2'):
                     result = self._dataAdapter.tryGetDataFromPeerOrStorage(
                         response)
-                if self._storage == 'v3' and typeCheck.isList(result):
+                if self._storage == 'v2' and typeCheck.isList(result):
                     for node in result:
                         if typeCheck.isDict(node) and getPath(node, 'info.isBigData') is True:
                             nodeResult = self._dataAdapter.tryGetDataFromPeerOrStorage({"storageInfo": node['info']})
