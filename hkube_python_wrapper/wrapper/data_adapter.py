@@ -248,7 +248,7 @@ class DataAdapter:
         if (data and dataPath):
             newData = getPath(data, dataPath)
             if (newData == 'DEFAULT'):
-                newData = data
+                newData = None
         else:
             newData = data
         return newData
