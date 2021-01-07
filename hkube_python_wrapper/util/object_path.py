@@ -15,10 +15,7 @@ def getPath(obj, path, defaultValue="DEFAULT"):
 
     currentPath = getKey(path[0])
     nextObj = getShallowProperty(obj, currentPath)
-    if (nextObj is None):
-        return defaultValue
-
-    if (len(path) == 1):
+    if (nextObj is None or len(path) == 1):
         return nextObj
 
     return getPath(obj[currentPath], path[1:], defaultValue)
