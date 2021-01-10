@@ -46,8 +46,8 @@ class Algorunner(DaemonThread):
         self.runningStartThread = None
         self.stopped = False
         self._redirectLogs = False
-        self._localRunExecOptions=None
-        self._singleRun=False
+        self._localRunExecOptions = None
+        self._singleRun = False
         DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
@@ -78,7 +78,7 @@ class Algorunner(DaemonThread):
             j.join()
 
     @staticmethod
-    def RunLocal(name=None, start=None, init=None, stop=None, exit=None, options=None, exec=None, single_run=True):
+    def RunLocal(name=None, start=None, init=None, stop=None, exit=None, options=None, execution=None, single_run=True):
         """Starts the algorunner wrapper and registers for local run.
 
         Convenience method to start the algorithm. Pass the algorithm methods
@@ -99,8 +99,8 @@ class Algorunner(DaemonThread):
         options.storage['mode'] = 'v1'
         options.discovery['enable'] = False
         options.algorithm['redirectLogs'] = True
-        options.algorithm['exec']=exec
-        options.algorithm['single_run']=single_run
+        options.algorithm['execution'] = execution
+        options.algorithm['single_run'] = single_run
         if name:
             options.algorithm['name'] = name
         if (start):
@@ -242,10 +242,10 @@ class Algorunner(DaemonThread):
             storage=self._storage, encoding=encoding)
         if (options.algorithm['name']):
             self._url += '&name={name}'.format(name=options.algorithm['name'])
-        self._localRunExecOptions = options.algorithm.get('exec')
+        self._localRunExecOptions = options.algorithm.get('execution')
         self._singleRun = options.algorithm.get('single_run')
         if (self._localRunExecOptions):
-            self._url += '&exec={exec}'.format(exec='true')
+            self._url += '&execution={execution}'.format(execution='true')
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initStorage(options)
         self.streamingManager = StreamingManager(self)
@@ -340,8 +340,8 @@ class Algorunner(DaemonThread):
                 self.sendError(self._loadAlgorithmError)
             else:
                 self._input = options
-                if (getPath(self._localRunExecOptions,'input',None)):
-                    setPath(self._input, 'input', getPath(self._localRunExecOptions,'input',None))
+                if (getPath(self._localRunExecOptions, 'input', None)):
+                    setPath(self._input, 'input', getPath(self._localRunExecOptions, 'input', None))
                 if self.isStreamingPipeLine() and options.get('stateType') == 'stateless':
                     self._algorithm = self._statelessWrapped
                 else:
