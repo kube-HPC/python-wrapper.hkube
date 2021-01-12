@@ -49,12 +49,10 @@ class HKubeApi:
         execution = self._executions.get(requestId)
         try:
             error = data.get('error')
-            if (error):
-                execution.waiter.set(error)
-            else:
-                result = data.get('response')
-                execution.waiter.set(result)
-
+            dataSource = None
+            if (not error):
+                dataSource = data.get('response')
+            execution.waiter.set((error, dataSource))
         except Exception as e:
             execution.waiter.set(e)
         finally:
@@ -118,7 +116,7 @@ class HKubeApi:
 
         return self._waitForResult(execution)
 
-    def getDataSource(self, dataSource, snapshotName=None, versionId=None):
+    def getDataSource(self, dataSource):
         print('getDataSource called')
         requestId = self._generateExecId()
         execution = Execution(requestId, False, WaitForData(True))
@@ -128,9 +126,7 @@ class HKubeApi:
             "command": messages.outgoing.dataSourceMetadataRequest,
             "data": {
                 "requestId": requestId,
-                "dataSource": dataSource,
-                "snapshotName": snapshotName,
-                "versionId": versionId
+                "dataSource": dataSource
             }
         }
         self._wc.send(message)
