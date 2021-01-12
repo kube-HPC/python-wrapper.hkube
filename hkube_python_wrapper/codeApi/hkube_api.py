@@ -44,7 +44,7 @@ class HKubeApi:
         subPipelineId = data.get('subPipelineId')
         self._handleExecutionDone(subPipelineId, data)
 
-    def dataSourceMetadataResponse(self, data):
+    def dataSourceResponse(self, data):
         requestId = data.get('requestId')
         execution = self._executions.get(requestId)
         try:
@@ -123,7 +123,7 @@ class HKubeApi:
         self._executions[requestId] = execution
 
         message = {
-            "command": messages.outgoing.dataSourceMetadataRequest,
+            "command": messages.outgoing.dataSourceRequest,
             "data": {
                 "requestId": requestId,
                 "dataSource": dataSource

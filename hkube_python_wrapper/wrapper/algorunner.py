@@ -211,8 +211,8 @@ class Algorunner(DaemonThread):
             self._hkubeApi.algorithmExecutionDone(data)
         if (command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError, messages.incoming.subPipelineStopped]):
             self._hkubeApi.subPipelineDone(data)
-        if (command == messages.incoming.dataSourceMetadataResponse):
-            self._hkubeApi.dataSourceMetadataResponse(data)
+        if (command == messages.incoming.dataSourceResponse):
+            self._hkubeApi.dataSourceResponse(data)
 
     def get_message(self, blocking=True):
         return self._msg_queue.get(block=blocking, timeout=0.1)
