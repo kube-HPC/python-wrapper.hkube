@@ -29,8 +29,11 @@ class HKubeApi:
     def sendMessage(self, msg, flowName=None):
         self.streamingManager.sendMessage(msg, flowName)
 
-    def stopStreaming(self):
-        self.streamingManager.stopStreaming()
+    def stopStreaming(self, force=True):
+        self.streamingManager.stopStreaming(force)
+
+    def isListeningToMessages(self):
+        return self.streamingManager.listeningToMessages
 
     def _generateExecId(self):
         self._lastExecId += 1

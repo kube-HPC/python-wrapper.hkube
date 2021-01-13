@@ -6,6 +6,7 @@ class Outgoing(object):
         self.initialized = "initialized"
         self.started = "started"
         self.stopped = "stopped"
+        self.stopping = "stopping"
         self.progress = "progress"
         self.error = "errorMessage"
         self.storing = "storing"

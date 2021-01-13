@@ -114,6 +114,8 @@ class ZMQProducer(object):
     def sent(self, consumerType):
         return self.messageQueue.sent[consumerType]
 
-    def close(self):
+    def close(self, force=True):
+        while not (len(self.messageQueue.queue) == 0) and not force:
+            time.sleep(1)
         self.active = False
         self._backend.close()
