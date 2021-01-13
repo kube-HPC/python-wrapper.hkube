@@ -44,6 +44,20 @@ class HKubeApi:
         subPipelineId = data.get('subPipelineId')
         self._handleExecutionDone(subPipelineId, data)
 
+    def dataSourceResponse(self, data):
+        requestId = data.get('requestId')
+        execution = self._executions.get(requestId)
+        try:
+            error = data.get('error')
+            dataSource = None
+            if (not error):
+                dataSource = data.get('response')
+            execution.waiter.set((error, dataSource))
+        except Exception as e:
+            execution.waiter.set(e)
+        finally:
+            self._executions.pop(requestId)
+
     def _handleExecutionDone(self, execId, data):
         execution = self._executions.get(execId)
         # pylint: disable=too-many-nested-blocks
@@ -75,15 +89,15 @@ class HKubeApi:
     def start_algorithm(self, algorithmName, input=[], includeResult=True):
         """Starts algorithm execution.
 
-    starts an invocation of algorithm with input, and waits for results
+        starts an invocation of algorithm with input, and waits for results
 
-    Args:
-        algorithmName (string): The name of the algorithm to start.
-        input (array): Optional input for the algorithm.
-        includeResult (bool): if True, returns the result of the algorithm execution.
-    Returns:
-        Returns the result of the algorithm
-    """
+        Args:
+            algorithmName (string): The name of the algorithm to start.
+            input (array): Optional input for the algorithm.
+            includeResult (bool): if True, returns the result of the algorithm execution.
+        Returns:
+            Returns the result of the algorithm
+        """
         print('start_algorithm called with {name}'.format(name=algorithmName))
         execId = self._generateExecId()
         execution = Execution(execId, includeResult, WaitForData(True))
@@ -102,19 +116,36 @@ class HKubeApi:
 
         return self._waitForResult(execution)
 
+    def getDataSource(self, dataSource):
+        print('getDataSource called')
+        requestId = self._generateExecId()
+        execution = Execution(requestId, False, WaitForData(True))
+        self._executions[requestId] = execution
+
+        message = {
+            "command": messages.outgoing.dataSourceRequest,
+            "data": {
+                "requestId": requestId,
+                "dataSource": dataSource
+            }
+        }
+        self._wc.send(message)
+
+        return self._waitForResult(execution)
+
     def start_stored_subpipeline(self, name, flowInput={}, includeResult=True):
         """Starts pipeline execution.
 
-    starts an invocation of a sub-pipeline with input, and waits for results
+        starts an invocation of a sub-pipeline with input, and waits for results
 
-    Args:
-        name (string): The name of the pipeline to start.
-        flowInput (dict): Optional flowInput for the pipeline.
-        includeResult (bool): if True, returns the result of the pipeline execution.
-            default: True
-    Returns:
-        Returns the result of the pipeline
-    """
+        Args:
+            name (string): The name of the pipeline to start.
+            flowInput (dict): Optional flowInput for the pipeline.
+            includeResult (bool): if True, returns the result of the pipeline execution.
+                default: True
+        Returns:
+            Returns the result of the pipeline
+        """
         print('start_stored_subpipeline called with {name}'.format(name=name))
         execId = self._generateExecId()
         execution = Execution(execId, includeResult, WaitForData(True))
@@ -137,19 +168,19 @@ class HKubeApi:
     def start_raw_subpipeline(self, name, nodes, flowInput, options={}, webhooks={}, includeResult=True):
         """Starts pipeline execution.
 
-    starts an invocation of a sub-pipeline with input, nodes, options, and optionally waits for results
+        starts an invocation of a sub-pipeline with input, nodes, options, and optionally waits for results
 
-    Args:
-        name (string): The name of the pipeline to start.
-        nodes (array): array of node definitions (like in the pipeline descriptor)
-        options (dict): pipeline options (like in the pipeline descriptor)
-        webhooks (dict): webhook options (like in the pipeline descriptor)
-        flowInput (dict): flowInput for the pipeline.
-        includeResult (bool): if True, returns the result of the pipeline execution.
-            default: True
-    Returns:
-        Returns the result of the pipeline
-    """
+        Args:
+            name (string): The name of the pipeline to start.
+            nodes (array): array of node definitions (like in the pipeline descriptor)
+            options (dict): pipeline options (like in the pipeline descriptor)
+            webhooks (dict): webhook options (like in the pipeline descriptor)
+            flowInput (dict): flowInput for the pipeline.
+            includeResult (bool): if True, returns the result of the pipeline execution.
+                default: True
+        Returns:
+            Returns the result of the pipeline
+        """
         print('start_raw_subpipeline called with {name}'.format(name=name))
         execId = self._generateExecId()
         execution = Execution(execId, includeResult, WaitForData(True))
