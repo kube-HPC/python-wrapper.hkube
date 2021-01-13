@@ -409,17 +409,17 @@ class Algorunner(DaemonThread):
             if (self.isStreamingPipeLine()):
                 if not (options['forceStop']):
                     print('entering stopping soon')
-                    stopping = True
+                    stoppingState = True
 
                     def stopping():
                         print('in stopping')
-                        while (stopping):
+                        while (stoppingState):
                             self._sendCommand(messages.outgoing.stopping, None)
                             time.sleep(1)
 
                     Thread(target=stopping).start()
                     self._hkubeApi.stopStreaming(False)
-                    stopping = False
+                    stoppingState = False
                 else:
                     print('force was true')
                     self._hkubeApi.stopStreaming(True)

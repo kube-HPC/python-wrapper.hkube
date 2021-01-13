@@ -67,11 +67,10 @@ class MessageQueue(object):
         _, _, msg = out
         self.sizeSum -= len(msg)
         for key in self.indexPerConsumer.keys():
-            if self.indexPerConsumer[key] > 0 :
+            if self.indexPerConsumer[key] > 0:
                 self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
             else:
-                self.lostMessages [key] += 1
-
+                self.lostMessages[key] += 1
 
     def append(self, messageFlowPattern, header, msg):
         self.sizeSum += len(msg)
