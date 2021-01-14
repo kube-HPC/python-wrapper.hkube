@@ -6,6 +6,7 @@ from .MessageProducer import MessageProducer
 
 class StreamingManager():
     threadLocalStorage = threading.local()
+
     def __init__(self, errorHandler):
         self.errorHandler = errorHandler
         self.messageProducer = None
@@ -46,7 +47,7 @@ class StreamingManager():
             if (predecessor['type'] == 'Del'):
                 if (self.listeningToMessages):
                     self._messageListeners[remoteAddressUrl].close()
-                del self._messageListeners[remoteAddressUrl]
+                    del self._messageListeners[remoteAddressUrl]
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
@@ -84,7 +85,7 @@ class StreamingManager():
                 raise Exception("No such flow " + flowName)
             self.messageProducer.produce(parsedFlow, msg)
 
-    def stopStreaming(self):
+    def stopStreaming(self, force=True):
         if (self.listeningToMessages):
             for listener in self._messageListeners.values():
                 listener.close()
@@ -92,5 +93,5 @@ class StreamingManager():
         self.listeningToMessages = False
         self._inputListener = []
         if (self.messageProducer is not None):
-            self.messageProducer.close()
+            self.messageProducer.close(force)
             self.messageProducer = None

@@ -1,5 +1,7 @@
 from __future__ import print_function, division, absolute_import
 
+import time
+
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from .statelessAlgoWrapper import statelessAlgoWrapper
 from ..config import config
@@ -407,7 +409,23 @@ class Algorunner(DaemonThread):
             if (method is not None):
                 method(options)
             if (self.isStreamingPipeLine()):
-                self._hkubeApi.stopStreaming()
+                if not (options['forceStop']):
+                    print('entering stopping soon')
+                    stoppingState = True
+
+                    def stopping():
+                        print('in stopping')
+                        while (stoppingState):
+                            self._sendCommand(messages.outgoing.stopping, None)
+                            time.sleep(1)
+
+                    Thread(target=stopping).start()
+                    self._hkubeApi.stopStreaming(False)
+                    stoppingState = False
+                else:
+                    print('force was true')
+                    self._hkubeApi.stopStreaming(True)
+
             if (self.runningStartThread):
                 self.runningStartThread.join()
             self._sendCommand(messages.outgoing.stopped, None)

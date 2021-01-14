@@ -103,7 +103,8 @@ class ZMQListener(object):
                             print(e)
                         else:
                             break
-                    self.worker = self.worker_socket(context, self.remoteAddress)
+                    if (self.active):
+                        self.worker = self.worker_socket(context, self.remoteAddress)
                     liveness = HEARTBEAT_LIVENESS
 
             if time.time() > heartbeat_at:

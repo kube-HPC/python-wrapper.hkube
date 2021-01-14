@@ -67,7 +67,7 @@ class MessageProducer(DaemonThread):
             singleNodeStatistics = {"nodeName": nodeName, "sent": sent, "queueSize": queueSize,
                                     "durations": self.resetResponseCache(nodeName),
                                     "responses": self.getResponseCount(nodeName),
-                                    "dropped": self.adapter.messageQueue.lostMessages}
+                                    "dropped": self.adapter.messageQueue.lostMessages[nodeName]}
             statistics.append(singleNodeStatistics)
         for listener in self.listeners:
             listener(statistics)
@@ -80,9 +80,9 @@ class MessageProducer(DaemonThread):
     def run(self):
         self.adapter.start()
 
-    def close(self):
+    def close(self, force=True):
         if not (self.active):
             print("Attempting to close inactive MessageProducer")
         else:
             self.active = False
-            self.adapter.close()
+            self.adapter.close(force)

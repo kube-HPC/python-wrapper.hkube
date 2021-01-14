@@ -11,12 +11,13 @@ class MessageQueue(object):
         self.indexPerConsumer = OrderedDict()
         self.sent = {}
         self.everAppended = {}
+        self.lostMessages = {}
         for consumerType in self.consumerTypes:
             self.indexPerConsumer[consumerType] = 0
             self.sent[consumerType] = 0
             self.everAppended[consumerType] = 0
+            self.lostMessages[consumerType] = 0
         self.sizeSum = 0
-        self.lostMessages = 0
         self.queue = []
 
     def hasItems(self, consumerType):
@@ -65,7 +66,11 @@ class MessageQueue(object):
         out = self.queue.pop(0)
         _, _, msg = out
         self.sizeSum -= len(msg)
-        self.lostMessages += 1
+        for key in self.indexPerConsumer.keys():
+            if self.indexPerConsumer[key] > 0:
+                self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
+            else:
+                self.lostMessages[key] += 1
 
     def append(self, messageFlowPattern, header, msg):
         self.sizeSum += len(msg)
