@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 
 class Outgoing(object):
+    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self.initialized = "initialized"
         self.started = "started"
