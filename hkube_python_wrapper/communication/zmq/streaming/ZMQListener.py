@@ -117,6 +117,7 @@ class ZMQListener(object):
                         break
 
     def close(self):
+        # pylint: disable=too-many-nested-blocks
         if not (self.active):
             print("Attempting to close inactive ZMQListener")
         else:
