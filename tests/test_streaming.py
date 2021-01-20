@@ -3,7 +3,7 @@ from hkube_python_wrapper.communication.streaming.MessageListener import Message
 from hkube_python_wrapper.communication.streaming.MessageProducer import MessageProducer
 import time
 
-parsedFlows = {'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}], 'master': [{'source': 'B', 'next': ['A', 'C']}, {'source': 'C', 'next': ['D']},{'source': 'D', 'next': ['E']}]}
+parsedFlows = {'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}], 'master': [{'source': 'B', 'next': ['A', 'C']}, {'source': 'C', 'next': ['D']}, {'source': 'D', 'next': ['E']}]}
 parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9326'}, 'type': 'Add'}]
 
 
@@ -27,7 +27,8 @@ def test_streaming_manager():
         resultsAtC['flowFirstSource'] = flow[0]['source']
         resultsAtC['msg'] = msg
         print("atOnmessageC")
-    def onMessageAtB(msg,origin):
+
+    def onMessageAtB(msg, origin):
         print('atOnmessageB')
         streamingManagaerB.sendMessage('stam_klum')
 
@@ -50,7 +51,7 @@ def test_streaming_manager():
         assert resultsAtC['flowLength'] == 1
         assert resultsAtC['flowFirstSource'] == 'C'
         assert resultsAtC['msg'] == 'stam_klum'
-# send to none default flow
+        # send to none default flow
         streamingManagaerB.sendMessage('klum', 'master')
         time.sleep(1)
         assert resultsAtC['flowLength'] == 2
@@ -123,5 +124,53 @@ def test_Messaging():
     finally:
         messageProducer.close()
         messageListener.close()
+
+    time.sleep(2)
+
+
+def test_load():
+    try:
+        producer_config = {'port': 9526, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 0.5}
+        listenr_config = {'remoteAddress': 'tcp://localhost:9526', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
+        asserts = {}
+        asserts['responses'] = 0
+        messageProducer = MessageProducer(producer_config, ['a'], 'b')
+
+        def onStatistics(statistics):
+            asserts['stats'] = statistics
+
+        messageProducer.registerStatisticsListener(onStatistics)
+        time.sleep(1)
+
+        def onMessage(envelope, msg, origin):
+            time.sleep(0.5)
+
+        messageProducer.start()
+        env = [{
+            "source": "b",
+            "next": [
+                "a"
+            ]
+        }, {
+            "source": "a",
+            "next": [
+                "c"
+            ]
+        }]
+
+        messageListener = MessageListener(listenr_config, receiverNode='a')
+        messageListener.registerMessageListener(onMessage)
+        messageListener.start()
+        time.sleep(2)
+        for _ in range(1, 100):
+            messageProducer.produce(env, {'field1': 'value1'})
+        time.sleep(3)
+        print('respopnse count:' + str(messageProducer.responseCount['a']))
+        print('sent:' + str(messageProducer.adapter.messageQueue.sent['a']))
+    finally:
+        messageProducer.close()
+        messageListener.close()
+        print('respopnse count:' + str(messageProducer.responseCount['a']))
+        print('sent:' + str(messageProducer.adapter.messageQueue.sent['a']))
 
     time.sleep(2)

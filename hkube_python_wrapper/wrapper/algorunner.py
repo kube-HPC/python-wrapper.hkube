@@ -403,34 +403,37 @@ class Algorunner(DaemonThread):
             self._sendCommand(messages.outgoing.servingStatus, True)
 
     def _stopAlgorithm(self, options):
-        self.stopped = True
-        try:
-            method = self._getMethod('stop')
-            if (method is not None):
-                method(options)
-            if (self.isStreamingPipeLine()):
-                if not (options['forceStop']):
-                    print('entering stopping soon')
-                    stoppingState = True
+        if (self.stopped):
+            print ('Got stop command while already stopping')
+        else:
+            self.stopped = True
+            try:
+                method = self._getMethod('stop')
+                if (method is not None):
+                    method(options)
+                if (self.isStreamingPipeLine()):
+                    if not (options['forceStop']):
+                        print('entering stopping soon')
+                        stoppingState = True
 
-                    def stopping():
-                        print('in stopping')
-                        while (stoppingState):
-                            self._sendCommand(messages.outgoing.stopping, None)
-                            time.sleep(1)
+                        def stopping():
+                            print('in stopping')
+                            while (stoppingState):
+                                self._sendCommand(messages.outgoing.stopping, None)
+                                time.sleep(1)
 
-                    Thread(target=stopping).start()
-                    self._hkubeApi.stopStreaming(False)
-                    stoppingState = False
-                else:
-                    print('force was true')
-                    self._hkubeApi.stopStreaming(True)
+                        Thread(target=stopping).start()
+                        self._hkubeApi.stopStreaming(False)
+                        stoppingState = False
+                    else:
+                        print('force was true')
+                        self._hkubeApi.stopStreaming(True)
 
-            if (self.runningStartThread):
-                self.runningStartThread.join()
-            self._sendCommand(messages.outgoing.stopped, None)
-        except Exception as e:
-            self.sendError(e)
+                if (self.runningStartThread):
+                    self.runningStartThread.join()
+                self._sendCommand(messages.outgoing.stopped, None)
+            except Exception as e:
+                self.sendError(e)
 
     def _exit(self, options):
         try:
