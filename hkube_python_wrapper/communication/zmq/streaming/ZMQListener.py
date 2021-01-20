@@ -67,7 +67,7 @@ class ZMQListener(object):
 
                 if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
-                    encodedMessageFlowPattern, header, message = frames
+                    encodedMessageFlowPattern, header, message = frames # pylint: disable=unbalanced-tuple-unpacking
                     messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
                     result = self.onMessage(messageFlowPattern, header, message)
                     newFrames = [result, self.encoding.encode(self.consumerType, plainEncode=True)]
@@ -131,7 +131,7 @@ class ZMQListener(object):
                         while result == zmq.POLLIN:
                             frames = self.worker.recv_multipart()
                             if len(frames) == 3:
-                                encodedMessageFlowPattern, header, message = frames
+                                encodedMessageFlowPattern, header, message = frames # pylint: disable=unbalanced-tuple-unpacking
                                 messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
                                 self.onMessage(messageFlowPattern, header, message)
                                 readAfterStopped += 1
