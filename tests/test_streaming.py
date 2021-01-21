@@ -81,7 +81,7 @@ def test_Messaging():
             # pylint: disable=unused-argument
             if (type(msg) == type(dict())):
                 asserts['field1'] = msg['field1']
-            time.sleep(1)
+            time.sleep(0.1)
 
         messageProducer.start()
         env = [{
@@ -129,4 +129,4 @@ def test_Messaging():
     finally:
         messageProducer.close()
         messageListener.close()
-    time.sleep(5)
+
