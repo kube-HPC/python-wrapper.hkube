@@ -412,7 +412,7 @@ class Algorunner(DaemonThread):
                 if (method is not None):
                     method(options)
                 if (self.isStreamingPipeLine()):
-                    if (options.get('forceStop') == False):
+                    if (options.get('forceStop') is False):
                         print('entering stopping soon')
                         stoppingState = True
 
