@@ -426,7 +426,7 @@ class Algorunner(DaemonThread):
                         self._hkubeApi.stopStreaming(False)
                         stoppingState = False
                     else:
-                        print('force was true')
+                        print('forcing stop')
                         self._hkubeApi.stopStreaming(True)
 
                 if (self.runningStartThread):
