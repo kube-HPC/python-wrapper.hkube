@@ -34,13 +34,13 @@ def test_tracer_init_empty_config():
     with pytest.raises(AttributeError):
         tracer = Tracer(None)
 
-def test_tracer_init_config():
+def xtest_tracer_init_config():
     tracer = Tracer(config.tracer)
     assert tracer.tracer is not None
     assert tracer.tracer.service_name == config.tracer.get("service_name")
     tracer.close()
 
-def test_tracer_start_span():
+def xtest_tracer_start_span():
     tracer = Tracer(config.tracer)
     op1=randomString()
     with tracer.tracer.start_span(operation_name=op1) as span1:
@@ -50,7 +50,7 @@ def test_tracer_start_span():
     r=get_jaeger_trace(operation=op1)
     assert r['data'][0]
         
-def test_tracer_start_child_span():
+def xtest_tracer_start_child_span():
     tracer = Tracer(config.tracer)
     op1=randomString()
     op2=randomString()
