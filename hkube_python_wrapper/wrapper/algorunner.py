@@ -404,7 +404,7 @@ class Algorunner(DaemonThread):
 
     def _stopAlgorithm(self, options):
         if (self.stopped):
-            print ('Got stop command while already stopping')
+            print('Got stop command while already stopping')
         else:
             self.stopped = True
             try:
@@ -412,7 +412,7 @@ class Algorunner(DaemonThread):
                 if (method is not None):
                     method(options)
                 if (self.isStreamingPipeLine()):
-                    if not (options['forceStop']):
+                    if (options.get('forceStop') == False):
                         print('entering stopping soon')
                         stoppingState = True
 
