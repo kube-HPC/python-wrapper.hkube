@@ -16,7 +16,7 @@ def test_zmq_streaming():
         return b'5'
 
     count = [0, 0]
-    producer = ZMQProducer(port=5556, maxMemorySize=5000, responseAcumulator=doNothing, consumerTypes=['b', 'c'], encoding=encoding, me='a')
+    producer = ZMQProducer(port=5559, maxMemorySize=5000, responseAcumulator=doNothing, consumerTypes=['b', 'c'], encoding=encoding, me='a')
     runThread = Thread(name="Producer", target=producer.start)
     runThread.start()
 
@@ -32,8 +32,8 @@ def test_zmq_streaming():
         time.sleep(0.1)
         return b'5'
 
-    listener1 = ZMQListener('tcp://localhost:5556', doSomething, encoding, 'b')
-    listener2 = ZMQListener('tcp://localhost:5556', doSomething2, encoding, 'c')
+    listener1 = ZMQListener('tcp://localhost:5559', doSomething, encoding, 'b')
+    listener2 = ZMQListener('tcp://localhost:5559', doSomething2, encoding, 'c')
     runThread = Thread(name="Listener1", target=listener1.start)
     runThread.start()
     runThread = Thread(name="Listener2", target=listener2.start)
