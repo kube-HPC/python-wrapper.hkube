@@ -13,7 +13,8 @@ docker run -d --name jaeger1 \
 -p 14268:14268 \
 -p 14250:14250 \
 -p 9411:9411 \
-jaegertracing/all-in-one:1.18
+
+
 
 until $(curl --output /dev/null --silent --fail http://localhost:16686/api/traces?service=foo); do
     printf '.'
