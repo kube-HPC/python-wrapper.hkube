@@ -34,7 +34,7 @@ class MessageListener(DaemonThread):
         return self._encoding.encode({'duration': duration}, plainEncode=True)
 
     def run(self):
-        print("start receiving from " + self.messageOriginNodeName)
+        print("Start receiving from " + self.messageOriginNodeName)
         try:
             self.adapater.start()
         except Exception as e:
