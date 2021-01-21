@@ -64,8 +64,8 @@ def test_streaming_manager():
 
 def test_Messaging():
     try:
-        producer_config = {'port': 9526, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
-        listenr_config = {'remoteAddress': 'tcp://localhost:9526', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
+        producer_config = {'port': 9536, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
+        listenr_config = {'remoteAddress': 'tcp://localhost:9536', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
         asserts = {}
         asserts['responses'] = 0
         messageProducer = MessageProducer(producer_config, ['a'], 'b')
