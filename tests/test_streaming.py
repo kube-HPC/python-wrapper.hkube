@@ -58,6 +58,7 @@ def test_streaming_manager():
         assert resultsAtC['flowFirstSource'] == 'C'
     finally:
         streamingManagaerA.stopStreaming()
+        streamingManagaerB.stopStreaming()
         messageListener.close()
 
 
