@@ -140,4 +140,4 @@ class ZMQListener(object):
                 except Exception as e:
                     print ('Error on zmqListener close'+str(e))
             if (self.worker is not None):
-                self.worker.close()
+                self.worker.close(0)
