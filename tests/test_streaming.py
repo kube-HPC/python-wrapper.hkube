@@ -104,11 +104,11 @@ def test_Messaging():
         messageListener = MessageListener(listenr_config, receiverNode='a')
         messageListener.registerMessageListener(onMessage)
         messageListener.start()
-        for _ in range(1,60):
+        for _ in range(1,5):
             if ( asserts.get('field1')):
                 break
             time.sleep(1)
-        time.sleep(5)
+        time.sleep(4)
         assert asserts['field1'] == 'value1'
         assert asserts['stats'][0]['queueSize'] == 0
         assert asserts['stats'][0]['sent'] == 3
