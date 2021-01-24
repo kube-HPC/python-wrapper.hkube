@@ -3,7 +3,7 @@ from hkube_python_wrapper.communication.streaming.MessageListener import Message
 from hkube_python_wrapper.communication.streaming.MessageProducer import MessageProducer
 import time
 
-parsedFlows = {'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}], 'master': [{'source': 'B', 'next': ['A', 'C']}, {'source': 'C', 'next': ['D']},{'source': 'D', 'next': ['E']}]}
+parsedFlows = {'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}], 'master': [{'source': 'B', 'next': ['A', 'C']}, {'source': 'C', 'next': ['D']}, {'source': 'D', 'next': ['E']}]}
 parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9326'}, 'type': 'Add'}]
 
 
@@ -27,7 +27,8 @@ def test_streaming_manager():
         resultsAtC['flowFirstSource'] = flow[0]['source']
         resultsAtC['msg'] = msg
         print("atOnmessageC")
-    def onMessageAtB(msg,origin):
+
+    def onMessageAtB(msg, origin):
         print('atOnmessageB')
         streamingManagaerB.sendMessage('stam_klum')
 
@@ -46,24 +47,25 @@ def test_streaming_manager():
         messageListener.start()
         time.sleep(1)
         streamingManagaerA.sendMessage('klum')
-        time.sleep(2)
+        time.sleep(4)
         assert resultsAtC['flowLength'] == 1
         assert resultsAtC['flowFirstSource'] == 'C'
         assert resultsAtC['msg'] == 'stam_klum'
-# send to none default flow
+        # send to none default flow
         streamingManagaerB.sendMessage('klum', 'master')
         time.sleep(1)
         assert resultsAtC['flowLength'] == 2
         assert resultsAtC['flowFirstSource'] == 'C'
     finally:
         streamingManagaerA.stopStreaming()
+        streamingManagaerB.stopStreaming()
         messageListener.close()
 
 
 def test_Messaging():
     try:
-        producer_config = {'port': 9526, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
-        listenr_config = {'remoteAddress': 'tcp://localhost:9526', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
+        producer_config = {'port': 9536, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
+        listenr_config = {'remoteAddress': 'tcp://localhost:9536', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
         asserts = {}
         asserts['responses'] = 0
         messageProducer = MessageProducer(producer_config, ['a'], 'b')
@@ -79,7 +81,7 @@ def test_Messaging():
             # pylint: disable=unused-argument
             if (type(msg) == type(dict())):
                 asserts['field1'] = msg['field1']
-            time.sleep(1)
+            time.sleep(0.1)
 
         messageProducer.start()
         env = [{
@@ -102,7 +104,11 @@ def test_Messaging():
         messageListener = MessageListener(listenr_config, receiverNode='a')
         messageListener.registerMessageListener(onMessage)
         messageListener.start()
-        time.sleep(4.2)
+        for _ in range(1,5):
+            if ( asserts.get('field1')):
+                break
+            time.sleep(1)
+        time.sleep(4)
         assert asserts['field1'] == 'value1'
         assert asserts['stats'][0]['queueSize'] == 0
         assert asserts['stats'][0]['sent'] == 3
@@ -124,4 +130,3 @@ def test_Messaging():
         messageProducer.close()
         messageListener.close()
 
-    time.sleep(2)

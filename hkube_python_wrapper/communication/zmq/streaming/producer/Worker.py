@@ -1,6 +1,6 @@
 import time
 
-HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
+HEARTBEAT_LIVENESS = 3  # 3..5 is reasonable
 HEARTBEAT_INTERVAL = 1.0  # Seconds
 
 

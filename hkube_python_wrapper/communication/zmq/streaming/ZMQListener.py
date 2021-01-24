@@ -53,7 +53,6 @@ class ZMQListener(object):
                 #  Get message
                 #  - 3-part envelope + content -> request
                 #  - 1-part HEARTBEAT -> heartbeat
-                frames = None
                 try:
                     frames = self.worker.recv_multipart()
                 except Exception as e:
@@ -68,7 +67,7 @@ class ZMQListener(object):
 
                 if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
-                    encodedMessageFlowPattern, header, message = frames
+                    encodedMessageFlowPattern, header, message = frames # pylint: disable=unbalanced-tuple-unpacking
                     messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
                     result = self.onMessage(messageFlowPattern, header, message)
                     newFrames = [result, self.encoding.encode(self.consumerType, plainEncode=True)]
@@ -118,9 +117,27 @@ class ZMQListener(object):
                         break
 
     def close(self):
+        # pylint: disable=too-many-nested-blocks
         if not (self.active):
             print("Attempting to close inactive ZMQListener")
         else:
             self.active = False
+            time.sleep(1)
             if (self.worker is not None):
-                self.worker.close()
+                readAfterStopped = 0
+                try:
+                    if (self.worker is not None):
+                        result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
+                        while result == zmq.POLLIN:
+                            frames = self.worker.recv_multipart()
+                            if len(frames) == 3:
+                                encodedMessageFlowPattern, header, message = frames # pylint: disable=unbalanced-tuple-unpacking
+                                messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
+                                self.onMessage(messageFlowPattern, header, message)
+                                readAfterStopped += 1
+                                print('Read after stop ' + str(readAfterStopped))
+                            result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
+                except Exception as e:
+                    print ('Error on zmqListener close'+str(e))
+            if (self.worker is not None):
+                self.worker.close(0)

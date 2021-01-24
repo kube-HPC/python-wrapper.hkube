@@ -84,5 +84,5 @@ class MessageProducer(DaemonThread):
         if not (self.active):
             print("Attempting to close inactive MessageProducer")
         else:
-            self.active = False
             self.adapter.close(force)
+            self.active = False
