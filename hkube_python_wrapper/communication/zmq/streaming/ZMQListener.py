@@ -37,6 +37,11 @@ class ZMQListener(object):
         arr.append(self.consumerType)
         workder.send_multipart(arr)
 
+    def handleAMessage(self, frames):
+        encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
+        messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
+        return self.onMessage(messageFlowPattern, header, message)
+
     def start(self):  # pylint: disable=too-many-branches
         context = zmq.Context(1)
         liveness = HEARTBEAT_LIVENESS
@@ -72,9 +77,7 @@ class ZMQListener(object):
 
                 if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
-                    encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
-                    messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
-                    result = self.onMessage(messageFlowPattern, header, message)
+                    result = self.handleAMessage(frames)
                     try:
                         self.send(self.worker, [result])
                     except Exception as e:
@@ -134,9 +137,7 @@ class ZMQListener(object):
                     while result == zmq.POLLIN:
                         frames = self.worker.recv_multipart()
                         if len(frames) == 3:
-                            encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
-                            messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
-                            self.onMessage(messageFlowPattern, header, message)
+                            self.handleAMessage(frames)
                             readAfterStopped += 1
                             print('Read after stop ' + str(readAfterStopped))
                         result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
