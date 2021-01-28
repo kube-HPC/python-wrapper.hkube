@@ -20,11 +20,13 @@ class ZMQListener(object):
         self.remoteAddress = remoteAddress
         self.active = True
         self.worker = None
+        self.context = None
 
-    def worker_socket(self, context, remoteAddress):
+    def worker_socket(self,  remoteAddress):
         """Helper function that returns a new configured socket
            connected to the Paranoid Pirate queue"""
-        worker = context.socket(zmq.DEALER)  # DEALER
+        self.context = zmq.Context(1)
+        worker = self.context.socket(zmq.DEALER)  # DEALER
         identity = str(uuid.uuid4()).encode()
         worker.setsockopt(zmq.IDENTITY, identity)
         worker.connect(remoteAddress)
@@ -33,12 +35,11 @@ class ZMQListener(object):
         return worker
 
     def start(self):  # pylint: disable=too-many-branches
-        context = zmq.Context(1)
         liveness = HEARTBEAT_LIVENESS
         interval = INTERVAL_INIT
 
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-        self.worker = self.worker_socket(context, self.remoteAddress)
+        self.worker = self.worker_socket( self.remoteAddress)
         result = None
         while self.active:
             try:
@@ -97,13 +98,15 @@ class ZMQListener(object):
                     try:
                         self.worker.setsockopt(zmq.LINGER, 0)
                         self.worker.close()
+                        self.worker = None
+                        self.context.destroy()
                     except Exception as e:
                         if (self.active):
                             print(e)
                         else:
                             break
                     if (self.active):
-                        self.worker = self.worker_socket(context, self.remoteAddress)
+                        self.worker = self.worker_socket(self.remoteAddress)
                     liveness = HEARTBEAT_LIVENESS
 
             if time.time() > heartbeat_at:
@@ -122,7 +125,7 @@ class ZMQListener(object):
             print("Attempting to close inactive ZMQListener")
         else:
             self.active = False
-            time.sleep(1)
+            time.sleep(HEARTBEAT_LIVENESS + 1)
             if (self.worker is not None):
                 readAfterStopped = 0
                 try:
@@ -139,5 +142,5 @@ class ZMQListener(object):
                             result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
                 except Exception as e:
                     print ('Error on zmqListener close'+str(e))
-            if (self.worker is not None):
-                self.worker.close(0)
+                self.worker.close()
+                self.context.destroy()

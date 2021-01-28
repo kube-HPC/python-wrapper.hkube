@@ -118,4 +118,8 @@ class ZMQProducer(object):
         while len(self.messageQueue.queue) >= 1 and not force:
             time.sleep(1)
         self.active = False
-        self._backend.close()
+        time.sleep(HEARTBEAT_LIVENESS + 1)
+        if not force:
+            self._backend.close(10)
+        else:
+            self._backend.close(0)

@@ -46,7 +46,10 @@ class StreamingManager():
                     listener.start()
             if (predecessor['type'] == 'Del'):
                 if (self.listeningToMessages):
-                    self._messageListeners[remoteAddressUrl].close()
+                    try:
+                        self._messageListeners[remoteAddressUrl].close()
+                    except Exception as e:
+                        print('another Exception:' + str(e))
                     del self._messageListeners[remoteAddressUrl]
 
     def registerInputListener(self, onMessage):

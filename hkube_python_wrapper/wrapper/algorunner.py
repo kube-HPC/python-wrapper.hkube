@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
+import threading
 import time
 
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
@@ -45,6 +46,7 @@ class Algorunner(DaemonThread):
         self._nodeName = None
         self.runningStartThread = None
         self.stopped = False
+        self.discoveryLock  = threading.Lock()
         DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
@@ -289,10 +291,14 @@ class Algorunner(DaemonThread):
             self.sendError(e)
 
     def _discovery_update(self, discovery):
-        print('Got discovery update' + str(discovery))
-        messageListenerConfig = {'encoding': config.discovery['encoding']}
-        self.streamingManager.setupStreamingListeners(
-            messageListenerConfig, discovery, self._nodeName)
+        self.discoveryLock.acquire()
+        try:
+            print('Got discovery update' + str(discovery))
+            messageListenerConfig = {'encoding': config.discovery['encoding']}
+            self.streamingManager.setupStreamingListeners(
+                messageListenerConfig, discovery, self._nodeName)
+        finally:
+            self.discoveryLock.release()
 
     def _setupStreamingProducer(self, me):
 
@@ -381,7 +387,7 @@ class Algorunner(DaemonThread):
         if (span):
             Tracer.instance.finish_span(span)
         if (self.isStreamingPipeLine()):
-            self._hkubeApi.stopStreaming()
+            self._hkubeApi.stopStreaming(False)
         self._sendCommand(messages.outgoing.done, None)
 
     def _reportServing(self, interval=None):
@@ -471,7 +477,7 @@ class Algorunner(DaemonThread):
                 }
             })
             if (self.isStreamingPipeLine()):
-                self._hkubeApi.stopStreaming()
+                self._hkubeApi.stopStreaming(False)
         except Exception as e:
             print(e)
 
