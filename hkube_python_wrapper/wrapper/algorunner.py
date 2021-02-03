@@ -1,6 +1,5 @@
 from __future__ import print_function, division, absolute_import
 
-import threading
 import time
 
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
@@ -290,11 +289,10 @@ class Algorunner(DaemonThread):
             self.sendError(e)
 
     def _discovery_update(self, discovery):
-            print('Got discovery update' + str(discovery))
-            messageListenerConfig = {'encoding': config.discovery['encoding']}
-            self.streamingManager.setupStreamingListeners(
-                messageListenerConfig, discovery, self._nodeName)
-
+        print('Got discovery update' + str(discovery))
+        messageListenerConfig = {'encoding': config.discovery['encoding']}
+        self.streamingManager.setupStreamingListeners(
+            messageListenerConfig, discovery, self._nodeName)
 
     def _setupStreamingProducer(self, me):
 
@@ -425,7 +423,8 @@ class Algorunner(DaemonThread):
                                 self._sendCommand(messages.outgoing.stopping, None)
                                 time.sleep(1)
 
-                        stoppingThread = Thread(target=stopping).start()
+                        stoppingThread = Thread(target=stopping)
+                        stoppingThread.start()
                         self._hkubeApi.stopStreaming(False)
                         stoppingState = False
                         stoppingThread.join()
