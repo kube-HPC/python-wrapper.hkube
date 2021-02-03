@@ -2,7 +2,7 @@ import time
 import zmq
 import uuid
 
-HEARTBEAT_LIVENESS = 3
+HEARTBEAT_LIVENESS = 5
 HEARTBEAT_INTERVAL = 1
 INTERVAL_INIT = 1
 INTERVAL_MAX = 32
@@ -22,11 +22,14 @@ class ZMQListener(object):
         self.worker = None
         self.context = None
 
-    def worker_socket(self,  remoteAddress):
+    def worker_socket(self, remoteAddress, context=None):
         """Helper function that returns a new configured socket
            connected to the Paranoid Pirate queue"""
-        self.context = zmq.Context(1)
+        if not context:
+            context = zmq.Context(1)
+        self.context = context
         worker = self.context.socket(zmq.DEALER)  # DEALER
+        worker.setsockopt(zmq.LINGER, 0)
         identity = str(uuid.uuid4()).encode()
         worker.setsockopt(zmq.IDENTITY, identity)
         worker.connect(remoteAddress)
@@ -39,14 +42,14 @@ class ZMQListener(object):
         interval = INTERVAL_INIT
 
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-        self.worker = self.worker_socket( self.remoteAddress)
+        self.worker = self.worker_socket(self.remoteAddress)
         result = None
         while self.active:
             try:
                 result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
             except Exception as e:
                 if (self.active):
-                    print(e)
+                    print('Error during poll of ' + str(self.remoteAddress) + ' ' + str(e))
                     raise e
                 break
             # Handle worker activity on backend
@@ -58,7 +61,7 @@ class ZMQListener(object):
                     frames = self.worker.recv_multipart()
                 except Exception as e:
                     if (self.active):
-                        print(e)
+                        print('Error during receive of ' + str(self.remoteAddress) + ' ' + str(e))
                         raise e
                     break
                 if not frames:
@@ -68,7 +71,7 @@ class ZMQListener(object):
 
                 if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
-                    encodedMessageFlowPattern, header, message = frames # pylint: disable=unbalanced-tuple-unpacking
+                    encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
                     messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
                     result = self.onMessage(messageFlowPattern, header, message)
                     newFrames = [result, self.encoding.encode(self.consumerType, plainEncode=True)]
@@ -89,7 +92,7 @@ class ZMQListener(object):
             else:
                 liveness -= 1
                 if liveness == 0:
-                    print("W: Heartbeat failure, can't reach queue")
+                    print("W: Heartbeat failure, can't reach queue of " + str(self.remoteAddress))
                     print("W: Reconnecting in %0.2fs" % interval)
                     time.sleep(interval)
 
@@ -99,14 +102,13 @@ class ZMQListener(object):
                         self.worker.setsockopt(zmq.LINGER, 0)
                         self.worker.close()
                         self.worker = None
-                        self.context.destroy()
                     except Exception as e:
                         if (self.active):
-                            print(e)
+                            print('Error on heartbeat failure for ' + str(self.remoteAddress) + str(e))
                         else:
                             break
                     if (self.active):
-                        self.worker = self.worker_socket(self.remoteAddress)
+                        self.worker = self.worker_socket(self.remoteAddress, self.context)
                     liveness = HEARTBEAT_LIVENESS
 
             if time.time() > heartbeat_at:
@@ -134,7 +136,7 @@ class ZMQListener(object):
                         while result == zmq.POLLIN:
                             frames = self.worker.recv_multipart()
                             if len(frames) == 3:
-                                encodedMessageFlowPattern, header, message = frames # pylint: disable=unbalanced-tuple-unpacking
+                                encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
                                 messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
                                 self.onMessage(messageFlowPattern, header, message)
                                 readAfterStopped += 1

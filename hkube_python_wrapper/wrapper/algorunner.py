@@ -46,7 +46,6 @@ class Algorunner(DaemonThread):
         self._nodeName = None
         self.runningStartThread = None
         self.stopped = False
-        self.discoveryLock  = threading.Lock()
         DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
@@ -291,14 +290,11 @@ class Algorunner(DaemonThread):
             self.sendError(e)
 
     def _discovery_update(self, discovery):
-        self.discoveryLock.acquire()
-        try:
             print('Got discovery update' + str(discovery))
             messageListenerConfig = {'encoding': config.discovery['encoding']}
             self.streamingManager.setupStreamingListeners(
                 messageListenerConfig, discovery, self._nodeName)
-        finally:
-            self.discoveryLock.release()
+
 
     def _setupStreamingProducer(self, me):
 
@@ -318,6 +314,7 @@ class Algorunner(DaemonThread):
         self.streamingManager.setParsedFlows(self._input.get('parsedFlow'), self._input.get('defaultFlow'))
         if (self.isStreamingPipeLine() and self._input['childs']):
             self._setupStreamingProducer(self._input.get("nodeName"))
+            self.streamingManager.clearMessageListeners()
         # pylint: disable=unused-argument
         span = None
         self.runningStartThread = current_thread()
@@ -428,9 +425,10 @@ class Algorunner(DaemonThread):
                                 self._sendCommand(messages.outgoing.stopping, None)
                                 time.sleep(1)
 
-                        Thread(target=stopping).start()
+                        stoppingThread = Thread(target=stopping).start()
                         self._hkubeApi.stopStreaming(False)
                         stoppingState = False
+                        stoppingThread.join()
                     else:
                         print('forcing stop')
                         self._hkubeApi.stopStreaming(True)
