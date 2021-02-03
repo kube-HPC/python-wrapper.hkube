@@ -1,8 +1,3 @@
-import gc
-import os
-
-import psutil as psutil
-
 from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.communication.streaming.MessageListener import MessageListener
 from hkube_python_wrapper.communication.streaming.MessageProducer import MessageProducer
@@ -24,7 +19,7 @@ def test_streaming_manager():
     streamingManagaerB = StreamingManager(None)
     streamingManagaerB.setParsedFlows(parsedFlows, 'analyze')
 
-    messageListener = MessageListener(listen_toB_config, receiverNode='v')
+    messageListener = MessageListener(listen_toB_config, receiverNode='C')
     resultsAtC = {}
 
     def onMessageB2C(flow, msg, origin):
@@ -109,8 +104,8 @@ def test_Messaging():
         messageListener = MessageListener(listenr_config, receiverNode='a')
         messageListener.registerMessageListener(onMessage)
         messageListener.start()
-        for _ in range(1, 5):
-            if (asserts.get('field1')):
+        for _ in range(1,5):
+            if ( asserts.get('field1')):
                 break
             time.sleep(1)
         time.sleep(4)
@@ -135,64 +130,3 @@ def test_Messaging():
         messageProducer.close()
         messageListener.close()
 
-
-def test_streaming_manager_load():
-    producer_configA = {'port': 9326, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
-    producer_configB = {'port': 9426, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
-    listen_toB_config = {'remoteAddress': 'tcp://localhost:9426', 'encoding': 'msgpack', 'messageOriginNodeName': 'B'}
-    listen_config = {'encoding': 'msgpack'}
-    parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9326'}, 'type': 'Add'}]
-    parentsDel = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': '9326'}, 'type': 'Del'}]
-    streamingManagaerA = StreamingManager(None)
-    streamingManagaerA.setParsedFlows(parsedFlows, 'analyze')
-    streamingManagaerB = StreamingManager(None)
-    streamingManagaerB.setParsedFlows(parsedFlows, 'analyze')
-
-    def onMessageAtB(msg, origin):
-        print('atOnmessageB')
-
-    def statsInvoked(args):
-        print('stats')
-
-    try:
-        streamingManagaerA.setupStreamingProducer(statsInvoked, producer_configA, ['B'], 'A')
-        for i in range(1, 60):
-            print('Start over')
-            gc.collect()
-            process = psutil.Process(os.getpid())
-            print(str(i) + ' 1 ****************************' + str(process.memory_info().rss))
-            # streamingManagaerA.setupStreamingProducer(statsInvoked, producer_configA, ['B'], 'A')
-            streamingManagaerB.setupStreamingListeners(listen_config, parents, 'B')
-            streamingManagaerB.registerInputListener(onMessageAtB)
-            time.sleep(1)
-            process = psutil.Process(os.getpid())
-            gc.collect()
-            print(str(i) +' 2 ****************************' + str(process.memory_info().rss))
-
-            streamingManagaerB.startMessageListening()
-            time.sleep(1)
-            gc.collect()
-            process = psutil.Process(os.getpid())
-            print(str(i) +' 3 ****************************' + str(process.memory_info().rss))
-            # streamingManagaerA.sendMessage(bytearray(1))
-
-            time.sleep(4)
-            gc.collect()
-            process = psutil.Process(os.getpid())
-            print(str(i) + ' 4 ****************************' + str(process.memory_info().rss))
-            time.sleep(1)
-            gc.collect()
-            process = psutil.Process(os.getpid())
-            print(str(i) + ' 5 ****************************' + str(process.memory_info().rss))
-            streamingManagaerB.setupStreamingListeners(listen_config, parentsDel, 'B')
-
-        gc.collect()
-        process = psutil.Process(os.getpid())
-        print('end ****************************' + str(process.memory_info().rss))
-
-    finally:
-        streamingManagaerA.stopStreaming()
-        streamingManagaerB.stopStreaming()
-        gc.collect()
-        process = psutil.Process(os.getpid())
-        print('finally ****************************' + str(process.memory_info().rss))
