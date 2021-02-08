@@ -30,7 +30,7 @@ class MessageListener(DaemonThread):
                 print('Error during MessageListener onMessage' + str(e))
 
         end = time.time()
-        duration = int((end - start) * 1000)
+        duration = float((end - start) * 1000)
         return self._encoding.encode({'duration': duration}, plainEncode=True)
 
     def run(self):

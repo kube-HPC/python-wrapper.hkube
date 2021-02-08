@@ -105,11 +105,13 @@ class StreamingManager():
                     listener.close()
                 self._messageListeners = dict()
             finally:
+                self.listeningToMessages = False
                 self.listenerLock.release()
-        self.listeningToMessages = False
         self._inputListener = []
         if (self.messageProducer is not None):
             self.messageProducer.close(force)
             self.messageProducer = None
     def clearMessageListeners(self):
-        self._inputListener = []
+        self.listenerLock.acquire()
+        self._messageListeners = dict()
+        self.listenerLock.release()
