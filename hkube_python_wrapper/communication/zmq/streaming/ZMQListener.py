@@ -113,7 +113,6 @@ class ZMQListener(object):
                     if interval < INTERVAL_MAX:
                         interval *= 2
                     try:
-                        self.worker.setsockopt(zmq.LINGER, 0)
                         self.worker.close()
                         self.worker = None
                     except Exception as e:
@@ -156,9 +155,7 @@ class ZMQListener(object):
                             lock.acquire()
                             frames = self.worker.recv_multipart()
                             if len(frames) == 3:
-                                encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
-                                messageFlowPattern = self.encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
-                                self.onMessage(messageFlowPattern, header, message)
+                                self.handleAMessage(frames)
                                 readAfterStopped += 1
                                 print('Read after stop ' + str(readAfterStopped))
                             lock.release()
