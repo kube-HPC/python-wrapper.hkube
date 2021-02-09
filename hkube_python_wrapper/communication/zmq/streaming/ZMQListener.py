@@ -1,6 +1,7 @@
 import time
 import zmq
 import uuid
+import threading
 
 HEARTBEAT_LIVENESS = 5
 HEARTBEAT_INTERVAL = 1
@@ -9,7 +10,7 @@ INTERVAL_MAX = 32
 #  Paranoid Pirate Protocol constants
 PPP_READY = b"\x01"  # Signals worker is ready
 PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
-
+lock = threading.Lock()
 
 class ZMQListener(object):
 
@@ -67,6 +68,7 @@ class ZMQListener(object):
                 #  Get message
                 #  - 3-part envelope + content -> request
                 #  - 1-part HEARTBEAT -> heartbeat
+                lock.acquire()
                 try:
                     frames = self.worker.recv_multipart()
                 except Exception as e:
@@ -82,6 +84,7 @@ class ZMQListener(object):
                 if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
                     result = self.handleAMessage(frames)
+                    lock.release()
                     try:
                         self.send(self.worker, [result])
                     except Exception as e:
@@ -91,9 +94,11 @@ class ZMQListener(object):
                         break
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
                     liveness = HEARTBEAT_LIVENESS
+                    lock.release()
                 else:
                     print("E: Invalid message: %s" % frames)
                     liveness = HEARTBEAT_LIVENESS
+                    lock.release()
 
                 interval = INTERVAL_INIT
             else:
@@ -146,6 +151,7 @@ class ZMQListener(object):
                             print('Read after stop ' + str(readAfterStopped))
                         result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
                         while result == zmq.POLLIN:
+                            lock.acquire()
                             frames = self.worker.recv_multipart()
                             if len(frames) == 3:
                                 encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
@@ -153,6 +159,7 @@ class ZMQListener(object):
                                 self.onMessage(messageFlowPattern, header, message)
                                 readAfterStopped += 1
                                 print('Read after stop ' + str(readAfterStopped))
+                            lock.release()
                             result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
                 except Exception as e:
                     print ('Error on zmqListener close'+str(e))
