@@ -12,6 +12,7 @@ PPP_READY = b"\x01"  # Signals worker is ready
 PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
 lock = threading.Lock()
 
+
 class ZMQListener(object):
 
     def __init__(self, remoteAddress, onMessage, encoding, consumerType):
@@ -72,6 +73,7 @@ class ZMQListener(object):
                 try:
                     frames = self.worker.recv_multipart()
                 except Exception as e:
+                    lock.release()
                     if (self.active):
                         print('Error during receive of ' + str(self.remoteAddress) + ' ' + str(e))
                         raise e
@@ -162,6 +164,9 @@ class ZMQListener(object):
                             lock.release()
                             result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
                 except Exception as e:
-                    print ('Error on zmqListener close'+str(e))
+                    try:
+                        lock.release()
+                    finally:
+                        print('Error on zmqListener close' + str(e))
                 self.worker.close()
                 self.context.destroy()
