@@ -79,14 +79,17 @@ class ZMQListener(object):
                         raise e
                     break
                 if not frames:
+                    lock.release()
                     if (self.active):
                         raise Exception("Connection to producer on " + self.remoteAddress + " interrupted")
                     break
 
                 if len(frames) == 3:
                     liveness = HEARTBEAT_LIVENESS
-                    result = self.handleAMessage(frames)
-                    lock.release()
+                    try:
+                        result = self.handleAMessage(frames)
+                    finally:
+                        lock.release()
                     try:
                         self.send(self.worker, [result])
                     except Exception as e:
@@ -146,20 +149,14 @@ class ZMQListener(object):
                 try:
                     result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
                     while result == zmq.POLLIN:
+                        lock.acquire()
                         frames = self.worker.recv_multipart()
                         if len(frames) == 3:
+                            self.handleAMessage(frames)
                             readAfterStopped += 1
                             print('Read after stop ' + str(readAfterStopped))
+                        lock.release()
                         result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
-                        while result == zmq.POLLIN:
-                            lock.acquire()
-                            frames = self.worker.recv_multipart()
-                            if len(frames) == 3:
-                                self.handleAMessage(frames)
-                                readAfterStopped += 1
-                                print('Read after stop ' + str(readAfterStopped))
-                            lock.release()
-                            result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
                 except Exception as e:
                     try:
                         lock.release()
