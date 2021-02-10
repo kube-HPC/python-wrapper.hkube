@@ -121,6 +121,7 @@ class ZMQProducer(object):
             time.sleep(1)
         print('Closing dealt with ' + str(stillInQueue) + ' more')
         self.active = False
+        time.sleep(HEARTBEAT_LIVENESS + 1)
         if not force:
             self._backend.close(10)
         else:

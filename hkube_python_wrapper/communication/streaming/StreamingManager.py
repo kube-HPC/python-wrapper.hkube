@@ -15,6 +15,7 @@ class StreamingManager():
         self.listeningToMessages = False
         self.parsedFlows = {}
         self.defaultFlow = None
+        self.listenerLock = threading.Lock()
 
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
@@ -30,24 +31,31 @@ class StreamingManager():
             self.messageProducer.start()
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
-        print("parents" + str(parents))
-        for predecessor in parents:
-            remoteAddress = predecessor['address']
-            remoteAddressUrl = 'tcp://{host}:{port}'.format(host=remoteAddress['host'], port=remoteAddress['port'])
-            if (predecessor['type'] == 'Add'):
-                options = {}
-                options.update(listenerConfig)
-                options['remoteAddress'] = remoteAddressUrl
-                options['messageOriginNodeName'] = predecessor['nodeName']
-                listener = MessageListener(options, nodeName, self)
-                listener.registerMessageListener(self._onMessage)
-                self._messageListeners[remoteAddressUrl] = listener
-                if (self.listeningToMessages):
-                    listener.start()
-            if (predecessor['type'] == 'Del'):
-                if (self.listeningToMessages):
-                    self._messageListeners[remoteAddressUrl].close()
-                    del self._messageListeners[remoteAddressUrl]
+        self.listenerLock.acquire()
+        try:
+            print("parents" + str(parents))
+            for predecessor in parents:
+                remoteAddress = predecessor['address']
+                remoteAddressUrl = 'tcp://{host}:{port}'.format(host=remoteAddress['host'], port=remoteAddress['port'])
+                if (predecessor['type'] == 'Add'):
+                    options = {}
+                    options.update(listenerConfig)
+                    options['remoteAddress'] = remoteAddressUrl
+                    options['messageOriginNodeName'] = predecessor['nodeName']
+                    listener = MessageListener(options, nodeName, self)
+                    listener.registerMessageListener(self._onMessage)
+                    self._messageListeners[remoteAddressUrl] = listener
+                    if (self.listeningToMessages):
+                        listener.start()
+                if (predecessor['type'] == 'Del'):
+                    if (self.listeningToMessages):
+                        try:
+                            self._messageListeners[remoteAddressUrl].close()
+                        except Exception as e:
+                            print('another Exception:' + str(e))
+                        del self._messageListeners[remoteAddressUrl]
+        finally:
+            self.listenerLock.release()
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
@@ -63,9 +71,13 @@ class StreamingManager():
 
     def startMessageListening(self):
         self.listeningToMessages = True
-        for listener in self._messageListeners.values():
-            if not (listener.is_alive()):
-                listener.start()
+        self.listenerLock.acquire()
+        try:
+            for listener in self._messageListeners.values():
+                if not (listener.is_alive()):
+                    listener.start()
+        finally:
+            self.listenerLock.release()
 
     def sendMessage(self, msg, flowName=None):
         if (self.messageProducer is None):
@@ -87,11 +99,19 @@ class StreamingManager():
 
     def stopStreaming(self, force=True):
         if (self.listeningToMessages):
-            for listener in self._messageListeners.values():
-                listener.close()
-            self._messageListeners = dict()
-        self.listeningToMessages = False
+            self.listenerLock.acquire()
+            try:
+                for listener in self._messageListeners.values():
+                    listener.close()
+                self._messageListeners = dict()
+            finally:
+                self.listeningToMessages = False
+                self.listenerLock.release()
         self._inputListener = []
         if (self.messageProducer is not None):
             self.messageProducer.close(force)
             self.messageProducer = None
+    def clearMessageListeners(self):
+        self.listenerLock.acquire()
+        self._messageListeners = dict()
+        self.listenerLock.release()

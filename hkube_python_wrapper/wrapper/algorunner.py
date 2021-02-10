@@ -312,6 +312,7 @@ class Algorunner(DaemonThread):
         self.streamingManager.setParsedFlows(self._input.get('parsedFlow'), self._input.get('defaultFlow'))
         if (self.isStreamingPipeLine() and self._input['childs']):
             self._setupStreamingProducer(self._input.get("nodeName"))
+            self.streamingManager.clearMessageListeners()
         # pylint: disable=unused-argument
         span = None
         self.runningStartThread = current_thread()
@@ -381,7 +382,7 @@ class Algorunner(DaemonThread):
         if (span):
             Tracer.instance.finish_span(span)
         if (self.isStreamingPipeLine()):
-            self._hkubeApi.stopStreaming()
+            self._hkubeApi.stopStreaming(False)
         self._sendCommand(messages.outgoing.done, None)
 
     def _reportServing(self, interval=None):
@@ -422,9 +423,11 @@ class Algorunner(DaemonThread):
                                 self._sendCommand(messages.outgoing.stopping, None)
                                 time.sleep(1)
 
-                        Thread(target=stopping).start()
+                        stoppingThread = Thread(target=stopping)
+                        stoppingThread.start()
                         self._hkubeApi.stopStreaming(False)
                         stoppingState = False
+                        stoppingThread.join()
                     else:
                         print('forcing stop')
                         self._hkubeApi.stopStreaming(True)
@@ -471,7 +474,7 @@ class Algorunner(DaemonThread):
                 }
             })
             if (self.isStreamingPipeLine()):
-                self._hkubeApi.stopStreaming()
+                self._hkubeApi.stopStreaming(False)
         except Exception as e:
             print(e)
 
