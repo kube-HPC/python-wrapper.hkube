@@ -150,17 +150,16 @@ class ZMQListener(object):
                     result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
                     while result == zmq.POLLIN:
                         lock.acquire()
-                        frames = self.worker.recv_multipart()
-                        if len(frames) == 3:
-                            self.handleAMessage(frames)
-                            readAfterStopped += 1
-                            print('Read after stop ' + str(readAfterStopped))
-                        lock.release()
+                        try:
+                            frames = self.worker.recv_multipart()
+                            if len(frames) == 3:
+                                self.handleAMessage(frames)
+                                readAfterStopped += 1
+                                print('Read after stop ' + str(readAfterStopped))
+                        finally:
+                            lock.release()
                         result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
                 except Exception as e:
-                    try:
-                        lock.release()
-                    finally:
-                        print('Error on zmqListener close' + str(e))
+                    print('Error on zmqListener close' + str(e))
                 self.worker.close()
                 self.context.destroy()
