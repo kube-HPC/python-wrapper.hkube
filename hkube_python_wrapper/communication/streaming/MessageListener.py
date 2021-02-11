@@ -32,7 +32,7 @@ class MessageListener(DaemonThread):
 
         end = time.time()
         duration = float((end - start) * 1000)
-        return self._encoding.encode({'duration': duration}, plainEncode=True)
+        return self._encoding.encode({'duration': round(duration, 4)}, plainEncode=True)
 
     def run(self):
         log.info("Start receiving from {node}", node=self.messageOriginNodeName)
@@ -42,6 +42,6 @@ class MessageListener(DaemonThread):
             if (self.errorHandler):
                 self.errorHandler.sendError(e)
 
-    def close(self):
-        self.adapater.close()
+    def close(self, force=True):
+        self.adapater.close(force)
         self.messageListeners = []
