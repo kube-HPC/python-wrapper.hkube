@@ -8,6 +8,7 @@ from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.storage.storage_manager import StorageManager
 from hkube_python_wrapper.communication.DataRequest import DataRequest
 from hkube_python_wrapper.cache.caching import Cache
+from hkube_python_wrapper.util.logger import log
 from ..config import config
 
 
@@ -21,7 +22,7 @@ class DataAdapter:
         self._requestTimeout = options.discovery['timeout']
         self._networkTimeout = options.discovery['networkTimeout']
         self._maxWorkers = min(32, (multiprocessing.cpu_count() or 1) + 4)
-        print('using {workers} workers for DataAdapter'.format(workers=self._maxWorkers))
+        log.info('using {workers} workers for DataAdapter', workers=self._maxWorkers)
 
     def encode(self, value):
         return self._encoding.encode(value)

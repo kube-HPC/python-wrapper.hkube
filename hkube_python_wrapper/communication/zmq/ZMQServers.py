@@ -5,6 +5,8 @@ import multiprocessing
 
 from .ZMQServer import ZMQServer
 from .ZMQPingServer import ZMQPingServer
+from hkube_python_wrapper.util.logger import log
+
 
 class ZMQServers(object):
     def __init__(self, port, replyFunc, config):
@@ -39,7 +41,7 @@ class ZMQServers(object):
             self._device.setsockopt_out(zmq.LINGER, 0)
             self._device.start()
         except Exception as e:
-            print('zmq.device failed with '+str(e))
+            log.error('zmq.device failed with {e}', e=str(e))
             raise
 
     def isServing(self):
@@ -47,18 +49,18 @@ class ZMQServers(object):
         return res
 
     def close(self):
-        print('closing zmq servers')
+        log.info('closing zmq servers')
 
         for i in self._instances:
-            print('closing zmq servers - stop')
+            log.info('closing zmq servers - stop')
             i.stop()
-        print('joining zmq server threads')
+        log.info('joining zmq server threads')
         for i in self._instances:
             i.join()
-        print('zmq context closing')
+        log.info('zmq context closing')
         self._context.term()
-        print('zmq context closed')
-        print('closed ZmqServers')
+        log.info('zmq context closed')
+        log.info('closed ZmqServers')
 
     def _createZmqPingServers(self, port):
         try:
@@ -74,11 +76,11 @@ class ZMQServers(object):
                 return (clients, workers)
 
             clients, workers = createDealerRouter(url_client=url_client, url_worker=url_worker, context=pingContext)
-            print('clients: {c}, workers: {w}'.format(c=clients.get(zmq.LAST_ENDPOINT), w=workers.get(zmq.LAST_ENDPOINT)))
-            print('Creating {num_threads} ZMQ Ping Servers on port {port}. pid: {pid}'.format(port=url_client, num_threads=self._num_ping_threads, pid=os.getpid()))
+            log.info('clients: {c}, workers: {w}', c=clients.get(zmq.LAST_ENDPOINT), w=workers.get(zmq.LAST_ENDPOINT))
+            log.info('Creating {num_threads} ZMQ Ping Servers on port {port}. pid: {pid}', port=url_client, num_threads=self._num_ping_threads, pid=os.getpid())
             for i in range(self._num_ping_threads):
                 server = ZMQPingServer(pingContext, url_worker, 'Ping-Thread-'+str(i))
                 server.start()
             zmq.device(zmq.QUEUE, clients, workers)
         except Exception as e:
-            print(e)
+            log.error(e)

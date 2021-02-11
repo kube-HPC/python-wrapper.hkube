@@ -1,6 +1,7 @@
 from hkube_python_wrapper.communication.zmq.streaming.ZMQListener import ZMQListener
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
+from hkube_python_wrapper.util.logger import log
 import time
 
 
@@ -27,14 +28,14 @@ class MessageListener(DaemonThread):
             try:
                 listener(messageFlowPattern, decodedMsg, self.messageOriginNodeName)
             except Exception as e:
-                print('Error during MessageListener onMessage' + str(e))
+                log.error('Error during MessageListener onMessage {e}', e=str(e))
 
         end = time.time()
         duration = float((end - start) * 1000)
         return self._encoding.encode({'duration': duration}, plainEncode=True)
 
     def run(self):
-        print("Start receiving from " + self.messageOriginNodeName)
+        log.info("Start receiving from {node}", node=self.messageOriginNodeName)
         try:
             self.adapater.start()
         except Exception as e:

@@ -6,6 +6,7 @@ from hkube_python_wrapper.wrapper.messages import messages
 from .execution import Execution
 from .waitFor import WaitForData
 from hkube_python_wrapper.util.queueImpl import Empty
+from hkube_python_wrapper.util.logger import log
 
 
 class HKubeApi:
@@ -101,7 +102,7 @@ class HKubeApi:
         Returns:
             Returns the result of the algorithm
         """
-        print('start_algorithm called with {name}'.format(name=algorithmName))
+        log.info('start_algorithm called with {name}', name=algorithmName)
         execId = self._generateExecId()
         execution = Execution(execId, includeResult, WaitForData(True))
         self._executions[execId] = execution
@@ -120,7 +121,7 @@ class HKubeApi:
         return self._waitForResult(execution)
 
     def getDataSource(self, dataSource):
-        print('getDataSource called')
+        log.info('getDataSource called')
         requestId = self._generateExecId()
         execution = Execution(requestId, False, WaitForData(True))
         self._executions[requestId] = execution
@@ -149,7 +150,7 @@ class HKubeApi:
         Returns:
             Returns the result of the pipeline
         """
-        print('start_stored_subpipeline called with {name}'.format(name=name))
+        log.info('start_stored_subpipeline called with {name}', name=name)
         execId = self._generateExecId()
         execution = Execution(execId, includeResult, WaitForData(True))
         self._executions[execId] = execution
@@ -184,7 +185,7 @@ class HKubeApi:
         Returns:
             Returns the result of the pipeline
         """
-        print('start_raw_subpipeline called with {name}'.format(name=name))
+        log.info('start_raw_subpipeline called with {name}', name=name)
         execId = self._generateExecId()
         execution = Execution(execId, includeResult, WaitForData(True))
         self._executions[execId] = execution

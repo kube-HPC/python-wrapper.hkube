@@ -2,6 +2,7 @@ import time
 import zmq
 import uuid
 import threading
+from hkube_python_wrapper.util.logger import log
 
 HEARTBEAT_LIVENESS = 5
 HEARTBEAT_INTERVAL = 1
@@ -36,7 +37,7 @@ class ZMQListener(object):
         worker.setsockopt(zmq.IDENTITY, identity)
         worker.setsockopt(zmq.LINGER, 0)
         worker.connect(remoteAddress)
-        print("zmq listener connecting to " + remoteAddress)
+        log.info("zmq listener connecting to {addr}", addr=remoteAddress)
         self.send(worker, [PPP_READY])
         return worker
 
@@ -61,7 +62,7 @@ class ZMQListener(object):
                 result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
             except Exception as e:
                 if (self.active):
-                    print('Error during poll of ' + str(self.remoteAddress) + ' ' + str(e))
+                    log.error('Error during poll of {addr}, {e}', addr=str(self.remoteAddress), e=str(e))
                     raise e
                 break
             # Handle worker activity on backend
@@ -75,7 +76,7 @@ class ZMQListener(object):
                 except Exception as e:
                     lock.release()
                     if (self.active):
-                        print('Error during receive of ' + str(self.remoteAddress) + ' ' + str(e))
+                        log.error('Error during receive of {addr}, {e}', addr=str(self.remoteAddress), e=str(e))
                         raise e
                     break
                 if not frames:
@@ -94,14 +95,14 @@ class ZMQListener(object):
                         self.send(self.worker, [result])
                     except Exception as e:
                         if (self.active):
-                            print(e)
+                            log.error(e)
                             raise e
                         break
                 elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
                     liveness = HEARTBEAT_LIVENESS
                     lock.release()
                 else:
-                    print("E: Invalid message: %s" % frames)
+                    log.error("Invalid message: {message}", message=frames)
                     liveness = HEARTBEAT_LIVENESS
                     lock.release()
 
@@ -109,8 +110,8 @@ class ZMQListener(object):
             else:
                 liveness -= 1
                 if liveness == 0:
-                    print("W: Heartbeat failure, can't reach queue of " + str(self.remoteAddress))
-                    print("W: Reconnecting in %0.2fs" % interval)
+                    log.warning("Heartbeat failure, can't reach queue of {addr}", addr=str(self.remoteAddress))
+                    log.warning("Reconnecting in {interval:0.2f}", interval=interval)
                     time.sleep(interval)
 
                     if interval < INTERVAL_MAX:
@@ -120,7 +121,7 @@ class ZMQListener(object):
                         self.worker = None
                     except Exception as e:
                         if (self.active):
-                            print('Error on heartbeat failure for ' + str(self.remoteAddress) + str(e))
+                            log.error('Error on heartbeat failure for {addr} {e}', addr=str(self.remoteAddress), e=str(e))
                         else:
                             break
                     if (self.active):
@@ -133,14 +134,14 @@ class ZMQListener(object):
                     self.send(self.worker, [PPP_HEARTBEAT])
                 except Exception as e:
                     if (self.active):
-                        print(e)
+                        log.error(e)
                     else:
                         break
 
     def close(self):
         # pylint: disable=too-many-nested-blocks
         if not (self.active):
-            print("Attempting to close inactive ZMQListener")
+            log.warning("Attempting to close inactive ZMQListener")
         else:
             self.active = False
             time.sleep(HEARTBEAT_LIVENESS + 1)
@@ -155,11 +156,11 @@ class ZMQListener(object):
                             if len(frames) == 3:
                                 self.handleAMessage(frames)
                                 readAfterStopped += 1
-                                print('Read after stop ' + str(readAfterStopped))
+                                log.warning('Read after stop {readAfterStopped}', readAfterStopped=readAfterStopped)
                         finally:
                             lock.release()
                         result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
                 except Exception as e:
-                    print('Error on zmqListener close' + str(e))
+                    log.error('Error on zmqListener close {e}', e=str(e))
                 self.worker.close()
                 self.context.destroy()

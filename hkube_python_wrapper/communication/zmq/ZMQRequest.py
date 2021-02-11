@@ -1,6 +1,7 @@
 import zmq
 from .consts import consts
 from hkube_python_wrapper.util.decorators import timing
+from hkube_python_wrapper.util.logger import log
 
 context = zmq.Context()
 
@@ -28,7 +29,7 @@ class ZMQRequest(object):
             message = self.socket.recv_multipart()
             return message
         err = 'request timed out ({timeout}) to {conn}'.format(timeout=self.timeout, conn=self.connStr)
-        print(err)
+        log.error(err)
         raise Exception(err)
 
     @timing
@@ -40,7 +41,7 @@ class ZMQRequest(object):
             if (message == consts.zmq.pong):
                 return True
         err = 'ping timed out ({timeout}) to {conn}'.format(timeout=self.networkTimeout, conn=self.pingConnStr)
-        print(err)
+        log.error(err)
         raise Exception(err)
 
     def close(self):
@@ -49,7 +50,7 @@ class ZMQRequest(object):
 
     def _createSocket(self, host, port):
         connStr = 'tcp://' + host + ':' + str(port)
-        print('creating socket to: {s}'.format(s=connStr))
+        log.info('creating socket to: {s}', s=connStr)
         socket = context.socket(zmq.REQ)
         socket.setsockopt(zmq.LINGER, 0)
         socket.connect(connStr)

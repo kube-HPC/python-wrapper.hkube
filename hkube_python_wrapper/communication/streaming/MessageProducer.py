@@ -5,6 +5,7 @@ from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.communication.zmq.streaming.producer.ZMQProducer import ZMQProducer
 from hkube_python_wrapper.util.fifo_array import FifoArray
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
+from hkube_python_wrapper.util.logger import log
 
 RESPONSE_CACHE = 2000
 
@@ -74,7 +75,7 @@ class MessageProducer(DaemonThread):
         for singleNodeStatisticsForPrint in statistics:
             singleNodeStatisticsForPrint['durations'] = singleNodeStatisticsForPrint['durations'][:10]
         if (self.printStatistics % 10 == 0):
-            print("statistics " + str(statistics))
+            log.debug("statistics {stats}", stats=str(statistics))
         self.printStatistics += 1
 
     def run(self):
@@ -82,7 +83,7 @@ class MessageProducer(DaemonThread):
 
     def close(self, force=True):
         if not (self.active):
-            print("Attempting to close inactive MessageProducer")
+            log.warning("Attempting to close inactive MessageProducer")
         else:
             self.adapter.close(force)
             self.active = False

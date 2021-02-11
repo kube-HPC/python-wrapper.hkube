@@ -3,6 +3,7 @@ import time
 import datetime
 import sys
 from hkube_python_wrapper.tracing import Tracer
+from hkube_python_wrapper.util.logger import log
 
 PY3 = sys.version_info[0] == 3
 
@@ -31,11 +32,11 @@ def timing(func):
 
 
 def printTimePY2(func, time1, time2):
-    print('%s function took %0.3f ms' % (func.func_name, (time2 - time1) * 1000.0))
+    log.debug('{name} function took {time:0.3} ms', name=func.func_name, time=(time2 - time1) * 1000.0)
 
 
 def printTimePY3(func, time1, time2):
-    print('{:s} {:s} function took {:.3f} ms'.format(timeFormat(), func.__name__, (time2 - time1) * 1000.0))
+    log.debug('{time} {name} function took {diff:.3f} ms', time=timeFormat(), name=func.__name__, diff=(time2 - time1) * 1000.0)
 
 
 def timeFormat():
