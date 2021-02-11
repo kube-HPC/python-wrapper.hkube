@@ -74,7 +74,7 @@ class ZMQProducer(object):
                 if not consumerType in self.consumerTypes:
                     print("Producer got message from unknown consumer: " + consumerType + ", dropping the message")
                     continue
-                if frames[1] not in (PPP_READY, PPP_HEARTBEAT,PPP_DISCONNECT):
+                if frames[1] not in (PPP_READY, PPP_HEARTBEAT, PPP_DISCONNECT):
                     self.watingForResponse.remove(address)
                     self.responseAcumulator(frames[1], consumerType)
                 if not address in self.watingForResponse:
@@ -106,7 +106,7 @@ class ZMQProducer(object):
                         frames = [self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
                         identity = workers.next(consumerType)
                         self.watingForResponse.append(identity)
-                        frames.insert(0,identity )
+                        frames.insert(0, identity)
                         try:
                             self._backend.send_multipart(frames)
                         except Exception as e:
