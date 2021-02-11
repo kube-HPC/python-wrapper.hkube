@@ -151,15 +151,15 @@ class ZMQListener(object):
             self.heartbeat_at = time.time() + HEARTBEAT_INTERVAL
             self.send(self.worker, [PPP_HEARTBEAT])
 
-    def close(self, forc=True):
+    def close(self, force=True):
         # pylint: disable=too-many-nested-blocks
         if not (self.active):
             print("Attempting to close inactive ZMQListener")
         else:
             self.active = False
-            time.sleep(HEARTBEAT_LIVENESS + 1)
             if (self.worker is not None):
-                if not (forc):
+                if not (force):
+                    time.sleep(HEARTBEAT_LIVENESS + 1)
                     readAfterStopped = 0
                     try:
                         result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
