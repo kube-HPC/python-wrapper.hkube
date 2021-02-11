@@ -31,7 +31,7 @@ class MessageListener(DaemonThread):
 
         end = time.time()
         duration = float((end - start) * 1000)
-        return self._encoding.encode({'duration': duration}, plainEncode=True)
+        return self._encoding.encode({'duration': round(duration,4)}, plainEncode=True)
 
     def run(self):
         print("Start receiving from " + self.messageOriginNodeName)

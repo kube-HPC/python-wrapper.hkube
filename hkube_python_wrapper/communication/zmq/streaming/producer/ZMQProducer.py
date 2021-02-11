@@ -16,6 +16,7 @@ HEARTBEAT_INTERVAL = 1.0  # Seconds
 #  Paranoid Pirate Protocol constants
 PPP_READY = b"\x01"  # Signals worker is ready
 PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
+PPP_DISCONNECT = b"\x03"  # Disconnect
 
 
 class ZMQProducer(object):
@@ -32,6 +33,7 @@ class ZMQProducer(object):
         self._backend.bind("tcp://*:" + str(port))  # For workers
         print("Producer listening on " + "tcp://*:" + str(port))
         self.active = True
+        self.watingForResponse = []
 
     def produce(self, header, message, messageFlowPattern=[]):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
@@ -72,9 +74,14 @@ class ZMQProducer(object):
                 if not consumerType in self.consumerTypes:
                     print("Producer got message from unknown consumer: " + consumerType + ", dropping the message")
                     continue
-                if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
+                if frames[1] not in (PPP_READY, PPP_HEARTBEAT,PPP_DISCONNECT):
+                    self.watingForResponse.remove(address)
                     self.responseAcumulator(frames[1], consumerType)
-                workers.ready(Worker(address), consumerType)
+                if not address in self.watingForResponse:
+                    workers.ready(Worker(address), consumerType)
+                else:
+                    if frames[1] == PPP_DISCONNECT:
+                        self.watingForResponse.remove(address)
 
                 # Validate control message, or return reply to client
                 msg = frames[1:]
@@ -97,8 +104,9 @@ class ZMQProducer(object):
                         messageFlowPattern, header, payload = poped
                         flow = Flow(messageFlowPattern)
                         frames = [self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
-
-                        frames.insert(0, workers.next(consumerType))
+                        identity = workers.next(consumerType)
+                        self.watingForResponse.append(identity)
+                        frames.insert(0,identity )
                         try:
                             self._backend.send_multipart(frames)
                         except Exception as e:
