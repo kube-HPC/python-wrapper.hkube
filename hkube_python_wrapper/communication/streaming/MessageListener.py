@@ -41,6 +41,6 @@ class MessageListener(DaemonThread):
             if (self.errorHandler):
                 self.errorHandler.sendError(e)
 
-    def close(self):
-        self.adapater.close()
+    def close(self, force=True):
+        self.adapater.close(force)
         self.messageListeners = []

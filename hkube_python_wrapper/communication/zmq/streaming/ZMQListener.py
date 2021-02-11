@@ -145,12 +145,13 @@ class ZMQListener(object):
                         print(e)
                     else:
                         break
+
     def sendHeartBeat(self):
         if time.time() > self.heartbeat_at:
             self.heartbeat_at = time.time() + HEARTBEAT_INTERVAL
             self.send(self.worker, [PPP_HEARTBEAT])
 
-    def close(self):
+    def close(self, forc=True):
         # pylint: disable=too-many-nested-blocks
         if not (self.active):
             print("Attempting to close inactive ZMQListener")
@@ -158,22 +159,28 @@ class ZMQListener(object):
             self.active = False
             time.sleep(HEARTBEAT_LIVENESS + 1)
             if (self.worker is not None):
-                readAfterStopped = 0
-                try:
-                    result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
-                    while result == zmq.POLLIN:
-                        lock.acquire()
-                        try:
-                            frames = self.worker.recv_multipart()
-                            if len(frames) == 3:
-                                self.handleAMessage(frames)
-                                readAfterStopped += 1
-                                print('Read after stop ' + str(readAfterStopped))
-                                self.send(self.worker, [PPP_DISCONNECT])
-                        finally:
-                            lock.release()
+                if not (forc):
+                    readAfterStopped = 0
+                    try:
                         result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
-                except Exception as e:
-                    print('Error on zmqListener close' + str(e))
+                        while result == zmq.POLLIN:
+                            lock.acquire()
+                            try:
+                                frames = self.worker.recv_multipart()
+                                if len(frames) == 3:
+                                    self.handleAMessage(frames)
+                                    readAfterStopped += 1
+                                    print('Read after stop ' + str(readAfterStopped))
+                                    self.send(self.worker, [PPP_DISCONNECT])
+                            finally:
+                                lock.release()
+                            result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
+                    except Exception as e:
+                        print('Error on zmqListener close' + str(e))
+                    else:
+                        try:
+                            self.send(self.worker, [PPP_DISCONNECT])
+                        except Exception as e:
+                            print('Error on sending disconnect' + str(e))
                 self.worker.close()
                 self.context.destroy()
