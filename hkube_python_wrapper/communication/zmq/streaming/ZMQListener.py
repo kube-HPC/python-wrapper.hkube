@@ -10,6 +10,7 @@ INTERVAL_MAX = 32
 #  Paranoid Pirate Protocol constants
 PPP_READY = b"\x01"  # Signals worker is ready
 PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
+PPP_DISCONNECT = b"\x03"  # Disconnect
 lock = threading.Lock()
 
 
@@ -23,6 +24,7 @@ class ZMQListener(object):
         self.active = True
         self.worker = None
         self.context = None
+        self.heartbeat_at = None
 
     def worker_socket(self, remoteAddress, context=None):
         """Helper function that returns a new configured socket
@@ -53,7 +55,7 @@ class ZMQListener(object):
         liveness = HEARTBEAT_LIVENESS
         interval = INTERVAL_INIT
 
-        heartbeat_at = time.time() + HEARTBEAT_INTERVAL
+        self.heartbeat_at = time.time() + HEARTBEAT_INTERVAL
         self.worker = self.worker_socket(self.remoteAddress)
         result = None
         while self.active:
@@ -97,13 +99,22 @@ class ZMQListener(object):
                             print(e)
                             raise e
                         break
-                elif len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
-                    liveness = HEARTBEAT_LIVENESS
-                    lock.release()
                 else:
-                    print("E: Invalid message: %s" % frames)
-                    liveness = HEARTBEAT_LIVENESS
-                    lock.release()
+                    if len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
+                        liveness = HEARTBEAT_LIVENESS
+                        lock.release()
+
+                    else:
+                        print("E: Invalid message: %s" % frames)
+                        liveness = HEARTBEAT_LIVENESS
+                        lock.release()
+                    try:
+                        self.sendHeartBeat()
+                    except Exception as e:
+                        if (self.active):
+                            print(e)
+                        else:
+                            break
 
                 interval = INTERVAL_INIT
             else:
@@ -127,15 +138,17 @@ class ZMQListener(object):
                         self.worker = self.worker_socket(self.remoteAddress, self.context)
                     liveness = HEARTBEAT_LIVENESS
 
-            if time.time() > heartbeat_at:
-                heartbeat_at = time.time() + HEARTBEAT_INTERVAL
                 try:
-                    self.send(self.worker, [PPP_HEARTBEAT])
+                    self.sendHeartBeat()
                 except Exception as e:
                     if (self.active):
                         print(e)
                     else:
                         break
+    def sendHeartBeat(self):
+        if time.time() > self.heartbeat_at:
+            self.heartbeat_at = time.time() + HEARTBEAT_INTERVAL
+            self.send(self.worker, [PPP_HEARTBEAT])
 
     def close(self):
         # pylint: disable=too-many-nested-blocks
@@ -156,6 +169,7 @@ class ZMQListener(object):
                                 self.handleAMessage(frames)
                                 readAfterStopped += 1
                                 print('Read after stop ' + str(readAfterStopped))
+                                self.send(self.worker, [PPP_DISCONNECT])
                         finally:
                             lock.release()
                         result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
