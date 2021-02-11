@@ -20,6 +20,7 @@ class Outgoing(object):
         self.startRawSubPipeline = "startRawSubPipeline"
         self.startStoredSubPipeline = "startStoredSubPipeline"
         self.stopSubPipeline = "stopSubPipeline"
+        self.logData = "logData"
 
 
 class Incoming(object):

@@ -1,5 +1,4 @@
 import math
-import functools
 
 
 def percentile(N, percent, key=lambda x: x):
@@ -24,11 +23,6 @@ def percentile(N, percent, key=lambda x: x):
     d1 = key(N[int(c)]) * (k-f)
     return d0+d1
 
-
-# median is 50th percentile.
-median = functools.partial(percentile, percent=0.5)
-
-
 def print_percentiles(values, percentiles=[10, 25, 50, 75, 90, 95], title=None):
     if not values:
         return
@@ -36,4 +30,5 @@ def print_percentiles(values, percentiles=[10, 25, 50, 75, 90, 95], title=None):
         print(title)
         print('-'*len(title))
     for p in percentiles:
-        print(str(p) + ' - ' + str(percentile(values, p)))
+        percents = percentile(values, p)
+        print(str(p) + ' - ' + str(percents))
