@@ -27,7 +27,7 @@ def setup():
     logger = logging.getLogger('wrapper')
     logger.propagate = False
     logger.setLevel(level)
-    # create console handler and set level to debug
+    # create console handler and set level
     ch = logging.StreamHandler()
     ch.setLevel(level)
     # create formatter
