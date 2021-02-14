@@ -22,7 +22,7 @@ class Cache:
         if (key in self._cache):
             return True
         if (size > self._maxCacheSize):
-            log.warning("unable to insert cache value of size + {size} MB, max: ({max}) MB", size=size, max=self._maxCacheSize)
+            log.warning("unable to insert cache value of size {size} MB, max: ({max}) MB", size=size, max=self._maxCacheSize)
             return False
         while ((self.sumSize + size) > self._maxCacheSize):
             self._remove_oldest()
