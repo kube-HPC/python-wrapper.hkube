@@ -8,7 +8,7 @@ from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from hkube_python_wrapper.util.logger import log
 
 RESPONSE_CACHE = 2000
-
+PPP_DISCONNECT = b"\x03"  # Disconnect
 
 class MessageProducer(DaemonThread):
     def __init__(self, options, consumerNodes, me):
@@ -19,12 +19,14 @@ class MessageProducer(DaemonThread):
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
         self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=self.nodeNames, encoding=self._encoding, me=me)
-        self.responsesCache = {}
+        self.durationsCache = {}
+        self.grossDurationCache = {}
         self.responseCount = {}
         self.active = True
         self.printStatistics = 0
         for nodeName in consumerNodes:
-            self.responsesCache[nodeName] = FifoArray(RESPONSE_CACHE)
+            self.durationsCache[nodeName] = FifoArray(RESPONSE_CACHE)
+            self.grossDurationCache[nodeName] = FifoArray(RESPONSE_CACHE)
             self.responseCount[nodeName] = 0
         self.listeners = []
 
@@ -43,16 +45,25 @@ class MessageProducer(DaemonThread):
         header, encodedMessage = self._encoding.encode(obj)
         self.adapter.produce(header, encodedMessage, messageFlowPattern=meesageFlowPattern)
 
-    def responseAccumulator(self, response, consumerType):
-        decodedResponse = self._encoding.decode(value=response, plainEncode=True)
+    def responseAccumulator(self, response, consumerType, grossDuration):
+        if(response != PPP_DISCONNECT):
+            decodedResponse = self._encoding.decode(value=response, plainEncode=True)
+            duration = decodedResponse['duration']
+            self.durationsCache[consumerType].append(float(duration))
+        self.grossDurationCache[consumerType].append(grossDuration)
         self.responseCount[consumerType] += 1
-        duration = decodedResponse['duration']
-        self.responsesCache[consumerType].append(float(duration))
 
-    def resetResponseCache(self, consumerType):
-        responsePerNode = self.responsesCache[consumerType].getAsArray()
-        self.responsesCache[consumerType].reset()
-        return responsePerNode
+
+
+    def resetDurationsCache(self, consumerType):
+        durationPerNode = self.durationsCache[consumerType].getAsArray()
+        self.durationsCache[consumerType].reset()
+        return durationPerNode
+
+    def resetGrossDurationsCache(self, consumerType):
+        durationPerNode = self.grossDurationCache[consumerType].getAsArray()
+        self.grossDurationCache[consumerType].reset()
+        return durationPerNode
 
     def getResponseCount(self, consumerType):
         return self.responseCount[consumerType]
@@ -66,7 +77,8 @@ class MessageProducer(DaemonThread):
             queueSize = self.adapter.queueSize(nodeName)
             sent = self.adapter.sent(nodeName)
             singleNodeStatistics = {"nodeName": nodeName, "sent": sent, "queueSize": queueSize,
-                                    "durations": self.resetResponseCache(nodeName),
+                                    "netDurations": self.resetDurationsCache(nodeName),
+                                    "durations": self.resetGrossDurationsCache(nodeName),
                                     "responses": self.getResponseCount(nodeName),
                                     "dropped": self.adapter.messageQueue.lostMessages[nodeName]}
             statistics.append(singleNodeStatistics)

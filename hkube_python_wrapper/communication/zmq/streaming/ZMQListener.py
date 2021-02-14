@@ -178,10 +178,10 @@ class ZMQListener(object):
                             result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
                     except Exception as e:
                         log.error('Error on zmqListener close {e}', e=str(e))
-                    else:
-                        try:
-                            self.send(self.worker, [PPP_DISCONNECT])
-                        except Exception as e:
-                            log.error('Error on sending disconnect {e}', e=str(e))
+                else:
+                    try:
+                        self.send(self.worker, [PPP_DISCONNECT])
+                    except Exception as e:
+                        log.error('Error on sending disconnect {e}', e=str(e))
                 self.worker.close()
                 self.context.destroy()
