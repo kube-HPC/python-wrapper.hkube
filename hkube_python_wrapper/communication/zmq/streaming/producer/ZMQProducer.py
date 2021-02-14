@@ -34,7 +34,7 @@ class ZMQProducer(object):
         self._backend.bind("tcp://*:" + str(port))  # For workers
         log.info("Producer listening on tcp://*:{port}", port=port)
         self.active = True
-        self.watingForResponse = []
+        self.watingForResponse = {}
 
     def produce(self, header, message, messageFlowPattern=[]):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
@@ -75,17 +75,19 @@ class ZMQProducer(object):
                 if not consumerType in self.consumerTypes:
                     log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
                     continue
-                if frames[1] not in (PPP_READY, PPP_HEARTBEAT, PPP_DISCONNECT):
-                    self.watingForResponse.remove(address)
-                    self.responseAcumulator(frames[1], consumerType)
-                if not address in self.watingForResponse:
+
+                if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
+                    sentTime = self.watingForResponse.get(address)
+                    if (sentTime):
+                        now = time.time()
+                        del self.watingForResponse[address]
+                        self.responseAcumulator(frames[1], consumerType, round((now - sentTime) * 1000, 4))
+                    else:
+                        log.error('missing from watingForResponse:' + str(frames[1]))
+                if not address in self.watingForResponse.keys() and (frames[1] != PPP_DISCONNECT):
                     workers.ready(Worker(address), consumerType)
-                else:
-                    if frames[1] == PPP_DISCONNECT:
-                        self.watingForResponse.remove(address)
 
                 # Validate control message, or return reply to client
-                msg = frames[1:]
                 if time.time() >= heartbeat_at:
                     for consumerType, workersOfType in workers.queues.items():
                         for worker in workersOfType:
@@ -106,7 +108,7 @@ class ZMQProducer(object):
                         flow = Flow(messageFlowPattern)
                         frames = [self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
                         identity = workers.next(consumerType)
-                        self.watingForResponse.append(identity)
+                        self.watingForResponse[identity] = time.time()
                         frames.insert(0, identity)
                         try:
                             self._backend.send_multipart(frames)
