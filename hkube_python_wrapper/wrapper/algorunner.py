@@ -15,6 +15,7 @@ from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
 from hkube_python_wrapper.util.timerImpl import Timer
+from hkube_python_wrapper.util.logger import log
 import os
 import sys
 import importlib
@@ -87,7 +88,7 @@ class Algorunner(DaemonThread):
 
     def loadAlgorithmCallbacks(self, start, init=None, stop=None, exit=None, options=None):
         try:
-            print('Initializing algorithm callbacks')
+            log.info('Initializing algorithm callbacks')
             self._originalAlgorithm['start'] = start
             self._originalAlgorithm['init'] = init
             self._originalAlgorithm['stop'] = stop
@@ -97,15 +98,14 @@ class Algorunner(DaemonThread):
                 method = v
                 isMandatory = method["mandatory"]
                 if self._originalAlgorithm[methodName] is not None:
-                    print('found method {methodName}'.format(
-                        methodName=methodName))
+                    log.info('found method {methodName}', methodName=methodName)
                 else:
                     mandatory = "mandatory" if isMandatory else "optional"
                     error = 'unable to find {mandatory} method {methodName}'.format(
                         mandatory=mandatory, methodName=methodName)
                     if (isMandatory):
                         raise Exception(error)
-                    print(error)
+                    log.warning(error)
             # fix start if it has only one argument
             if start.__code__.co_argcount == 1:
                 self._originalAlgorithm['start'] = lambda args, api: start(args)
@@ -114,7 +114,7 @@ class Algorunner(DaemonThread):
 
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)
-            print(e)
+            log.error(e)
 
     @staticmethod
     def _getEntryPoint(entry):
@@ -132,10 +132,10 @@ class Algorunner(DaemonThread):
             entryPoint = Algorunner._getEntryPoint(entry)
             __import__(package)
             os.chdir('{cwd}/{package}'.format(cwd=cwd, package=package))
-            print('loading {entry}'.format(entry=entry))
+            log.info('loading {entry}', entry=entry)
             mod = importlib.import_module('.{entryPoint}'.format(
                 entryPoint=entryPoint), package=package)
-            print('algorithm code loaded')
+            log.info('algorithm code loaded')
 
             for k, v in methods.items():
                 methodName = k
@@ -148,21 +148,20 @@ class Algorunner(DaemonThread):
                         self._originalAlgorithm['startOrig'] = self._originalAlgorithm['start']
                         self._originalAlgorithm['start'] = lambda args, api: self._originalAlgorithm['startOrig'](
                             args)
-                    print('found method {methodName}'.format(
-                        methodName=methodName))
+                    log.info('found method {methodName}', methodName=methodName)
                 except Exception as e:
                     mandatory = "mandatory" if isMandatory else "optional"
                     error = 'unable to find {mandatory} method {methodName}'.format(
                         mandatory=mandatory, methodName=methodName)
                     if (isMandatory):
                         raise Exception(error)
-                    print(error)
+                    log.warning(error)
             self._wrapStateless()
             self.tracer = Tracer(options.tracer)
         except Exception as e:
             self._loadAlgorithmError = self._errorMsg(e)
             traceback.print_exc()
-            print(e)
+            log.error(e)
 
     def _wrapStateless(self):
         wrapper = statelessAlgoWrapper(self._originalAlgorithm)
@@ -191,7 +190,7 @@ class Algorunner(DaemonThread):
         self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage, self.streamingManager)
         self._registerToWorkerEvents()
 
-        print('connecting to {url}'.format(url=self._url))
+        log.info('connecting to {url}', url=self._url)
         self._wsc.start()
         self._dataServer and self._dataServer.listen()
         self.start()
@@ -228,7 +227,7 @@ class Algorunner(DaemonThread):
                 runThread.start()
             except Empty:
                 pass
-        print('Exiting run loop')
+        log.info('Exiting run loop')
 
     def _initStorage(self, options):
         if (self._storage != 'v1'):
@@ -259,11 +258,11 @@ class Algorunner(DaemonThread):
 
     def _connection(self):
         self._connected = True
-        print('connected to ' + self._url)
+        log.info('connected to {url}', url=self._url)
 
     def _disconnect(self):
         if self._connected:
-            print('disconnected from ' + self._url)
+            log.info('disconnected from {url}', url=self._url)
         self._connected = False
 
     def _getMethod(self, name):
@@ -289,7 +288,7 @@ class Algorunner(DaemonThread):
             self.sendError(e)
 
     def _discovery_update(self, discovery):
-        print('Got discovery update' + str(discovery))
+        log.info('Got discovery update {discovery}', discovery=discovery)
         messageListenerConfig = {'encoding': config.discovery['encoding']}
         self.streamingManager.setupStreamingListeners(
             messageListenerConfig, discovery, self._nodeName)
@@ -405,7 +404,7 @@ class Algorunner(DaemonThread):
 
     def _stopAlgorithm(self, options):
         if (self.stopped):
-            print('Got stop command while already stopping')
+            log.warning('Got stop command while already stopping')
         else:
             self.stopped = True
             try:
@@ -414,11 +413,11 @@ class Algorunner(DaemonThread):
                     method(options)
                 if (self.isStreamingPipeLine()):
                     if (options.get('forceStop') is False):
-                        print('entering stopping soon')
+                        log.debug('entering stopping soon')
                         stoppingState = True
 
                         def stopping():
-                            print('in stopping')
+                            log.debug('in stopping')
                             while (stoppingState):
                                 self._sendCommand(messages.outgoing.stopping, None)
                                 time.sleep(1)
@@ -429,7 +428,7 @@ class Algorunner(DaemonThread):
                         stoppingState = False
                         stoppingThread.join()
                     else:
-                        print('forcing stop')
+                        log.debug('forcing stop')
                         self._hkubeApi.stopStreaming(True)
 
                 if (self.runningStartThread):
@@ -449,11 +448,11 @@ class Algorunner(DaemonThread):
             option = options if options is not None else dict()
             code = option.get('exitCode', 0)
             self.close()
-            print('Got exit command. Exiting with code', code)
+            log.info('Got exit command. Exiting with code {code}', code=code)
             sys.exit(code)
 
         except Exception as e:
-            print('Got error during exit: ' + str(e))
+            log.error('Got error during exit: {e}', e=e)
             # pylint: disable=protected-access
             os._exit(0)
 
@@ -465,7 +464,7 @@ class Algorunner(DaemonThread):
 
     def sendError(self, error):
         try:
-            print(error)
+            log.error(error)
             self._wsc.send({
                 'command': messages.outgoing.error,
                 'error': {
@@ -476,7 +475,7 @@ class Algorunner(DaemonThread):
             if (self.isStreamingPipeLine()):
                 self._hkubeApi.stopStreaming(False)
         except Exception as e:
-            print(e)
+            log.error(e)
 
     def _errorMsg(self, error):
         return str(error)

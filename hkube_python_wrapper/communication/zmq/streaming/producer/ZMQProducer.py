@@ -8,6 +8,7 @@ from .Flow import Flow
 from .Worker import Worker
 from .WorkerQueue import WorkerQueue
 from .MessageQueue import MessageQueue
+from hkube_python_wrapper.util.logger import log
 import zmq
 
 HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
@@ -31,7 +32,7 @@ class ZMQProducer(object):
         context = zmq.Context(1)
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers
-        print("Producer listening on " + "tcp://*:" + str(port))
+        log.info("Producer listening on tcp://*:{port}", port=port)
         self.active = True
         self.watingForResponse = []
 
@@ -52,7 +53,7 @@ class ZMQProducer(object):
                 socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
             except Exception as e:
                 if (self.active):
-                    print(e)
+                    log.error(e)
                 else:
                     break
             # Handle worker activity on self._backend
@@ -62,7 +63,7 @@ class ZMQProducer(object):
                     frames = self._backend.recv_multipart()
                 except Exception as e:
                     if (self.active):
-                        print(e)
+                        log.error(e)
                     else:
                         break
                 if not frames:
@@ -72,7 +73,7 @@ class ZMQProducer(object):
                 address = frames[0]
                 consumerType = self.encoding.decode(value=frames[2], plainEncode=True)
                 if not consumerType in self.consumerTypes:
-                    print("Producer got message from unknown consumer: " + consumerType + ", dropping the message")
+                    log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
                     continue
                 if frames[1] not in (PPP_READY, PPP_HEARTBEAT, PPP_DISCONNECT):
                     self.watingForResponse.remove(address)
@@ -93,7 +94,7 @@ class ZMQProducer(object):
                                 self._backend.send_multipart(msg)
                             except Exception as e:
                                 if (self.active):
-                                    print(e)
+                                    log.error(e)
                                 else:
                                     break
                     heartbeat_at = time.time() + HEARTBEAT_INTERVAL
@@ -111,7 +112,7 @@ class ZMQProducer(object):
                             self._backend.send_multipart(frames)
                         except Exception as e:
                             if (self.active):
-                                print(e)
+                                log.error(e)
                             else:
                                 break
             workers.purge()
@@ -127,7 +128,7 @@ class ZMQProducer(object):
         while self.messageQueue.queue and not force:
             stillInQueue += 1
             time.sleep(1)
-        print('Closing dealt with ' + str(stillInQueue) + ' more')
+        log.info('Closing dealt with {stillInQueue} more', stillInQueue=stillInQueue)
         self.active = False
         time.sleep(HEARTBEAT_LIVENESS + 1)
         if not force:

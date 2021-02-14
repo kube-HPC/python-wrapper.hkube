@@ -1,6 +1,8 @@
 import zmq
 from .consts import consts
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
+from hkube_python_wrapper.util.logger import log
+
 
 class ZMQPingServer(DaemonThread):
     def __init__(self, context, workerUrl, name):
@@ -24,9 +26,9 @@ class ZMQPingServer(DaemonThread):
                 if(message == consts.zmq.ping):
                     self._socket.send(consts.zmq.pong)
             except Exception as e:
-                print('socket closed: '+str(e))
+                log.error('socket closed: {e}', e=str(e))
                 break
-        print('ZmqPingServer run loop exit')
+        log.info('ZmqPingServer run loop exit')
         self.close()
 
     def stop(self):

@@ -3,6 +3,7 @@ from hkube_python_wrapper.storage.task_output_manager import TaskOutputManager
 from hkube_python_wrapper.storage.base_storage_manager import BaseStorageManager
 from hkube_python_wrapper.storage.fs_adapter import FSAdapter
 from hkube_python_wrapper.storage.s3_adapter import S3Adapter
+from hkube_python_wrapper.util.logger import log
 
 adapterTypes = {
     'fs': FSAdapter,
@@ -19,4 +20,4 @@ class StorageManager():
         adapter = adapterType(adapterConfig, encoding)
         self.hkube = TaskOutputManager(adapter, config)
         self.storage = BaseStorageManager(adapter)
-        print('init {type} storage client with {encoding} encoding'.format(type=storageType, encoding=encoding))
+        log.info('init {type} storage client with {encoding} encoding', type=storageType, encoding=encoding)

@@ -63,6 +63,7 @@ expected-line-ending-format=
 
 [LOGGING]
 logging-modules=logging
+logging-format-style=new
 
 [MISCELLANEOUS]
 

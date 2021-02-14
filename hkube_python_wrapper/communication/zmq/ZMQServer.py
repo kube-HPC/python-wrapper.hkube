@@ -1,5 +1,6 @@
 import time
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
+from hkube_python_wrapper.util.logger import log
 import zmq
 from .consts import consts
 
@@ -32,9 +33,9 @@ class ZMQServer(DaemonThread):
                     self._send(message)
                 self._lastServing = time.time()
             except Exception as e:
-                print('socket closed: '+str(e))
+                log.error('socket closed: {e}', e=str(e))
                 break
-        print('ZmqServer run loop exit')
+        log.info('ZmqServer run loop exit')
         self.close()
 
     def _send(self, message):
@@ -42,7 +43,7 @@ class ZMQServer(DaemonThread):
             toBeSent = self._replyFunc(message)
             self._socket.send_multipart(toBeSent, copy=False)
         except Exception as e:
-            print(e)
+            log.error(e)
 
     def isServing(self):
         return (self._lastServing) and (time.time() - self._lastServing < 10)

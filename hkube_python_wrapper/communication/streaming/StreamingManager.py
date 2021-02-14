@@ -2,6 +2,7 @@ import threading
 
 from .MessageListener import MessageListener
 from .MessageProducer import MessageProducer
+from hkube_python_wrapper.util.logger import log
 
 
 class StreamingManager():
@@ -33,7 +34,7 @@ class StreamingManager():
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
         self.listenerLock.acquire()
         try:
-            print("parents" + str(parents))
+            log.debug("parents {parents}", parents=str(parents))
             for predecessor in parents:
                 remoteAddress = predecessor['address']
                 remoteAddressUrl = 'tcp://{host}:{port}'.format(host=remoteAddress['host'], port=remoteAddress['port'])
@@ -52,7 +53,7 @@ class StreamingManager():
                         try:
                             self._messageListeners[remoteAddressUrl].close()
                         except Exception as e:
-                            print('another Exception:' + str(e))
+                            log.error('another Exception: {e}', e=str(e))
                         del self._messageListeners[remoteAddressUrl]
         finally:
             self.listenerLock.release()
@@ -66,7 +67,7 @@ class StreamingManager():
             try:
                 listener(msg, origin)
             except Exception as e:
-                print("hkube_api message listener through exception: " + str(e))
+                log.error("hkube_api message listener through exception: {e}", e=str(e))
         self.threadLocalStorage.messageFlowPattern = []
 
     def startMessageListening(self):
@@ -111,6 +112,7 @@ class StreamingManager():
         if (self.messageProducer is not None):
             self.messageProducer.close(force)
             self.messageProducer = None
+
     def clearMessageListeners(self):
         self.listenerLock.acquire()
         self._messageListeners = dict()

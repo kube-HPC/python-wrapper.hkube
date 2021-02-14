@@ -72,3 +72,6 @@ tracer = {
     },
     "service_name": os.environ.get('ALGORITHM_TYPE', 'algorithm')
 }
+logging = {
+    "level": os.environ.get('HKUBE_LOG_LEVEL', "DEBUG")
+}

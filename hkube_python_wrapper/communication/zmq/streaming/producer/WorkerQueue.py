@@ -1,5 +1,7 @@
 from collections import OrderedDict
 import time
+from hkube_python_wrapper.util.logger import log
+
 
 class WorkerQueue(object):
     def __init__(self, consumerTypes):
@@ -20,7 +22,7 @@ class WorkerQueue(object):
                 if t > worker.expiry:  # Worker expired
                     expired.append((address, type))
             for (address, consumerType) in expired:
-                print("W: Idle worker expired: %s" % address)
+                log.warning("Idle worker expired: {address}", address=address)
                 self.queues[consumerType].pop(address, None)
 
     def next(self, type):

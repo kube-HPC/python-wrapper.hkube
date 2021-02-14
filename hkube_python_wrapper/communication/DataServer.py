@@ -2,6 +2,7 @@ from hkube_python_wrapper.communication.zmq.ZMQServers import ZMQServers
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.util.decorators import timing
 from hkube_python_wrapper.cache.caching import Cache
+from hkube_python_wrapper.util.logger import log
 
 
 class DataServer:
@@ -18,8 +19,7 @@ class DataServer:
             self._createError('notAvailable', 'taskId notAvailable'))
 
     def listen(self):
-        print('discovery serving on {host}:{port} with {encoding} encoding'.format(
-            host=self._host, port=self._port, encoding=self._encodingType))
+        log.info('discovery serving on {host}:{port} with {encoding} encoding', host=self._host, port=self._port, encoding=self._encodingType)
         self._adapter.listen()
 
     @timing

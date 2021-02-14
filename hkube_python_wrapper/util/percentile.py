@@ -1,5 +1,6 @@
 import math
 import functools
+from hkube_python_wrapper.util.logger import log
 
 
 def percentile(N, percent, key=lambda x: x):
@@ -33,7 +34,7 @@ def print_percentiles(values, percentiles=[10, 25, 50, 75, 90, 95], title=None):
     if not values:
         return
     if (title):
-        print(title)
-        print('-'*len(title))
-    for p in percentiles:
-        print(str(p) + ' - ' + str(percentile(values, p)))
+        log.debug(title)
+        log.debug('-'*len(title))
+    for per_name in percentiles:
+        log.debug('{per_name}, {per_value}', per_name=per_name, per_value=str(percentile(values, per_name)))

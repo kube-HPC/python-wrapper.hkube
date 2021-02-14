@@ -1,6 +1,8 @@
 from hkube_python_wrapper.communication.zmq.ZMQRequest import ZMQRequest
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.util.decorators import timing
+from hkube_python_wrapper.util.logger import log
+
 
 class DataRequest:
     def __init__(self, reqDetails):
@@ -22,7 +24,7 @@ class DataRequest:
     @timing
     def invoke(self):
         try:
-            print('tcp://' + self.request['host'] + ':' + str(self.request['port']))
+            log.info('tcp://{host}:{port}', host=self.request['host'], port=self.request['port'])
             adapter = ZMQRequest(self.request)
             responseFrames = adapter.invokeAdapter()
             results = []
