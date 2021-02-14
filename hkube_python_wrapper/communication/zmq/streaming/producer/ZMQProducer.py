@@ -81,7 +81,7 @@ class ZMQProducer(object):
                     if (sentTime):
                         now = time.time()
                         del self.watingForResponse[address]
-                        self.responseAcumulator(frames[1], consumerType, round((now - sentTime)*1000,4))
+                        self.responseAcumulator(frames[1], consumerType, round((now - sentTime) * 1000, 4))
                     else:
                         log.error('missing from watingForResponse:' + str(frames[1]))
                 if not address in self.watingForResponse.keys() and (frames[1] != PPP_DISCONNECT):
