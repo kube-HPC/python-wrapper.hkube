@@ -12,7 +12,7 @@ header = encoding.createHeader(DATA_TYPE_RAW, PROTOCOL_TYPE_MSGPACK)
 
 
 def test_zmq_streaming():
-    def doNothing(header, msg):
+    def doNothing(header, msg, dur):
         return b'5'
 
     count = [0, 0]
