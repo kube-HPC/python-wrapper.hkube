@@ -128,8 +128,9 @@ class ZMQListener(object):
                     if interval < INTERVAL_MAX:
                         interval *= 2
                     try:
-                        self.worker.close()
-                        self.worker = None
+                        if (self.active):
+                            self.worker.close()
+                            self.worker = None
                     except Exception as e:
                         if (self.active):
                             log.error('Error on heartbeat failure for {addr} {e}', addr=str(self.remoteAddress), e=str(e))

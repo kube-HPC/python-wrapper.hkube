@@ -421,18 +421,21 @@ class Algorunner(DaemonThread):
                             while (stoppingState):
                                 self._sendCommand(messages.outgoing.stopping, None)
                                 time.sleep(1)
+                            log.info('Done stopping')
 
                         stoppingThread = Thread(target=stopping)
                         stoppingThread.start()
                         self._hkubeApi.stopStreaming(False)
                         stoppingState = False
                         stoppingThread.join()
+                        log.info('Joined threads send stopping and stop streaming')
                     else:
                         log.debug('forcing stop')
                         self._hkubeApi.stopStreaming(True)
 
                 if (self.runningStartThread):
                     self.runningStartThread.join()
+                    log.info('Joined threads algorithm and stop algorithm')
                 self._sendCommand(messages.outgoing.stopped, None)
             except Exception as e:
                 self.sendError(e)
@@ -444,7 +447,14 @@ class Algorunner(DaemonThread):
             method = self._getMethod('exit')
             if (method is not None):
                 method(options)
-
+            if (self.isStreamingPipeLine()):
+                if (self.streamingManager.messageProducer):
+                    try:
+                        log.info('Messages left in queue on exit' + str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
+                    except Exception:
+                        log.error('Failed to print number of messages left in queue')
+                else:
+                    log.info('MessageProducer already None on exit')
             option = options if options is not None else dict()
             code = option.get('exitCode', 0)
             self.close()
