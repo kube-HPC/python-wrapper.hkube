@@ -451,7 +451,7 @@ class Algorunner(DaemonThread):
                 if (self.streamingManager.messageProducer):
                     try:
                         log.info('Messages left in queue on exit' + str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
-                    except:
+                    except Exception:
                         log.error('Failed to print number of messages left in queue')
                 else:
                     log.info('MessageProducer already None on exit')
