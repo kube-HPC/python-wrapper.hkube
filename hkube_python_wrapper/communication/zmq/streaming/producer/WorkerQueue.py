@@ -25,6 +25,6 @@ class WorkerQueue(object):
                 log.warning("Idle worker expired: {address}", address=address)
                 self.queues[consumerType].pop(address, None)
 
-    def next(self, consumerType):
+    def nextWorker(self, consumerType):
         address, _ = self.queues[consumerType].popitem(False)
         return address

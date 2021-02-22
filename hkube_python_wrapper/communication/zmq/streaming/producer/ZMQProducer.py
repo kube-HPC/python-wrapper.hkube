@@ -108,7 +108,7 @@ class ZMQProducer(object):
                         messageFlowPattern, header, payload = poped
                         flow = Flow(messageFlowPattern)
                         frames = [self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
-                        identity = workers.next(consumerType)
+                        identity = workers.nextWorker(consumerType)
                         self.watingForResponse[identity] = time.time()
                         frames.insert(0, identity)
                         try:
