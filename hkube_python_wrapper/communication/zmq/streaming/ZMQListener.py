@@ -174,6 +174,7 @@ class ZMQListener(object):
                                     readAfterStopped += 1
                                     log.warning('Read after stop {readAfterStopped}', readAfterStopped=readAfterStopped)
                                     self.send(self.worker, [PPP_DISCONNECT])
+                                    break
                             finally:
                                 lock.release()
                             result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)

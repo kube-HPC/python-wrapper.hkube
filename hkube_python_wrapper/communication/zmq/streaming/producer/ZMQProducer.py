@@ -13,6 +13,7 @@ import zmq
 
 HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
 HEARTBEAT_INTERVAL = 1.0  # Seconds
+CYCLE_LENGTH_MS = 10
 
 #  Paranoid Pirate Protocol constants
 PPP_READY = b"\x01"  # Signals worker is ready
@@ -50,7 +51,7 @@ class ZMQProducer(object):
         while self.active:
             poller = poll_workers
             try:
-                socks = dict(poller.poll(HEARTBEAT_INTERVAL * 1000))
+                socks = dict(poller.poll(CYCLE_LENGTH_MS))
             except Exception as e:
                 if (self.active):
                     log.error(e)
@@ -107,7 +108,7 @@ class ZMQProducer(object):
                         messageFlowPattern, header, payload = poped
                         flow = Flow(messageFlowPattern)
                         frames = [self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
-                        identity = workers.next(consumerType)
+                        identity = workers.nextWorker(consumerType)
                         self.watingForResponse[identity] = time.time()
                         frames.insert(0, identity)
                         try:
