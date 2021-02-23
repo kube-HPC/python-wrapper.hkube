@@ -77,10 +77,15 @@ class MessageQueue(object):
     def append(self, messageFlowPattern, header, msg):
         self.sizeSum += len(msg)
         flow = Flow(messageFlowPattern)
+        hasRecipient = False
         for consumerType in self.consumerTypes:
             if (flow.isNextInFlow(consumerType, self.me)):
                 self.everAppended[consumerType] += 1
-        return self.queue.append((messageFlowPattern, header, msg))
+                hasRecipient = True
+        if (hasRecipient):
+            return self.queue.append((messageFlowPattern, header, msg))
+        else:
+            return None
 
     def size(self, consumerType):
         everAppended = self.everAppended[consumerType]
