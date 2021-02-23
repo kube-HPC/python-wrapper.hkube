@@ -83,8 +83,8 @@ class MessageQueue(object):
                 self.everAppended[consumerType] += 1
                 hasRecipient = True
         if (hasRecipient):
-            return self.queue.append((messageFlowPattern, header, msg))
-        return None
+            self.queue.append((messageFlowPattern, header, msg))
+
 
     def size(self, consumerType):
         everAppended = self.everAppended[consumerType]
