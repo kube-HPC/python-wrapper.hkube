@@ -72,7 +72,7 @@ class MessageQueue(object):
                     if (self.indexPerConsumer[otherConsumerType] > 0):
                         self.indexPerConsumer[otherConsumerType] = self.indexPerConsumer[otherConsumerType] - 1
                 return True
-            return False
+        return False
 
     def loseMessage(self):
         out = self.queue.pop(0)
