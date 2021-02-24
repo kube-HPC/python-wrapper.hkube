@@ -127,11 +127,9 @@ class ZMQProducer(object):
         return self.messageQueue.sent[consumerType]
 
     def close(self, force=True):
-        stillInQueue = 0
         while self.messageQueue.queue and not force:
-            stillInQueue += 1
+            log.info('queue size during close = ' + str(len(self.messageQueue.queue)))
             time.sleep(1)
-        log.info('Closing dealt with {stillInQueue} more', stillInQueue=stillInQueue)
         self.active = False
         time.sleep(HEARTBEAT_LIVENESS + 1)
         if not force:

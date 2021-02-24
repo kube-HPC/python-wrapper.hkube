@@ -127,6 +127,83 @@ def test_Messaging():
         assert len(asserts['envelope']) == 1
         assert asserts['envelope'][0]['source'] == 'a'
     finally:
-        messageProducer.close()
-        messageListener.close()
+        if (messageProducer):
+            messageProducer.close()
+        if (messageListener):
+            messageListener.close()
 
+def test_MessagingSplit():
+    try:
+        producer_config = {'port': 9536, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
+        listenr_config_c = {'remoteAddress': 'tcp://localhost:9536', 'encoding': 'msgpack', 'messageOriginNodeName': 'c'}
+        asserts = {}
+        asserts['responses'] = 0
+        messageProducer = MessageProducer(producer_config, ['a','b'], 'c')
+
+        def onStatistics(statistics):
+            asserts['stats'] = statistics
+            asserts['responses'] = int(statistics[0]['responses'])
+
+        messageProducer.registerStatisticsListener(onStatistics)
+        time.sleep(3)
+
+        def onMessage(envelope, msg, origin):
+            # pylint: disable=unused-argument
+            if (type(msg) == type(dict())):
+                asserts['field1'] = msg['field1']
+            time.sleep(0.1)
+
+        messageProducer.start()
+        env = [{
+            "source": "c",
+            "next": [
+                "a"
+            ]
+        }]
+        env2 = [{
+            "source": "c",
+            "next": [
+                "b"
+            ]
+        }]
+        messageProducer.produce(env, {'field1': 'value1'})
+        messageProducer.produce(env2, {'field1': 'value2'})
+        messageProducer.produce(env, {'field1': 'value1'})
+        messageProducer.produce(env2, {'field1': 'value2'})
+        messageProducer.produce(env2, {'field1': 'value2'})
+        messageProducer.produce(env, {'field1': 'value1'})
+        time.sleep(2)
+        assert asserts['stats'][0]['queueSize'] == 3
+        assert asserts['stats'][0]['sent'] == 0
+
+        messageListener = MessageListener(listenr_config_c, receiverNode='a')
+        messageListener.registerMessageListener(onMessage)
+        messageListener.start()
+        for _ in range(1,5):
+            if ( asserts.get('field1')):
+                break
+            time.sleep(1)
+        time.sleep(2)
+        assert asserts['field1'] == 'value1'
+        assert asserts['stats'][0]['queueSize'] == 0
+        assert asserts['stats'][0]['sent'] == 3
+        assert asserts['stats'][1]['queueSize'] == 3
+        assert asserts['stats'][1]['sent'] == 0
+        assert asserts['responses'] == 3
+        messageListener2 = MessageListener(listenr_config_c, receiverNode='b')
+        messageListener2.registerMessageListener(onMessage)
+        messageListener2.start()
+        time.sleep(20)
+        assert asserts['stats'][1]['queueSize'] == 0
+        assert asserts['stats'][1]['sent'] == 3
+        assert len(messageProducer.adapter.messageQueue.queue) == 0
+
+
+
+    finally:
+        if (messageProducer):
+            messageProducer.close()
+        if (messageListener):
+            messageListener.close()
+        if(messageListener2):
+            messageListener2.close()
