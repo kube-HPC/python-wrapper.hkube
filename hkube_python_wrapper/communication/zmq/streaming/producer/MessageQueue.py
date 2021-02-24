@@ -56,11 +56,11 @@ class MessageQueue(object):
         if (self.queue):
             anyZero = False
             out = self.queue[0]
-            for otherConsumerType, otherIndex in self.indexPerConsumer.items():
-                if (otherIndex == 0):
+            for consumerType, index in self.indexPerConsumer.items():
+                if (index == 0):
                     messageFlowPattern, _, _ = out
                     flow = Flow(messageFlowPattern)
-                    if (flow.isNextInFlow(otherConsumerType, self.me)):
+                    if (flow.isNextInFlow(consumerType, self.me)):
                         anyZero = True
                         break
 
@@ -68,9 +68,9 @@ class MessageQueue(object):
                 self.queue.pop(0)
                 _, _, msg = out
                 self.sizeSum -= len(msg)
-                for otherConsumerType in self.indexPerConsumer.keys():
-                    if (self.indexPerConsumer[otherConsumerType] > 0):
-                        self.indexPerConsumer[otherConsumerType] = self.indexPerConsumer[otherConsumerType] - 1
+                for consumerType in self.indexPerConsumer.keys():
+                    if (self.indexPerConsumer[consumerType] > 0):
+                        self.indexPerConsumer[consumerType] = self.indexPerConsumer[consumerType] - 1
                 return True
         return False
 
