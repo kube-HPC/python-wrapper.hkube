@@ -47,20 +47,32 @@ class MessageQueue(object):
             index = nextItemIndex + 1
             self.indexPerConsumer[consumerType] = index
             self.sent[consumerType] += 1
+            while(self.removeIfNeeded()):
+                pass
+            return out
+        return None
+
+    def removeIfNeeded(self):
+        if (self.queue):
             anyZero = False
-            for value in self.indexPerConsumer.values():
-                if (value == 0):
-                    anyZero = True
-                    break
+            out = self.queue[0]
+            for otherConsumerType, otherIndex in self.indexPerConsumer.items():
+                if (otherIndex == 0):
+                    messageFlowPattern, _, _ = out
+                    flow = Flow(messageFlowPattern)
+                    if (flow.isNextInFlow(otherConsumerType, self.me)):
+                        anyZero = True
+                        break
 
             if not (anyZero):
                 self.queue.pop(0)
                 _, _, msg = out
                 self.sizeSum -= len(msg)
-                for key in self.indexPerConsumer.keys():
-                    self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
-            return out
-        return None
+                for otherConsumerType in self.indexPerConsumer.keys():
+                    if (self.indexPerConsumer[otherConsumerType] > 0):
+                        self.indexPerConsumer[otherConsumerType] = self.indexPerConsumer[otherConsumerType] - 1
+                return True
+            return False
 
     def loseMessage(self):
         out = self.queue.pop(0)
@@ -84,7 +96,6 @@ class MessageQueue(object):
                 hasRecipient = True
         if (hasRecipient):
             self.queue.append((messageFlowPattern, header, msg))
-
 
     def size(self, consumerType):
         everAppended = self.everAppended[consumerType]
