@@ -47,20 +47,32 @@ class MessageQueue(object):
             index = nextItemIndex + 1
             self.indexPerConsumer[consumerType] = index
             self.sent[consumerType] += 1
+            while(self.removeIfNeeded()):
+                pass
+            return out
+        return None
+
+    def removeIfNeeded(self):
+        if (self.queue):
             anyZero = False
-            for value in self.indexPerConsumer.values():
-                if (value == 0):
-                    anyZero = True
-                    break
+            out = self.queue[0]
+            for consumerType, index in self.indexPerConsumer.items():
+                if (index == 0):
+                    messageFlowPattern, _, _ = out
+                    flow = Flow(messageFlowPattern)
+                    if (flow.isNextInFlow(consumerType, self.me)):
+                        anyZero = True
+                        break
 
             if not (anyZero):
                 self.queue.pop(0)
                 _, _, msg = out
                 self.sizeSum -= len(msg)
-                for key in self.indexPerConsumer.keys():
-                    self.indexPerConsumer[key] = self.indexPerConsumer[key] - 1
-            return out
-        return None
+                for consumerType in self.indexPerConsumer.keys():
+                    if (self.indexPerConsumer[consumerType] > 0):
+                        self.indexPerConsumer[consumerType] = self.indexPerConsumer[consumerType] - 1
+                return True
+        return False
 
     def loseMessage(self):
         out = self.queue.pop(0)
@@ -77,10 +89,13 @@ class MessageQueue(object):
     def append(self, messageFlowPattern, header, msg):
         self.sizeSum += len(msg)
         flow = Flow(messageFlowPattern)
+        hasRecipient = False
         for consumerType in self.consumerTypes:
             if (flow.isNextInFlow(consumerType, self.me)):
                 self.everAppended[consumerType] += 1
-        return self.queue.append((messageFlowPattern, header, msg))
+                hasRecipient = True
+        if (hasRecipient):
+            self.queue.append((messageFlowPattern, header, msg))
 
     def size(self, consumerType):
         everAppended = self.everAppended[consumerType]

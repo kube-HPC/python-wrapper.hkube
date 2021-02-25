@@ -26,4 +26,4 @@ def test_queue_statistics():
     assert queue2.size('C') == 0
     assert queue2.sent['A'] == 3
     assert queue2.sent['C'] == 4
-    assert queue2.sizeSum != 0
+    assert queue2.sizeSum == 0
