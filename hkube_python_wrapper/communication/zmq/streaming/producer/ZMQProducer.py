@@ -12,8 +12,8 @@ from hkube_python_wrapper.util.logger import log
 import zmq
 
 HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
-HEARTBEAT_INTERVAL = 1.0  # Seconds
-CYCLE_LENGTH_MS = 10
+HEARTBEAT_INTERVAL = 5  # Seconds
+CYCLE_LENGTH_MS = 1
 
 #  Paranoid Pirate Protocol constants
 PPP_READY = b"\x01"  # Signals worker is ready
@@ -94,7 +94,7 @@ class ZMQProducer(object):
                         for worker in workersOfType:
                             msg = [worker, PPP_HEARTBEAT]
                             try:
-                                self._backend.send_multipart(msg)
+                                self._backend.send_multipart(msg, copy=False)
                             except Exception as e:
                                 if (self.active):
                                     log.error(e)

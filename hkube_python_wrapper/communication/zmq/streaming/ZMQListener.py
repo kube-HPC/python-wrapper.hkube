@@ -4,10 +4,13 @@ import uuid
 import threading
 from hkube_python_wrapper.util.logger import log
 
-HEARTBEAT_LIVENESS = 5
-HEARTBEAT_INTERVAL = 1
+CYCLE_LENGTH_MS = 1
+HEARTBEAT_INTERVAL = 5
+HEARTBEAT_LIVENESS = (CYCLE_LENGTH_MS * HEARTBEAT_INTERVAL * 1000)
 INTERVAL_INIT = 1
 INTERVAL_MAX = 32
+
+
 #  Paranoid Pirate Protocol constants
 PPP_READY = b"\x01"  # Signals worker is ready
 PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
@@ -45,7 +48,7 @@ class ZMQListener(object):
 
     def send(self, workder, arr):
         arr.append(self.consumerType)
-        workder.send_multipart(arr)
+        workder.send_multipart(arr, copy=False)
 
     def handleAMessage(self, frames):
         encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
@@ -61,7 +64,7 @@ class ZMQListener(object):
         result = None
         while self.active:
             try:
-                result = self.worker.poll(HEARTBEAT_INTERVAL * 1000)
+                result = self.worker.poll(CYCLE_LENGTH_MS)
             except Exception as e:
                 if (self.active):
                     log.error('Error during poll of {addr}, {e}', addr=str(self.remoteAddress), e=str(e))
@@ -101,14 +104,12 @@ class ZMQListener(object):
                             raise e
                         break
                 else:
+                    lock.release()
                     if len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
                         liveness = HEARTBEAT_LIVENESS
-                        lock.release()
-
                     else:
                         log.error("Invalid message: {message}", message=frames)
                         liveness = HEARTBEAT_LIVENESS
-                        lock.release()
                     try:
                         self.sendHeartBeat()
                     except Exception as e:
