@@ -85,7 +85,8 @@ class ZMQProducer(object):
                     else:
                         log.error('missing from watingForResponse:' + str(frames[1]))
                 if not address in self.watingForResponse.keys() and (frames[1] != PPP_DISCONNECT):
-                    workers.ready(Worker(address), consumerType)
+                    expiry = time.time() + (HEARTBEAT_INTERVAL * HEARTBEAT_LIVENESS)
+                    workers.ready(Worker(address, expiry), consumerType)
 
                 # Validate control message, or return reply to client
                 if time.time() >= heartbeat_at:
