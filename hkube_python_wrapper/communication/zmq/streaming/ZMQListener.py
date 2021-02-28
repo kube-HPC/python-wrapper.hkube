@@ -4,9 +4,9 @@ import uuid
 import threading
 from hkube_python_wrapper.util.logger import log
 
-CYCLE_LENGTH_MS = 1
+CYCLE_LENGTH_MS = 1000
 HEARTBEAT_INTERVAL = 5
-HEARTBEAT_LIVENESS = (CYCLE_LENGTH_MS * HEARTBEAT_INTERVAL * 1000)
+HEARTBEAT_LIVENESS = 5
 INTERVAL_INIT = 1
 INTERVAL_MAX = 32
 

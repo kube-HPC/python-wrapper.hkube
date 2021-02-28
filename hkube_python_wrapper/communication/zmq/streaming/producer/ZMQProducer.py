@@ -30,7 +30,7 @@ class ZMQProducer(object):
         self.port = port
         self.consumerTypes = consumerTypes
         self.messageQueue = MessageQueue(consumerTypes, self.me)
-        context = zmq.Context(1)
+        context = zmq.Context()
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers
         log.info("Producer listening on tcp://*:{port}", port=port)
@@ -49,9 +49,8 @@ class ZMQProducer(object):
 
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
         while self.active:
-            poller = poll_workers
             try:
-                socks = dict(poller.poll(CYCLE_LENGTH_MS))
+                socks = dict(poll_workers.poll(CYCLE_LENGTH_MS))
             except Exception as e:
                 if (self.active):
                     log.error(e)
@@ -107,12 +106,11 @@ class ZMQProducer(object):
                     if (poped):
                         messageFlowPattern, header, payload = poped
                         flow = Flow(messageFlowPattern)
-                        frames = [self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
                         identity = workers.nextWorker(consumerType)
+                        frames = [identity, self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
                         self.watingForResponse[identity] = time.time()
-                        frames.insert(0, identity)
                         try:
-                            self._backend.send_multipart(frames)
+                            self._backend.send_multipart(frames, copy=False)
                         except Exception as e:
                             if (self.active):
                                 log.error(e)

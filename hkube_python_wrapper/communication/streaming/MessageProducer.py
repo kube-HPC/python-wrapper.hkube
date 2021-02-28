@@ -53,8 +53,6 @@ class MessageProducer(DaemonThread):
         self.grossDurationCache[consumerType].append(grossDuration)
         self.responseCount[consumerType] += 1
 
-
-
     def resetDurationsCache(self, consumerType):
         durationPerNode = self.durationsCache[consumerType].getAsArray()
         self.durationsCache[consumerType].reset()
