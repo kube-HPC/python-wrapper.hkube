@@ -17,10 +17,10 @@ class WorkerQueue(object):
         """Look for & kill expired workers."""
         t = time.time()
         expired = []
-        for type, queue in self.queues.items():
+        for consumer, queue in self.queues.items():
             for address, worker in queue.items():
                 if t > worker.expiry:  # Worker expired
-                    expired.append((address, type))
+                    expired.append((address, consumer))
             for (address, consumerType) in expired:
                 log.warning("Idle worker expired: {address}", address=address)
                 self.queues[consumerType].pop(address, None)
