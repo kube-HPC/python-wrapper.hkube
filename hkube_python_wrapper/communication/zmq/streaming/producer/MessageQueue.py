@@ -6,7 +6,6 @@ class MessageQueue(object):
     def __init__(self, consumerTypes, me):
         self.me = me
         self.consumerTypes = consumerTypes
-
         self.indexPerConsumer = OrderedDict()
         self.sent = {}
         self.everAppended = {}

@@ -186,7 +186,7 @@ class Algorunner(DaemonThread):
 
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initStorage(options)
-        self.streamingManager = StreamingManager(self)
+        self.streamingManager = StreamingManager(self.sendError)
         self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage, self.streamingManager)
         self._registerToWorkerEvents()
 

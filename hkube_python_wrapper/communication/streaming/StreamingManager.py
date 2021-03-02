@@ -22,9 +22,6 @@ class StreamingManager():
         self.parsedFlows = flows
         self.defaultFlow = defaultFlow
 
-    def sendError(self, e):
-        self.errorHandler.sendError(e)
-
     def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, me):
         self.messageProducer = MessageProducer(producerConfig, nextNodes, me)
         self.messageProducer.registerStatisticsListener(onStatistics)
@@ -43,7 +40,7 @@ class StreamingManager():
                     options.update(listenerConfig)
                     options['remoteAddress'] = remoteAddressUrl
                     options['messageOriginNodeName'] = predecessor['nodeName']
-                    listener = MessageListener(options, nodeName, self._onReady, self._onNotReady, self)
+                    listener = MessageListener(options, nodeName, self.errorHandler, self._onReady, self._onNotReady)
                     listener.registerMessageListener(self._onMessage)
                     self._messageListeners[remoteAddressUrl] = listener
                     if (self.listeningToMessages):
