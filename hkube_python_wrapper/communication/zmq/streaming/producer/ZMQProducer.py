@@ -1,5 +1,5 @@
 #
-# Paranoid Pirate queue
+# Based on Paranoid Pirate queue
 #
 #   Author: Daniel Lundin <dln(at)eintr(dot)org>
 #
@@ -12,16 +12,9 @@ from hkube_python_wrapper.util.logger import log
 from hkube_python_wrapper.communication.zmq.streaming.consts import *
 import zmq
 
-HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
+HEARTBEAT_INTERVAL = 5
+HEARTBEAT_LIVENESS = 5
 CYCLE_LENGTH_MS = 1
-
-signals = {
-    PPP_INIT: 'INIT',
-    PPP_READY: 'READY',
-    PPP_NOT_READY: 'NOT_READY',
-    PPP_DONE: 'DONE',
-}
-
 shouldPrint = False
 
 class ZMQProducer(object):

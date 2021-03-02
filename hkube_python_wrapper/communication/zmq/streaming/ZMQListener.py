@@ -6,18 +6,12 @@ from hkube_python_wrapper.util.logger import log
 from hkube_python_wrapper.communication.zmq.streaming.consts import *
 
 CYCLE_LENGTH_MS = 1000
-HEARTBEAT_LIVENESS = HEARTBEAT_INTERVAL * 2
+HEARTBEAT_INTERVAL = 5
+HEARTBEAT_LIVENESS = HEARTBEAT_INTERVAL * HEARTBEAT_INTERVAL
 INTERVAL_INIT = 1
 INTERVAL_MAX = 32
 
 lock = threading.Lock()
-
-signals = {
-    PPP_INIT: 'INIT',
-    PPP_READY: 'READY',
-    PPP_NOT_READY: 'NOT_READY',
-    PPP_DONE: 'DONE',
-}
 
 shouldPrint = False
 
@@ -79,17 +73,13 @@ class ZMQListener(object):
             try:
                 result = self.worker.poll(CYCLE_LENGTH_MS)
                 lock.acquire()
-                # Handle worker activity on backend
+
                 if result == zmq.POLLIN:
-                    #  Get message
-                    #  - 3-part envelope + content -> request
-                    #  - 1-part HEARTBEAT -> heartbeat
                     frames = self.worker.recv_multipart()
                     if not frames:
                         raise Exception("Connection to producer on " + self.remoteAddress + " interrupted")
 
                     if len(frames) == 3:
-                        print('---GOT MESSAGE FROM {address}---'.format(address=self.remoteAddress))
                         liveness = HEARTBEAT_LIVENESS
                         self.onNotReady(self.remoteAddress)
                         result = self.handleAMessage(frames)
@@ -106,8 +96,7 @@ class ZMQListener(object):
                 else:
                     liveness -= 1
                     if liveness == 0:
-                        log.warning("Heartbeat failure, can't reach queue of {addr}", addr=str(self.remoteAddress))
-                        log.warning("Reconnecting in {interval:0.2f}", interval=interval)
+                        log.warning("Heartbeat failure {addr}, Reconnecting in {interval:0.2f}", addr=str(self.remoteAddress), interval=interval)
                         time.sleep(interval)
 
                         if interval < INTERVAL_MAX:
