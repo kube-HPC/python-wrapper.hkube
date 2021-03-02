@@ -12,6 +12,9 @@ class WorkerQueue(object):
     def ready(self, worker, consumerType):
         self.queues[consumerType].pop(worker.address, None)
         self.queues[consumerType][worker.address] = worker
+    
+    def notReady(self, consumerType, address):
+        self.queues[consumerType].pop(address, None)
 
     def purge(self):
         """Look for & kill expired workers."""

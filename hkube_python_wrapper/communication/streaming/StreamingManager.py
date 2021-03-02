@@ -21,7 +21,7 @@ class StreamingManager():
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
         self.defaultFlow = defaultFlow
-
+    
     def sendError(self, e):
         self.errorHandler.sendError(e)
 
@@ -43,7 +43,7 @@ class StreamingManager():
                     options.update(listenerConfig)
                     options['remoteAddress'] = remoteAddressUrl
                     options['messageOriginNodeName'] = predecessor['nodeName']
-                    listener = MessageListener(options, nodeName, self)
+                    listener = MessageListener(options, nodeName, self._onReady, self._onNotReady, self)
                     listener.registerMessageListener(self._onMessage)
                     self._messageListeners[remoteAddressUrl] = listener
                     if (self.listeningToMessages):
@@ -60,6 +60,20 @@ class StreamingManager():
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
+
+    def _onReady(self, address):
+        self.listenerLock.acquire()
+        for k, v in self._messageListeners.items():
+            if(k != address):
+                v.ready()
+        self.listenerLock.release()
+    
+    def _onNotReady(self, address):
+        self.listenerLock.acquire()
+        for k, v in self._messageListeners.items():
+            if(k != address):
+                v.notReady()
+        self.listenerLock.release()
 
     def _onMessage(self, messageFlowPattern, msg, origin):
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern

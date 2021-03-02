@@ -7,19 +7,24 @@ import time
 
 class MessageListener(DaemonThread):
 
-    def __init__(self, options, receiverNode, errorHandler=None):
+    def __init__(self, options, receiverNode, onReady, onNotReady, errorHandler=None):
         self.errorHandler = errorHandler
         remoteAddress = options['remoteAddress']
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
-        self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode)
+        self.adapater = ZMQListener(remoteAddress, self.onMessage, onReady, onNotReady, self._encoding, receiverNode)
         self.messageOriginNodeName = options['messageOriginNodeName']
-
         self.messageListeners = []
         DaemonThread.__init__(self, "MessageListener-" + str(self.messageOriginNodeName))
 
     def registerMessageListener(self, listener):
         self.messageListeners.append(listener)
+
+    def ready(self):
+        self.adapater.ready()
+
+    def notReady(self):
+        self.adapater.notReady()
 
     def onMessage(self, messageFlowPattern, header, msg):
         start = time.time()

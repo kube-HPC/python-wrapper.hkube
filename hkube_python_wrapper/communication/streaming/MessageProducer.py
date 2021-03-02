@@ -41,15 +41,14 @@ class MessageProducer(DaemonThread):
             runThread.start()
         DaemonThread.__init__(self, "MessageProducer")
 
-    def produce(self, meesageFlowPattern, obj):
+    def produce(self, messageFlowPattern, obj):
         header, encodedMessage = self._encoding.encode(obj)
-        self.adapter.produce(header, encodedMessage, messageFlowPattern=meesageFlowPattern)
+        self.adapter.produce(header, encodedMessage, messageFlowPattern=messageFlowPattern)
 
     def responseAccumulator(self, response, consumerType, grossDuration):
-        if(response != PPP_DISCONNECT):
-            decodedResponse = self._encoding.decode(value=response, plainEncode=True)
-            duration = decodedResponse['duration']
-            self.durationsCache[consumerType].append(float(duration))
+        decodedResponse = self._encoding.decode(value=response, plainEncode=True)
+        duration = decodedResponse['duration']
+        self.durationsCache[consumerType].append(float(duration))
         self.grossDurationCache[consumerType].append(grossDuration)
         self.responseCount[consumerType] += 1
 
