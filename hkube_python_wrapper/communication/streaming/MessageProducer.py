@@ -8,7 +8,6 @@ from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from hkube_python_wrapper.util.logger import log
 
 RESPONSE_CACHE = 2000
-PPP_DISCONNECT = b"\x03"  # Disconnect
 
 class MessageProducer(DaemonThread):
     def __init__(self, options, consumerNodes, me):

@@ -4,7 +4,6 @@ from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from hkube_python_wrapper.util.logger import log
 import time
 
-
 class MessageListener(DaemonThread):
 
     def __init__(self, options, receiverNode, onReady, onNotReady, errorHandler=None):

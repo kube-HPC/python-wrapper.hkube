@@ -9,20 +9,11 @@ from .Worker import Worker
 from .WorkerQueue import WorkerQueue
 from .MessageQueue import MessageQueue
 from hkube_python_wrapper.util.logger import log
+from hkube_python_wrapper.communication.zmq.streaming.consts import *
 import zmq
 
 HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
-HEARTBEAT_INTERVAL = 5  # Seconds
 CYCLE_LENGTH_MS = 1
-
-#  Paranoid Pirate Protocol constants
-PPP_INIT = b"\x01"  # Signals worker is ready
-PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
-PPP_DISCONNECT = b"\x03"  # Disconnect
-PPP_READY = b"\x04"  # Signals worker is not ready
-PPP_NOT_READY = b"\x05"  # Signals worker is not ready
-PPP_DONE = b"\x06"
-PPP_EMPTY = b"\x07"
 
 signals = {
     PPP_INIT: 'INIT',
@@ -86,8 +77,8 @@ class ZMQProducer(object):
                 if(len(frames) > 4):
                     log.warning("got {frames} frames ", frames=len(frames))
                     continue
-                
-                address, signal, consumer, result = frames
+
+                address, signal, consumer, result = frames # pylint: disable=unbalanced-tuple-unpacking
                 consumerType = self.encoding.decode(value=consumer, plainEncode=True)
 
                 signalStr = signals.get(signal)
@@ -96,14 +87,13 @@ class ZMQProducer(object):
 
                 if (not consumerType in self.consumerTypes):
                     log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
-                    print(frames)
                     continue
 
-                elif (signal == PPP_NOT_READY):
+                if (signal == PPP_NOT_READY):
                     workers.notReady(consumerType, address)
                     continue
 
-                elif (signal == PPP_DONE):
+                if (signal == PPP_DONE):
                     sentTime = self.watingForResponse.get(address)
                     if (sentTime):
                         now = time.time()
@@ -111,7 +101,7 @@ class ZMQProducer(object):
                         self.responseAccumulator(result, consumerType, round((now - sentTime) * 1000, 4))
                     else:
                         log.error('missing from watingForResponse:' + str(signal))
-                
+
                 if (not address in self.watingForResponse.keys() and signal in (PPP_INIT, PPP_READY, PPP_HEARTBEAT, PPP_DONE)):
                     expiry = time.time() + (HEARTBEAT_INTERVAL * HEARTBEAT_LIVENESS)
                     workers.ready(Worker(address, expiry), consumerType)

@@ -1,5 +1,4 @@
 from collections import OrderedDict
-
 from hkube_python_wrapper.communication.zmq.streaming.producer.Flow import Flow
 
 

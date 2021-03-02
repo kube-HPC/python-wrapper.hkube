@@ -21,7 +21,7 @@ class StreamingManager():
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
         self.defaultFlow = defaultFlow
-    
+
     def sendError(self, e):
         self.errorHandler.sendError(e)
 
@@ -67,7 +67,7 @@ class StreamingManager():
             if(k != address):
                 v.ready()
         self.listenerLock.release()
-    
+
     def _onNotReady(self, address):
         self.listenerLock.acquire()
         for k, v in self._messageListeners.items():

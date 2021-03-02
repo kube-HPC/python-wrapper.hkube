@@ -3,22 +3,13 @@ import zmq
 import uuid
 import threading
 from hkube_python_wrapper.util.logger import log
+from hkube_python_wrapper.communication.zmq.streaming.consts import *
 
 CYCLE_LENGTH_MS = 1000
-HEARTBEAT_INTERVAL = 5
 HEARTBEAT_LIVENESS = HEARTBEAT_INTERVAL * 2
 INTERVAL_INIT = 1
 INTERVAL_MAX = 32
 
-
-#  Paranoid Pirate Protocol constants
-PPP_INIT = b"\x01"  # Signals worker is ready
-PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
-PPP_DISCONNECT = b"\x03"  # Disconnect
-PPP_READY = b"\x04"  # Signals worker is not ready
-PPP_NOT_READY = b"\x05"  # Signals worker is not ready
-PPP_DONE = b"\x06"
-PPP_EMPTY = b"\x07"
 lock = threading.Lock()
 
 signals = {
@@ -29,7 +20,6 @@ signals = {
 }
 
 shouldPrint = False
-
 
 class ZMQListener(object):
 
@@ -85,7 +75,7 @@ class ZMQListener(object):
         self.worker = self.worker_socket(self.remoteAddress)
         result = None
 
-        while self.active:
+        while self.active: # pylint: disable=too-many-nested-blocks
             try:
                 result = self.worker.poll(CYCLE_LENGTH_MS)
                 lock.acquire()
@@ -94,30 +84,24 @@ class ZMQListener(object):
                     #  Get message
                     #  - 3-part envelope + content -> request
                     #  - 1-part HEARTBEAT -> heartbeat
-                
                     frames = self.worker.recv_multipart()
-
                     if not frames:
                         raise Exception("Connection to producer on " + self.remoteAddress + " interrupted")
-                   
+
                     if len(frames) == 3:
                         print('---GOT MESSAGE FROM {address}---'.format(address=self.remoteAddress))
                         liveness = HEARTBEAT_LIVENESS
-                        
                         self.onNotReady(self.remoteAddress)
                         result = self.handleAMessage(frames)
                         self.onReady(self.remoteAddress)
                         self.send(self.worker, PPP_DONE, result)
-    
                     else:
                         if len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
                             liveness = HEARTBEAT_LIVENESS
                         else:
                             log.error("Invalid message: {message}", message=frames)
                             liveness = HEARTBEAT_LIVENESS
-                    
                         self.sendHeartBeat()
-        
                     interval = INTERVAL_INIT
                 else:
                     liveness -= 1
@@ -128,24 +112,23 @@ class ZMQListener(object):
 
                         if interval < INTERVAL_MAX:
                             interval *= 2
-                        
+
                         if (self.active):
                             self.worker.close()
                             self.worker = None
-                    
+
                         if (self.active):
                             self.worker = self.worker_socket(self.remoteAddress, self.context)
-                        
+
                         liveness = HEARTBEAT_LIVENESS
-                        
                         self.sendHeartBeat()
-                
+
             except Exception as e:
                 if (self.active):
                     log.error('Error during poll of {addr}, {e}', addr=str(self.remoteAddress), e=str(e))
                     raise e
                 break
-            
+
             finally:
                 lock.release()
 
@@ -153,15 +136,14 @@ class ZMQListener(object):
         if time.time() > self.heartbeat_at and self._ready is True:
             self.heartbeat_at = time.time() + HEARTBEAT_INTERVAL
             self.send(self.worker, PPP_HEARTBEAT)
-    
+
     def ready(self):
         self._ready = True
         if(self._ready is True and not self._readySent):
             self._readySent = True
             self._notReadySent = False
             self.send(self.worker, PPP_READY)
-               
-        
+
     def notReady(self):
         self._ready = False
         if (self._ready is False and not self._notReadySent):
