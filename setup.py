@@ -14,10 +14,10 @@ VERSION = '2.1.0-dev30'
 packages = setuptools.find_packages()
 
 requires = [
-    'Events>=0.3',
-    'websocket-client>=0.57.0',
+    'Events==0.4',
+    'websocket-client==0.57.0',
     'simplejson',
-    'pymongo>=3.10.1',
+    'pymongo==3.11.2',
     'msgpack',
     'boto3',
     "wsaccel==0.6.2",
