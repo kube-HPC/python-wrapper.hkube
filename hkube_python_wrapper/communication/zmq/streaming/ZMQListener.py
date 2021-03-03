@@ -67,23 +67,24 @@ class ZMQListener(object):
         while self._active: # pylint: disable=too-many-nested-blocks
             try:
                 result = self._worker.poll(CYCLE_LENGTH_MS)
-            
+
                 if result == zmq.POLLIN:
                     lock.acquire()
                     frames = self._worker.recv_multipart()
-                    
+
                     if not frames:
                         raise Exception("Connection to producer on " + self._remoteAddress + " interrupted")
 
+                    liveness = HEARTBEAT_LIVENESS
+
                     if len(frames) == 3:
-                        liveness = HEARTBEAT_LIVENESS
                         self.onNotReady()
                         result = self._handleAMessage(frames)
                         self.onReady()
                         self._send(self._worker, PPP_DONE, result)
                     else:
-                        liveness = HEARTBEAT_LIVENESS
                         self._sendHeartBeat()
+
                     interval = INTERVAL_INIT
                 else:
                     liveness -= 1
@@ -111,7 +112,8 @@ class ZMQListener(object):
                 break
 
             finally:
-                lock.release()
+                if(lock.locked()):
+                    lock.release()
 
     def _sendHeartBeat(self):
         if time.time() > self._heartbeat_at and self._ready is True:

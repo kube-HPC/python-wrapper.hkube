@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import time
+from random import randrange
 from hkube_python_wrapper.util.logger import log
 
 
@@ -29,5 +30,8 @@ class WorkerQueue(object):
                 self.queues[consumerType].pop(address, None)
 
     def nextWorker(self, consumerType):
-        address, _ = self.queues[consumerType].popitem(False)
-        return address
+        workers = list(self.queues[consumerType].keys())
+        rand = randrange(len(workers))
+        worker = workers[rand]
+        self.queues[consumerType].pop(worker, None)
+        return worker

@@ -43,14 +43,14 @@ class ZMQProducer(object):
         workers = WorkerQueue(self.consumerTypes)
         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
 
-        while self.active:
+        while self.active:  # pylint: disable=too-many-nested-blocks
             try:
                 socks = dict(poll_workers.poll(CYCLE_LENGTH_MS))
-            
+
                 if socks.get(self._backend) == zmq.POLLIN:
-                    
+
                     frames = self._backend.recv_multipart()
-                
+
                     if not frames:
                         raise Exception("Unexpected router no frames on receive, no address frame")
 
@@ -87,9 +87,9 @@ class ZMQProducer(object):
                             for worker in workersOfType:
                                 msg = [worker, PPP_HEARTBEAT]
                                 self._backend.send_multipart(msg, copy=False)
-   
+
                         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-            
+
                 for consumerType, workerQueue in workers.queues.items():
                     if (workerQueue):
                         message = self.messageQueue.pop(consumerType)
@@ -100,7 +100,7 @@ class ZMQProducer(object):
                             frames = [identity, self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
                             self.watingForResponse[identity] = time.time()
                             self._backend.send_multipart(frames, copy=False)
-                            
+
             except Exception as e:
                 if (self.active):
                     log.error(e)
