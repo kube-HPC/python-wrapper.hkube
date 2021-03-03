@@ -6,7 +6,7 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = '2.1.0-dev29'
+VERSION = '2.1.0.1-dev35'
 
 
 
@@ -15,7 +15,7 @@ packages = setuptools.find_packages()
 
 requires = [
     'Events>=0.3',
-    'websocket-client>=0.57.0',
+    'websocket-client==0.57.0',
     'simplejson',
     'pymongo>=3.10.1',
     'msgpack',

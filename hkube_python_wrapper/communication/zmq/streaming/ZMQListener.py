@@ -13,8 +13,6 @@ INTERVAL_MAX = 32
 
 lock = threading.Lock()
 
-shouldPrint = False
-
 class ZMQListener(object):
 
     def __init__(self, remoteAddress, onMessage, encoding, consumerType, onReady=None, onNotReady=None):
@@ -51,9 +49,6 @@ class ZMQListener(object):
     def _send(self, worker, signal, result=PPP_EMPTY):
         if(worker):
             arr = [signal, self._consumerType, result]
-            signalStr = signals.get(signal)
-            if(signalStr and shouldPrint):
-                print('---- sending {signal} from {address} ----'.format(signal=signalStr, address=self._remoteAddress))
             worker.send_multipart(arr, copy=False)
 
     def _handleAMessage(self, frames):
@@ -72,10 +67,11 @@ class ZMQListener(object):
         while self._active: # pylint: disable=too-many-nested-blocks
             try:
                 result = self._worker.poll(CYCLE_LENGTH_MS)
-                lock.acquire()
-
+            
                 if result == zmq.POLLIN:
+                    lock.acquire()
                     frames = self._worker.recv_multipart()
+                    
                     if not frames:
                         raise Exception("Connection to producer on " + self._remoteAddress + " interrupted")
 
@@ -86,11 +82,7 @@ class ZMQListener(object):
                         self.onReady()
                         self._send(self._worker, PPP_DONE, result)
                     else:
-                        if len(frames) == 1 and frames[0] == PPP_HEARTBEAT:
-                            liveness = HEARTBEAT_LIVENESS
-                        else:
-                            log.error("Invalid message: {message}", message=frames)
-                            liveness = HEARTBEAT_LIVENESS
+                        liveness = HEARTBEAT_LIVENESS
                         self._sendHeartBeat()
                     interval = INTERVAL_INIT
                 else:
