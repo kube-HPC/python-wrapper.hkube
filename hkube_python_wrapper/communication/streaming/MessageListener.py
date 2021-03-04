@@ -53,6 +53,3 @@ class MessageListener(DaemonThread):
             log.error('Exception in adapater.close {e}', e=str(e))
         finally:
             self.messageListeners = []
-            
-        
-        
