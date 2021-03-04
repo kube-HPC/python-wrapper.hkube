@@ -157,7 +157,8 @@ class ZMQListener(object):
                             lock.acquire()
                             try:
                                 frames = self._worker.recv_multipart()
-                                if len(frames) == 3:
+                                signal = frames[0]
+                                if (signal == PPP_MSG):
                                     self._handleAMessage(frames)
                                     readAfterStopped += 1
                                     log.warning('Read after stop {readAfterStopped}', readAfterStopped=readAfterStopped)
@@ -173,5 +174,6 @@ class ZMQListener(object):
                         self._send(self._worker, PPP_DISCONNECT)
                     except Exception as e:
                         log.error('Error on sending disconnect {e}', e=str(e))
+
                 self._worker.close()
                 self._context.destroy()

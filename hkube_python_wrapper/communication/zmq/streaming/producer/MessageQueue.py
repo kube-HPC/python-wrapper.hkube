@@ -87,9 +87,6 @@ class MessageQueue(object):
                     flow = Flow(messageFlowPattern)
                     if (flow.isNextInFlow(consumerType, self.me)):
                         self.lostMessages[consumerType] += 1
-       
-
-
 
     def append(self, messageFlowPattern, header, msg):
         with self.lock:

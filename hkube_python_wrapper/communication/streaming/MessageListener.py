@@ -47,5 +47,12 @@ class MessageListener(DaemonThread):
                 self.errorHandler(e)
 
     def close(self, force=True):
-        self.adapater.close(force)
-        self.messageListeners = []
+        try:
+            self.adapater.close(force)
+        except Exception as e:
+            log.error('Exception in adapater.close {e}', e=str(e))
+        finally:
+            self.messageListeners = []
+            
+        
+        
