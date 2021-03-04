@@ -22,7 +22,7 @@ requires = [
     'boto3<=1.17.14',
     "wsaccel==0.6.3",
     "six==1.15.0",
-    'pyzmq<=19.0.2',
+    'pyzmq<=22.0.3',
     "jaeger-client==4.0.0",
     "pympler==0.9"
 ]
