@@ -41,8 +41,7 @@ class MessageQueue(object):
     # Messages are kept in the queue until consumers of all types popped out the message.
     # An index per consumer type is maintained, to know which messages the consumer already received and conclude which message should he get now.
     def pop(self, consumerType):
-        self.lock.acquire()
-        try:
+        with self.lock:
             nextItemIndex = self.nextMessageIndex(consumerType)
             if (nextItemIndex is not None):
                 out = self.queue[nextItemIndex]
@@ -53,8 +52,6 @@ class MessageQueue(object):
                     pass
                 return out
             return None
-        finally:
-            self.lock.release()
 
     def removeIfNeeded(self):
         if (self.queue):
@@ -79,8 +76,7 @@ class MessageQueue(object):
         return False
 
     def loseMessage(self):
-        self.lock.acquire()
-        try:
+        with self.lock:
             out = self.queue.pop(0)
             messageFlowPattern, _, msg = out
             self.sizeSum -= len(msg)
@@ -91,14 +87,12 @@ class MessageQueue(object):
                     flow = Flow(messageFlowPattern)
                     if (flow.isNextInFlow(consumerType, self.me)):
                         self.lostMessages[consumerType] += 1
-        finally:
-            self.lock.release()
+       
 
 
 
     def append(self, messageFlowPattern, header, msg):
-        self.lock.acquire()
-        try:
+        with self.lock:
             self.sizeSum += len(msg)
             flow = Flow(messageFlowPattern)
             hasRecipient = False
@@ -108,8 +102,6 @@ class MessageQueue(object):
                     hasRecipient = True
             if (hasRecipient):
                 self.queue.append((messageFlowPattern, header, msg))
-        finally:
-            self.lock.release()
 
     def size(self, consumerType):
         everAppended = self.everAppended[consumerType]

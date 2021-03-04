@@ -29,8 +29,7 @@ class StreamingManager():
             self.messageProducer.start()
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
-        self.listenerLock.acquire()
-        try:
+        with self.listenerLock:
             log.debug("parents {parents}", parents=str(parents))
             for predecessor in parents:
                 remoteAddress = predecessor['address']
@@ -52,25 +51,22 @@ class StreamingManager():
                         except Exception as e:
                             log.error('another Exception: {e}', e=str(e))
                         del self._messageListeners[remoteAddressUrl]
-        finally:
-            self.listenerLock.release()
+       
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
 
     def _onReady(self, address):
-        self.listenerLock.acquire()
-        for k, v in self._messageListeners.items():
-            if(k != address):
-                v.ready()
-        self.listenerLock.release()
+        with self.listenerLock:
+            for k, v in self._messageListeners.items():
+                if(k != address):
+                    v.ready()
 
     def _onNotReady(self, address):
-        self.listenerLock.acquire()
-        for k, v in self._messageListeners.items():
-            if(k != address):
-                v.notReady()
-        self.listenerLock.release()
+        with self.listenerLock:
+            for k, v in self._messageListeners.items():
+                if(k != address):
+                    v.notReady()
 
     def _onMessage(self, messageFlowPattern, msg, origin):
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern
@@ -83,13 +79,10 @@ class StreamingManager():
 
     def startMessageListening(self):
         self.listeningToMessages = True
-        self.listenerLock.acquire()
-        try:
+        with self.listenerLock:
             for listener in self._messageListeners.values():
                 if not (listener.is_alive()):
                     listener.start()
-        finally:
-            self.listenerLock.release()
 
     def sendMessage(self, msg, flowName=None):
         if (self.messageProducer is None):
@@ -125,6 +118,5 @@ class StreamingManager():
             self.messageProducer = None
 
     def clearMessageListeners(self):
-        self.listenerLock.acquire()
-        self._messageListeners = dict()
-        self.listenerLock.release()
+        with self.listenerLock:
+            self._messageListeners = dict()

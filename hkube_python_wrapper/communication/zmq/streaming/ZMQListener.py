@@ -52,7 +52,7 @@ class ZMQListener(object):
             worker.send_multipart(arr, copy=False)
 
     def _handleAMessage(self, frames):
-        encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
+        _, encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
         messageFlowPattern = self._encoding.decode(value=encodedMessageFlowPattern, plainEncode=True)
         return self._onMessage(messageFlowPattern, header, message)
 
@@ -67,24 +67,23 @@ class ZMQListener(object):
         while self._active: # pylint: disable=too-many-nested-blocks
             try:
                 result = self._worker.poll(CYCLE_LENGTH_MS)
+                lock.acquire()
 
                 if result == zmq.POLLIN:
-                    lock.acquire()
                     frames = self._worker.recv_multipart()
 
                     if not frames:
                         raise Exception("Connection to producer on " + self._remoteAddress + " interrupted")
 
-                    liveness = HEARTBEAT_LIVENESS
+                    signal = frames[0]
 
-                    if len(frames) == 3:
+                    if (signal == PPP_MSG):
                         self.onNotReady()
                         result = self._handleAMessage(frames)
                         self.onReady()
                         self._send(self._worker, PPP_DONE, result)
-                    else:
-                        self._sendHeartBeat()
 
+                    liveness = HEARTBEAT_LIVENESS
                     interval = INTERVAL_INIT
                 else:
                     liveness -= 1
@@ -98,16 +97,16 @@ class ZMQListener(object):
                         if (self._active):
                             self._worker.close()
                             self._worker = None
-
-                        if (self._active):
                             self._worker = self._worker_socket(self._remoteAddress, self._context)
 
                         liveness = HEARTBEAT_LIVENESS
-                        self.sendHeartBeat()
+
+                    else:
+                        self._sendHeartBeat()
 
             except Exception as e:
                 if (self._active):
-                    log.error('Error during poll of {addr}, {e}', addr=str(self._remoteAddress), e=str(e))
+                    log.error('Error in ZMQListener {e}', e=str(e))
                     raise e
                 break
 

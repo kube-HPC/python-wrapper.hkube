@@ -54,8 +54,8 @@ class ZMQProducer(object):
                     if not frames:
                         raise Exception("Unexpected router no frames on receive, no address frame")
 
-                    if(len(frames) > 4):
-                        log.warning("got {frames} frames ", frames=len(frames))
+                    if(len(frames) != 4):
+                        log.warning("got {len} frames {frames}", len=len(frames), frames=frames)
                         continue
 
                     address, signal, consumer, result = frames # pylint: disable=unbalanced-tuple-unpacking
@@ -65,7 +65,7 @@ class ZMQProducer(object):
                         log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
                         continue
 
-                    if (signal == PPP_NOT_READY):
+                    if (signal in (PPP_NOT_READY, PPP_DISCONNECT)):
                         workers.notReady(consumerType, address)
                         continue
 
@@ -86,7 +86,7 @@ class ZMQProducer(object):
                         for consumerType, workersOfType in workers.queues.items():
                             for worker in workersOfType:
                                 msg = [worker, PPP_HEARTBEAT]
-                                self._backend.send_multipart(msg, copy=False)
+                                self._send(msg)
 
                         heartbeat_at = time.time() + HEARTBEAT_INTERVAL
 
@@ -96,17 +96,20 @@ class ZMQProducer(object):
                         if (message):
                             messageFlowPattern, header, payload = message
                             flow = Flow(messageFlowPattern)
-                            identity = workers.nextWorker(consumerType)
-                            frames = [identity, self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
-                            self.watingForResponse[identity] = time.time()
-                            self._backend.send_multipart(frames, copy=False)
+                            worker = workers.nextWorker(consumerType)
+                            frames = [worker, PPP_MSG, self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
+                            self.watingForResponse[worker] = time.time()
+                            self._send(frames)
 
             except Exception as e:
                 if (self.active):
-                    log.error(e)
+                    log.error('Error in ZMQProducer {e}', e=str(e))
                 else:
                     break
             workers.purge()
+
+    def _send(self, frames):
+        self._backend.send_multipart(frames, copy=False)
 
     def queueSize(self, consumerSize):
         return self.messageQueue.size(consumerSize)
