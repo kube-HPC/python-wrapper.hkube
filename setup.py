@@ -16,15 +16,15 @@ packages = setuptools.find_packages()
 requires = [
     'Events==0.4',
     'websocket-client==0.57.0',
-    'simplejson',
-    'pymongo==3.11.2',
-    'msgpack',
-    'boto3',
-    "wsaccel==0.6.2",
-    "six",
-    "pyzmq",
-    "jaeger-client==4",
-    "pympler"
+    'simplejson==3.17.2',
+    'pymongo==3.11.3',
+    'msgpack==1.0.2',
+    'boto3==1.17.14',
+    "wsaccel==0.6.3",
+    "six==1.15.0",
+    "pyzmq==22.0.3",
+    "jaeger-client==4.0.0",
+    "pympler==0.9"
 ]
 
 with open("README.md", "r") as f:
