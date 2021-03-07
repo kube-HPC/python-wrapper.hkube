@@ -3,18 +3,24 @@ import zmq
 import uuid
 import threading
 from hkube_python_wrapper.util.logger import log
-from hkube_python_wrapper.communication.zmq.streaming.consts import *
+from hkube_python_wrapper.communication.zmq.streaming.signals import *
 
 CYCLE_LENGTH_MS = 1000
 HEARTBEAT_INTERVAL = 5
-HEARTBEAT_LIVENESS = HEARTBEAT_INTERVAL * HEARTBEAT_INTERVAL
+HEARTBEAT_LIVENESS = 5
+HEARTBEAT_LIVENESS_TIMEOUT = 30
 INTERVAL_INIT = 1
 INTERVAL_MAX = 32
 
 lock = threading.Lock()
 
 class ZMQListener(object):
+    """ZMQListener
 
+    This class runs in separate thread, but only one single thread can
+    proccess data at each moment, this is dramatically decreade performance!!
+
+    """
     def __init__(self, remoteAddress, onMessage, encoding, consumerType, onReady=None, onNotReady=None):
         self._encoding = encoding
         self._onMessage = onMessage
@@ -25,7 +31,9 @@ class ZMQListener(object):
         self._active = True
         self._worker = None
         self._context = None
-        self._heartbeat_at = None
+        self._interval = INTERVAL_INIT
+        self._lastHeartBeatSentTime = time.time()
+        self._lastMsgTime = time.time()
         self._ready = None
         self._readySent = None
         self._notReadySent = None
@@ -57,12 +65,7 @@ class ZMQListener(object):
         return self._onMessage(messageFlowPattern, header, message)
 
     def start(self):  # pylint: disable=too-many-branches
-        liveness = HEARTBEAT_LIVENESS
-        interval = INTERVAL_INIT
-
-        self._heartbeat_at = time.time() + HEARTBEAT_INTERVAL
         self._worker = self._worker_socket(self._remoteAddress)
-        result = None
 
         while self._active: # pylint: disable=too-many-nested-blocks
             try:
@@ -83,23 +86,19 @@ class ZMQListener(object):
                         self.onReady()
                         self._send(self._worker, PPP_DONE, result)
 
-                    liveness = HEARTBEAT_LIVENESS
-                    interval = INTERVAL_INIT
+                    self._interval = INTERVAL_INIT
+                    self._lastMsgTime = time.time()
                 else:
-                    liveness -= 1
-                    if liveness == 0:
-                        log.warning("Heartbeat failure {addr}, Reconnecting in {interval:0.2f}", addr=str(self._remoteAddress), interval=interval)
-                        time.sleep(interval)
+                    if (time.time() - self._lastMsgTime > HEARTBEAT_LIVENESS_TIMEOUT):
+                        log.warning("Heartbeat failure {addr}, Reconnecting in {interval:0.2f}", addr=str(self._remoteAddress), interval=self._interval)
 
-                        if interval < INTERVAL_MAX:
-                            interval *= 2
+                        if (self._interval < INTERVAL_MAX):
+                            self._interval *= 2
 
                         if (self._active):
                             self._worker.close()
                             self._worker = None
                             self._worker = self._worker_socket(self._remoteAddress, self._context)
-
-                        liveness = HEARTBEAT_LIVENESS
 
                     else:
                         self._sendHeartBeat()
@@ -115,20 +114,20 @@ class ZMQListener(object):
                     lock.release()
 
     def _sendHeartBeat(self):
-        if time.time() > self._heartbeat_at and self._ready is True:
-            self._heartbeat_at = time.time() + HEARTBEAT_INTERVAL
+        if (self._ready is True and time.time() - self._lastHeartBeatSentTime > HEARTBEAT_LIVENESS_TIMEOUT):
+            self._lastHeartBeatSentTime = time.time()
             self._send(self._worker, PPP_HEARTBEAT)
 
     def ready(self):
         self._ready = True
-        if(self._ready is True and not self._readySent):
+        if(not self._readySent):
             self._readySent = True
             self._notReadySent = False
             self._send(self._worker, PPP_READY)
 
     def notReady(self):
         self._ready = False
-        if (self._ready is False and not self._notReadySent):
+        if (not self._notReadySent):
             self._notReadySent = True
             self._readySent = False
             self._send(self._worker, PPP_NOT_READY)

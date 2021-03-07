@@ -9,7 +9,7 @@ from .Worker import Worker
 from .WorkerQueue import WorkerQueue
 from .MessageQueue import MessageQueue
 from hkube_python_wrapper.util.logger import log
-from hkube_python_wrapper.communication.zmq.streaming.consts import *
+from hkube_python_wrapper.communication.zmq.streaming.signals import *
 import zmq
 
 HEARTBEAT_INTERVAL = 5
