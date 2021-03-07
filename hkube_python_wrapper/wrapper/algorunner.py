@@ -199,20 +199,20 @@ class Algorunner(DaemonThread):
     def handle(self, command, data):
         if (command == messages.incoming.initialize):
             self._init(data)
-        if (command == messages.incoming.start):
+        elif (command == messages.incoming.start):
             self._start(data)
-        if (command == messages.incoming.stop):
+        elif (command == messages.incoming.stop):
             self._stopAlgorithm(data)
-        if (command == messages.incoming.serviceDiscoveryUpdate):
+        elif (command == messages.incoming.serviceDiscoveryUpdate):
             self._discovery_update(data)
-        if (command == messages.incoming.exit):
+        elif (command == messages.incoming.exit):
             # call exit on different thread to prevent deadlock
             Timer(0.1, lambda: self._exit(data), name="Exit timer").start()
-        if (command in [messages.incoming.algorithmExecutionDone, messages.incoming.algorithmExecutionError]):
+        elif (command in [messages.incoming.algorithmExecutionDone, messages.incoming.algorithmExecutionError]):
             self._hkubeApi.algorithmExecutionDone(data)
-        if (command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError, messages.incoming.subPipelineStopped]):
+        elif (command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError, messages.incoming.subPipelineStopped]):
             self._hkubeApi.subPipelineDone(data)
-        if (command == messages.incoming.dataSourceResponse):
+        elif (command == messages.incoming.dataSourceResponse):
             self._hkubeApi.dataSourceResponse(data)
 
     def get_message(self, blocking=True):
