@@ -31,7 +31,7 @@ def setup():
     ch = logging.StreamHandler()
     ch.setLevel(level)
     # create formatter
-    formatter = logging.Formatter('%(name)s::%(levelname)s::%(message)s')
+    formatter = logging.Formatter('%(name)s::%(levelname)s::%(threadName)s::%(message)s')
     # add formatter to ch
     ch.setFormatter(formatter)
     # add ch to logger
