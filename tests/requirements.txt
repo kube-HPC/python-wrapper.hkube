@@ -5,3 +5,4 @@ pytest-mock
 pytest-cov
 websocket_server
 requests
+wheel
