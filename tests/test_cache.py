@@ -1,5 +1,6 @@
 from hkube_python_wrapper.cache.caching import Cache
-
+import concurrent.futures
+import datetime
 
 def test_reaching_limit():
     cache = Cache({"maxCacheSize": 4})
@@ -14,6 +15,24 @@ def test_reaching_limit():
     assert "task4" in cache
     assert "task1" not in cache
 
+def test_threading():
+    cache = Cache({"maxCacheSize": 4})
+    # fill cache
+    startTime=datetime.datetime.now()
+    for i in range(10000):
+        values=(str(i),{"bytes": bytearray(500)},500)
+        cache._cache[values[0]] = {'timestamp': startTime+datetime.timedelta(0,1), 'size': values[2], 'value': values[1], 'header': None}
+    request=[]
+    for i in range(1000):
+        request.append(('key'+str(i),{"bytes": bytearray(50000)},50000))
+    res=[]
+    def process(item):
+        cache.update(item[0], item[1])
+        return item[0]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        for out in executor.map(process,request):
+            res.append(out)
+    assert len(res) == 1000
 
 def test_too_large_message():
     cache = Cache({"maxCacheSize": 5})
@@ -45,6 +64,5 @@ def test_get_all():
     assert "1" in set(data)
     assert "2" in set(data)
 
-
 if __name__ == '__main__':
-    test_get_all()
+    test_threading()
