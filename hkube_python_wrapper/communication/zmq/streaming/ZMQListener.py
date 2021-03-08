@@ -6,8 +6,7 @@ from hkube_python_wrapper.util.logger import log
 from hkube_python_wrapper.communication.zmq.streaming.signals import *
 
 CYCLE_LENGTH_MS = 1000
-HEARTBEAT_INTERVAL = 5
-HEARTBEAT_LIVENESS = 5
+HEARTBEAT_INTERVAL = 10
 HEARTBEAT_LIVENESS_TIMEOUT = 30
 INTERVAL_INIT = 1
 INTERVAL_MAX = 32
@@ -32,8 +31,8 @@ class ZMQListener(object):
         self._worker = None
         self._context = None
         self._interval = INTERVAL_INIT
-        self._lastHeartBeatSentTime = time.time()
-        self._lastMsgTime = time.time()
+        self._lastSentTime = time.time()
+        self._lastReceiveTime = time.time()
         self._ready = None
         self._readySent = None
         self._notReadySent = None
@@ -58,6 +57,7 @@ class ZMQListener(object):
         if(worker):
             arr = [signal, self._consumerType, result]
             worker.send_multipart(arr, copy=False)
+            self._lastSentTime = time.time()
 
     def _handleAMessage(self, frames):
         _, encodedMessageFlowPattern, header, message = frames  # pylint: disable=unbalanced-tuple-unpacking
@@ -87,9 +87,10 @@ class ZMQListener(object):
                         self._send(self._worker, PPP_DONE, result)
 
                     self._interval = INTERVAL_INIT
-                    self._lastMsgTime = time.time()
+                    self._lastReceiveTime = time.time()
                 else:
-                    if (time.time() - self._lastMsgTime > HEARTBEAT_LIVENESS_TIMEOUT):
+                    if (time.time() - self._lastReceiveTime > HEARTBEAT_LIVENESS_TIMEOUT):
+                        self._lastReceiveTime = time.time()
                         log.warning("Heartbeat failure {addr}, Reconnecting in {interval:0.2f}", addr=str(self._remoteAddress), interval=self._interval)
 
                         if (self._interval < INTERVAL_MAX):
@@ -114,8 +115,7 @@ class ZMQListener(object):
                     lock.release()
 
     def _sendHeartBeat(self):
-        if (self._ready is True and time.time() - self._lastHeartBeatSentTime > HEARTBEAT_LIVENESS_TIMEOUT):
-            self._lastHeartBeatSentTime = time.time()
+        if (time.time() - self._lastSentTime > HEARTBEAT_INTERVAL):
             self._send(self._worker, PPP_HEARTBEAT)
 
     def ready(self):

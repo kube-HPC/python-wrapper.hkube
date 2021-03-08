@@ -1,4 +1,8 @@
+import time
+
+EXPIRY = 30
+
 class Worker(object):
-    def __init__(self, address, expiry):
+    def __init__(self, address):
         self.address = address
-        self.expiry = expiry
+        self.expiry = time.time() + EXPIRY

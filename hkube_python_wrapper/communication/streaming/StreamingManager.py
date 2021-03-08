@@ -22,8 +22,8 @@ class StreamingManager():
         self.parsedFlows = flows
         self.defaultFlow = defaultFlow
 
-    def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, me):
-        self.messageProducer = MessageProducer(producerConfig, nextNodes, me)
+    def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, nodeName):
+        self.messageProducer = MessageProducer(producerConfig, nextNodes, nodeName)
         self.messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
             self.messageProducer.start()

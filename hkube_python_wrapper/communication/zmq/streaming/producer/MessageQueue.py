@@ -4,8 +4,8 @@ import threading
 
 
 class MessageQueue(object):
-    def __init__(self, consumerTypes, me):
-        self.me = me
+    def __init__(self, consumerTypes, nodeName):
+        self.nodeName = nodeName
         self.consumerTypes = consumerTypes
         self.lock = threading.Lock()
         self.indexPerConsumer = OrderedDict()
@@ -29,7 +29,7 @@ class MessageQueue(object):
         while (not foundMessage) and index < len(self.queue):
             messageFlowPattern, _, _ = self.queue[index]
             flow = Flow(messageFlowPattern)
-            if (flow.isNextInFlow(consumerType, self.me)):
+            if (flow.isNextInFlow(consumerType, self.nodeName)):
                 foundMessage = True
             else:
                 index += 1
@@ -61,7 +61,7 @@ class MessageQueue(object):
                 if (index == 0):
                     messageFlowPattern, _, _ = out
                     flow = Flow(messageFlowPattern)
-                    if (flow.isNextInFlow(consumerType, self.me)):
+                    if (flow.isNextInFlow(consumerType, self.nodeName)):
                         anyZero = True
                         break
 
@@ -85,7 +85,7 @@ class MessageQueue(object):
                     self.indexPerConsumer[consumerType] = self.indexPerConsumer[consumerType] - 1
                 else:
                     flow = Flow(messageFlowPattern)
-                    if (flow.isNextInFlow(consumerType, self.me)):
+                    if (flow.isNextInFlow(consumerType, self.nodeName)):
                         self.lostMessages[consumerType] += 1
 
     def append(self, messageFlowPattern, header, msg):
@@ -94,7 +94,7 @@ class MessageQueue(object):
             flow = Flow(messageFlowPattern)
             hasRecipient = False
             for consumerType in self.consumerTypes:
-                if (flow.isNextInFlow(consumerType, self.me)):
+                if (flow.isNextInFlow(consumerType, self.nodeName)):
                     self.everAppended[consumerType] += 1
                     hasRecipient = True
             if (hasRecipient):

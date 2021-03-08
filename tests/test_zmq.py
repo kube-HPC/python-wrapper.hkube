@@ -16,7 +16,7 @@ def test_zmq_streaming():
         return b'5'
 
     count = [0, 0]
-    producer = ZMQProducer(port=5559, maxMemorySize=5000, responseAccumulator=doNothing, consumerTypes=['b', 'c'], encoding=encoding, me='a')
+    producer = ZMQProducer(port=5559, maxMemorySize=5000, responseAccumulator=doNothing, consumerTypes=['b', 'c'], encoding=encoding, nodeName='a')
     runThread = Thread(name="Producer", target=producer.start)
     runThread.start()
 
