@@ -2,8 +2,8 @@ import time
 import zmq
 import uuid
 import threading
+import hkube_python_wrapper.communication.zmq.streaming.signals as signals
 from hkube_python_wrapper.util.logger import log
-from hkube_python_wrapper.communication.zmq.streaming.signals import *
 
 CYCLE_LENGTH_MS = 1000
 HEARTBEAT_INTERVAL = 10
@@ -43,18 +43,17 @@ class ZMQListener(object):
         if not context:
             context = zmq.Context(1)
         self._context = context
-        worker = self._context.socket(zmq.DEALER)  # DEALER
-        worker.setsockopt(zmq.LINGER, 0)
         identity = str(uuid.uuid4()).encode()
+        worker = self._context.socket(zmq.DEALER)  # DEALER
         worker.setsockopt(zmq.IDENTITY, identity)
         worker.setsockopt(zmq.LINGER, 0)
         worker.connect(remoteAddress)
         log.info("zmq listener connecting to {addr}", addr=remoteAddress)
-        self._send(worker, PPP_INIT)
+        self._send(worker, signals.PPP_INIT)
         return worker
 
-    def _send(self, worker, signal, result=PPP_EMPTY):
-        if(worker):
+    def _send(self, worker, signal, result=signals.PPP_EMPTY):
+        if(worker and (self._active or signal == signals.PPP_DISCONNECT)):
             arr = [signal, self._consumerType, result]
             worker.send_multipart(arr, copy=False)
             self._lastSentTime = time.time()
@@ -80,11 +79,11 @@ class ZMQListener(object):
 
                     signal = frames[0]
 
-                    if (signal == PPP_MSG):
+                    if (signal == signals.PPP_MSG):
                         self.onNotReady()
                         result = self._handleAMessage(frames)
                         self.onReady()
-                        self._send(self._worker, PPP_DONE, result)
+                        self._send(self._worker, signals.PPP_DONE, result)
 
                     self._interval = INTERVAL_INIT
                     self._lastReceiveTime = time.time()
@@ -98,7 +97,6 @@ class ZMQListener(object):
 
                         if (self._active):
                             self._worker.close()
-                            self._worker = None
                             self._worker = self._worker_socket(self._remoteAddress, self._context)
 
                     else:
@@ -116,21 +114,21 @@ class ZMQListener(object):
 
     def _sendHeartBeat(self):
         if (time.time() - self._lastSentTime > HEARTBEAT_INTERVAL):
-            self._send(self._worker, PPP_HEARTBEAT)
+            self._send(self._worker, signals.PPP_HEARTBEAT)
 
     def ready(self):
         self._ready = True
         if(not self._readySent):
             self._readySent = True
             self._notReadySent = False
-            self._send(self._worker, PPP_READY)
+            self._send(self._worker, signals.PPP_READY)
 
     def notReady(self):
         self._ready = False
         if (not self._notReadySent):
             self._notReadySent = True
             self._readySent = False
-            self._send(self._worker, PPP_NOT_READY)
+            self._send(self._worker, signals.PPP_NOT_READY)
 
     def onReady(self):
         if(self._onReady):
@@ -142,35 +140,34 @@ class ZMQListener(object):
 
     def close(self, force=True):
         # pylint: disable=too-many-nested-blocks
-        if not (self._active):
+        if (self._active is False):
             log.warning("Attempting to close inactive ZMQListener")
         else:
             self._active = False
             if (self._worker is not None):
-                if not (force):
-                    time.sleep(HEARTBEAT_INTERVAL + 1)
-                    readAfterStopped = 0
+                if (force is False):
                     try:
-                        result = self._worker.poll(HEARTBEAT_INTERVAL * 1000)
+                        readAfterStopped = 0
+                        result = self._worker.poll(CYCLE_LENGTH_MS * 5)
                         while result == zmq.POLLIN:
                             lock.acquire()
                             try:
                                 frames = self._worker.recv_multipart()
                                 signal = frames[0]
-                                if (signal == PPP_MSG):
+                                if (signal == signals.PPP_MSG):
                                     self._handleAMessage(frames)
                                     readAfterStopped += 1
                                     log.warning('Read after stop {readAfterStopped}', readAfterStopped=readAfterStopped)
-                                    self._send(self._worker, PPP_DISCONNECT)
+                                    self._send(self._worker, signals.PPP_DISCONNECT)
                                     break
                             finally:
                                 lock.release()
-                            result = self._worker.poll(HEARTBEAT_INTERVAL * 1000)
+                            result = self._worker.poll(CYCLE_LENGTH_MS)
                     except Exception as e:
                         log.error('Error on zmqListener close {e}', e=str(e))
                 else:
                     try:
-                        self._send(self._worker, PPP_DISCONNECT)
+                        self._send(self._worker, signals.PPP_DISCONNECT)
                     except Exception as e:
                         log.error('Error on sending disconnect {e}', e=str(e))
 
