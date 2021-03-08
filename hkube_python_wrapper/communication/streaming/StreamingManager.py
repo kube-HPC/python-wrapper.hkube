@@ -22,18 +22,14 @@ class StreamingManager():
         self.parsedFlows = flows
         self.defaultFlow = defaultFlow
 
-    def sendError(self, e):
-        self.errorHandler.sendError(e)
-
-    def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, me):
-        self.messageProducer = MessageProducer(producerConfig, nextNodes, me)
+    def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, nodeName):
+        self.messageProducer = MessageProducer(producerConfig, nextNodes, nodeName)
         self.messageProducer.registerStatisticsListener(onStatistics)
         if (nextNodes):
             self.messageProducer.start()
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
-        self.listenerLock.acquire()
-        try:
+        with self.listenerLock:
             log.debug("parents {parents}", parents=str(parents))
             for predecessor in parents:
                 remoteAddress = predecessor['address']
@@ -43,23 +39,30 @@ class StreamingManager():
                     options.update(listenerConfig)
                     options['remoteAddress'] = remoteAddressUrl
                     options['messageOriginNodeName'] = predecessor['nodeName']
-                    listener = MessageListener(options, nodeName, self)
+                    listener = MessageListener(options, nodeName, self.errorHandler, self._onReady, self._onNotReady)
                     listener.registerMessageListener(self._onMessage)
                     self._messageListeners[remoteAddressUrl] = listener
                     if (self.listeningToMessages):
                         listener.start()
                 if (predecessor['type'] == 'Del'):
                     if (self.listeningToMessages):
-                        try:
-                            self._messageListeners[remoteAddressUrl].close()
-                        except Exception as e:
-                            log.error('another Exception: {e}', e=str(e))
+                        self._messageListeners[remoteAddressUrl].close()
                         del self._messageListeners[remoteAddressUrl]
-        finally:
-            self.listenerLock.release()
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
+
+    def _onReady(self, address):
+        with self.listenerLock:
+            for k, v in self._messageListeners.items():
+                if(k != address):
+                    v.ready()
+
+    def _onNotReady(self, address):
+        with self.listenerLock:
+            for k, v in self._messageListeners.items():
+                if(k != address):
+                    v.notReady()
 
     def _onMessage(self, messageFlowPattern, msg, origin):
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern
@@ -72,13 +75,10 @@ class StreamingManager():
 
     def startMessageListening(self):
         self.listeningToMessages = True
-        self.listenerLock.acquire()
-        try:
+        with self.listenerLock:
             for listener in self._messageListeners.values():
                 if not (listener.is_alive()):
                     listener.start()
-        finally:
-            self.listenerLock.release()
 
     def sendMessage(self, msg, flowName=None):
         if (self.messageProducer is None):
@@ -114,6 +114,5 @@ class StreamingManager():
             self.messageProducer = None
 
     def clearMessageListeners(self):
-        self.listenerLock.acquire()
-        self._messageListeners = dict()
-        self.listenerLock.release()
+        with self.listenerLock:
+            self._messageListeners = dict()

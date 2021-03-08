@@ -4,22 +4,26 @@ from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from hkube_python_wrapper.util.logger import log
 import time
 
-
 class MessageListener(DaemonThread):
 
-    def __init__(self, options, receiverNode, errorHandler=None):
+    def __init__(self, options, receiverNode, errorHandler=None, onReady=None, onNotReady=None):
         self.errorHandler = errorHandler
         remoteAddress = options['remoteAddress']
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
-        self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode)
+        self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode, onReady, onNotReady)
         self.messageOriginNodeName = options['messageOriginNodeName']
-
         self.messageListeners = []
         DaemonThread.__init__(self, "MessageListener-" + str(self.messageOriginNodeName))
 
     def registerMessageListener(self, listener):
         self.messageListeners.append(listener)
+
+    def ready(self):
+        self.adapater.ready()
+
+    def notReady(self):
+        self.adapater.notReady()
 
     def onMessage(self, messageFlowPattern, header, msg):
         start = time.time()
@@ -40,8 +44,12 @@ class MessageListener(DaemonThread):
             self.adapater.start()
         except Exception as e:
             if (self.errorHandler):
-                self.errorHandler.sendError(e)
+                self.errorHandler(e)
 
     def close(self, force=True):
-        self.adapater.close(force)
-        self.messageListeners = []
+        try:
+            self.adapater.close(force)
+        except Exception as e:
+            log.error('Exception in adapater.close {e}', e=str(e))
+        finally:
+            self.messageListeners = []

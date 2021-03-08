@@ -1,12 +1,11 @@
 from collections import OrderedDict
-
 from hkube_python_wrapper.communication.zmq.streaming.producer.Flow import Flow
 import threading
 
 
 class MessageQueue(object):
-    def __init__(self, consumerTypes, me):
-        self.me = me
+    def __init__(self, consumerTypes, nodeName):
+        self.nodeName = nodeName
         self.consumerTypes = consumerTypes
         self.lock = threading.Lock()
         self.indexPerConsumer = OrderedDict()
@@ -30,7 +29,7 @@ class MessageQueue(object):
         while (not foundMessage) and index < len(self.queue):
             messageFlowPattern, _, _ = self.queue[index]
             flow = Flow(messageFlowPattern)
-            if (flow.isNextInFlow(consumerType, self.me)):
+            if (flow.isNextInFlow(consumerType, self.nodeName)):
                 foundMessage = True
             else:
                 index += 1
@@ -42,8 +41,7 @@ class MessageQueue(object):
     # Messages are kept in the queue until consumers of all types popped out the message.
     # An index per consumer type is maintained, to know which messages the consumer already received and conclude which message should he get now.
     def pop(self, consumerType):
-        self.lock.acquire()
-        try:
+        with self.lock:
             nextItemIndex = self.nextMessageIndex(consumerType)
             if (nextItemIndex is not None):
                 out = self.queue[nextItemIndex]
@@ -54,8 +52,6 @@ class MessageQueue(object):
                     pass
                 return out
             return None
-        finally:
-            self.lock.release()
 
     def removeIfNeeded(self):
         if (self.queue):
@@ -65,7 +61,7 @@ class MessageQueue(object):
                 if (index == 0):
                     messageFlowPattern, _, _ = out
                     flow = Flow(messageFlowPattern)
-                    if (flow.isNextInFlow(consumerType, self.me)):
+                    if (flow.isNextInFlow(consumerType, self.nodeName)):
                         anyZero = True
                         break
 
@@ -80,8 +76,7 @@ class MessageQueue(object):
         return False
 
     def loseMessage(self):
-        self.lock.acquire()
-        try:
+        with self.lock:
             out = self.queue.pop(0)
             messageFlowPattern, _, msg = out
             self.sizeSum -= len(msg)
@@ -90,27 +85,20 @@ class MessageQueue(object):
                     self.indexPerConsumer[consumerType] = self.indexPerConsumer[consumerType] - 1
                 else:
                     flow = Flow(messageFlowPattern)
-                    if (flow.isNextInFlow(consumerType, self.me)):
+                    if (flow.isNextInFlow(consumerType, self.nodeName)):
                         self.lostMessages[consumerType] += 1
-        finally:
-            self.lock.release()
-
-
 
     def append(self, messageFlowPattern, header, msg):
-        self.lock.acquire()
-        try:
+        with self.lock:
             self.sizeSum += len(msg)
             flow = Flow(messageFlowPattern)
             hasRecipient = False
             for consumerType in self.consumerTypes:
-                if (flow.isNextInFlow(consumerType, self.me)):
+                if (flow.isNextInFlow(consumerType, self.nodeName)):
                     self.everAppended[consumerType] += 1
                     hasRecipient = True
             if (hasRecipient):
                 self.queue.append((messageFlowPattern, header, msg))
-        finally:
-            self.lock.release()
 
     def size(self, consumerType):
         everAppended = self.everAppended[consumerType]

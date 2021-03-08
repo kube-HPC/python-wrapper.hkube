@@ -1,41 +1,39 @@
 #
-# Paranoid Pirate queue
+# Based on Paranoid Pirate queue
 #
 #   Author: Daniel Lundin <dln(at)eintr(dot)org>
 #
 import time
 from .Flow import Flow
-from .Worker import Worker
 from .WorkerQueue import WorkerQueue
 from .MessageQueue import MessageQueue
 from hkube_python_wrapper.util.logger import log
+from hkube_python_wrapper.communication.zmq.streaming.signals import *
 import zmq
 
-HEARTBEAT_LIVENESS = 5  # 3..5 is reasonable
-HEARTBEAT_INTERVAL = 5  # Seconds
+HEARTBEAT_INTERVAL = 10
+HEARTBEAT_LIVENESS = 5
 CYCLE_LENGTH_MS = 1
+PURGE_INTERVAL = 10
 
-#  Paranoid Pirate Protocol constants
-PPP_READY = b"\x01"  # Signals worker is ready
-PPP_HEARTBEAT = b"\x02"  # Signals worker heartbeat
-PPP_DISCONNECT = b"\x03"  # Disconnect
-
+context = zmq.Context()
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize, responseAcumulator, consumerTypes, encoding, me):
-        self.me = me
+    def __init__(self, port, maxMemorySize, responseAccumulator, consumerTypes, encoding, nodeName):
+        self.nodeName = nodeName
         self.encoding = encoding
-        self.responseAcumulator = responseAcumulator
+        self.responseAccumulator = responseAccumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
         self.consumerTypes = consumerTypes
-        self.messageQueue = MessageQueue(consumerTypes, self.me)
-        context = zmq.Context()
+        self.messageQueue = MessageQueue(consumerTypes, self.nodeName)
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers
         log.info("Producer listening on tcp://*:{port}", port=port)
         self.active = True
         self.watingForResponse = {}
+        self._nextPurgeTime = time.time() + PURGE_INTERVAL
+        self._nextHeartbeat = time.time() + HEARTBEAT_INTERVAL
 
     def produce(self, header, message, messageFlowPattern=[]):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
@@ -47,77 +45,75 @@ class ZMQProducer(object):
         poll_workers.register(self._backend, zmq.POLLIN)
         workers = WorkerQueue(self.consumerTypes)
 
-        heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-        while self.active:
+        while self.active:  # pylint: disable=too-many-nested-blocks
             try:
                 socks = dict(poll_workers.poll(CYCLE_LENGTH_MS))
+
+                if socks.get(self._backend) == zmq.POLLIN:
+
+                    frames = self._backend.recv_multipart()
+
+                    if not frames:
+                        raise Exception("Unexpected router no frames on receive, no address frame")
+
+                    if(len(frames) != 4):
+                        log.warning("got {len} frames {frames}", len=len(frames), frames=frames)
+                        continue
+
+                    address, signal, consumer, result = frames # pylint: disable=unbalanced-tuple-unpacking
+                    consumerType = self.encoding.decode(value=consumer, plainEncode=True)
+
+                    if (not consumerType in self.consumerTypes):
+                        log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
+                        continue
+
+                    if (signal in (PPP_NOT_READY, PPP_DISCONNECT)):
+                        workers.notReady(consumerType, address)
+                        continue
+
+                    if (signal == PPP_DONE):
+                        sentTime = self.watingForResponse.get(address)
+                        if (sentTime):
+                            now = time.time()
+                            del self.watingForResponse[address]
+                            self.responseAccumulator(result, consumerType, round((now - sentTime) * 1000, 4))
+                        else:
+                            log.error('missing from watingForResponse:' + str(signal))
+
+                    if (address not in self.watingForResponse and signal in (PPP_INIT, PPP_READY, PPP_HEARTBEAT, PPP_DONE)):
+                        workers.ready(consumerType, address)
+
+                    if time.time() >= self._nextHeartbeat:
+                        for workersOfType in workers.queues.values():
+                            for worker in workersOfType.values():
+                                self._send([worker.address, PPP_HEARTBEAT])
+
+                        self._nextHeartbeat = time.time() + HEARTBEAT_INTERVAL
+
+                for consumerType, workerQueue in workers.queues.items():
+                    if (workerQueue):
+                        message = self.messageQueue.pop(consumerType)
+                        if (message):
+                            messageFlowPattern, header, payload = message
+                            worker = workers.nextWorker(consumerType)
+                            flow = Flow(messageFlowPattern)
+                            flowMsg = self.encoding.encode(flow.getRestOfFlow(self.nodeName), plainEncode=True)
+                            frames = [worker, PPP_MSG, flowMsg, header, payload]
+                            self.watingForResponse[worker] = time.time()
+                            self._send(frames)
+
             except Exception as e:
                 if (self.active):
-                    log.error(e)
+                    log.error('Error in ZMQProducer {e}', e=str(e))
                 else:
                     break
-            # Handle worker activity on self._backend
-            if socks.get(self._backend) == zmq.POLLIN:
-                # Use worker address for LRU routing
-                try:
-                    frames = self._backend.recv_multipart()
-                except Exception as e:
-                    if (self.active):
-                        log.error(e)
-                    else:
-                        break
-                if not frames:
-                    if (self.active):
-                        raise Exception("Unexpected router no frames on receive, no address frame")
-                    break
-                address = frames[0]
-                consumerType = self.encoding.decode(value=frames[2], plainEncode=True)
-                if not consumerType in self.consumerTypes:
-                    log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
-                    continue
 
-                if frames[1] not in (PPP_READY, PPP_HEARTBEAT):
-                    sentTime = self.watingForResponse.get(address)
-                    if (sentTime):
-                        now = time.time()
-                        del self.watingForResponse[address]
-                        self.responseAcumulator(frames[1], consumerType, round((now - sentTime) * 1000, 4))
-                    else:
-                        log.error('missing from watingForResponse:' + str(frames[1]))
-                if not address in self.watingForResponse.keys() and (frames[1] != PPP_DISCONNECT):
-                    expiry = time.time() + (HEARTBEAT_INTERVAL * HEARTBEAT_LIVENESS)
-                    workers.ready(Worker(address, expiry), consumerType)
+            if(time.time() > self._nextPurgeTime):
+                self._nextPurgeTime = time.time() + PURGE_INTERVAL
+                workers.purge()
 
-                # Validate control message, or return reply to client
-                if time.time() >= heartbeat_at:
-                    for consumerType, workersOfType in workers.queues.items():
-                        for worker in workersOfType:
-                            msg = [worker, PPP_HEARTBEAT]
-                            try:
-                                self._backend.send_multipart(msg, copy=False)
-                            except Exception as e:
-                                if (self.active):
-                                    log.error(e)
-                                else:
-                                    break
-                    heartbeat_at = time.time() + HEARTBEAT_INTERVAL
-            for consumerType, workerQueue in workers.queues.items():
-                if (workerQueue):
-                    poped = self.messageQueue.pop(consumerType)
-                    if (poped):
-                        messageFlowPattern, header, payload = poped
-                        flow = Flow(messageFlowPattern)
-                        identity = workers.nextWorker(consumerType)
-                        frames = [identity, self.encoding.encode(flow.getRestOfFlow(self.me), plainEncode=True), header, payload]
-                        self.watingForResponse[identity] = time.time()
-                        try:
-                            self._backend.send_multipart(frames, copy=False)
-                        except Exception as e:
-                            if (self.active):
-                                log.error(e)
-                            else:
-                                break
-            workers.purge()
+    def _send(self, frames):
+        self._backend.send_multipart(frames, copy=False)
 
     def queueSize(self, consumerSize):
         return self.messageQueue.size(consumerSize)

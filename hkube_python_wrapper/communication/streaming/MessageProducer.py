@@ -8,26 +8,25 @@ from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from hkube_python_wrapper.util.logger import log
 
 RESPONSE_CACHE = 2000
-PPP_DISCONNECT = b"\x03"  # Disconnect
 
 class MessageProducer(DaemonThread):
-    def __init__(self, options, consumerNodes, me):
+    def __init__(self, options, consumerNodes, nodeName):
         self.nodeNames = consumerNodes
         port = options['port']
         maxMemorySize = options['messagesMemoryBuff'] * 1024 * 1024
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
-        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=self.nodeNames, encoding=self._encoding, me=me)
+        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=self.nodeNames, encoding=self._encoding, nodeName=nodeName)
         self.durationsCache = {}
         self.grossDurationCache = {}
         self.responseCount = {}
         self.active = True
         self.printStatistics = 0
-        for nodeName in consumerNodes:
-            self.durationsCache[nodeName] = FifoArray(RESPONSE_CACHE)
-            self.grossDurationCache[nodeName] = FifoArray(RESPONSE_CACHE)
-            self.responseCount[nodeName] = 0
+        for consumer in consumerNodes:
+            self.durationsCache[consumer] = FifoArray(RESPONSE_CACHE)
+            self.grossDurationCache[consumer] = FifoArray(RESPONSE_CACHE)
+            self.responseCount[consumer] = 0
         self.listeners = []
 
         def sendStatisticsEvery(interval):
@@ -41,15 +40,14 @@ class MessageProducer(DaemonThread):
             runThread.start()
         DaemonThread.__init__(self, "MessageProducer")
 
-    def produce(self, meesageFlowPattern, obj):
+    def produce(self, messageFlowPattern, obj):
         header, encodedMessage = self._encoding.encode(obj)
-        self.adapter.produce(header, encodedMessage, messageFlowPattern=meesageFlowPattern)
+        self.adapter.produce(header, encodedMessage, messageFlowPattern=messageFlowPattern)
 
     def responseAccumulator(self, response, consumerType, grossDuration):
-        if(response != PPP_DISCONNECT):
-            decodedResponse = self._encoding.decode(value=response, plainEncode=True)
-            duration = decodedResponse['duration']
-            self.durationsCache[consumerType].append(float(duration))
+        decodedResponse = self._encoding.decode(value=response, plainEncode=True)
+        duration = decodedResponse['duration']
+        self.durationsCache[consumerType].append(float(duration))
         self.grossDurationCache[consumerType].append(grossDuration)
         self.responseCount[consumerType] += 1
 

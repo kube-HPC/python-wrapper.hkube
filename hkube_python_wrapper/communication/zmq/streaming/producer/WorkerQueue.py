@@ -1,5 +1,7 @@
 from collections import OrderedDict
 import time
+from .Worker import Worker
+from random import randrange
 from hkube_python_wrapper.util.logger import log
 
 
@@ -9,9 +11,13 @@ class WorkerQueue(object):
         for consumerType in consumerTypes:
             self.queues[consumerType] = OrderedDict()
 
-    def ready(self, worker, consumerType):
-        self.queues[consumerType].pop(worker.address, None)
-        self.queues[consumerType][worker.address] = worker
+    def ready(self, consumerType, address):
+        worker = Worker(address)
+        self.queues[consumerType].pop(address, None)
+        self.queues[consumerType][address] = worker
+
+    def notReady(self, consumerType, address):
+        self.queues[consumerType].pop(address, None)
 
     def purge(self):
         """Look for & kill expired workers."""
@@ -26,5 +32,8 @@ class WorkerQueue(object):
                 self.queues[consumerType].pop(address, None)
 
     def nextWorker(self, consumerType):
-        address, _ = self.queues[consumerType].popitem(False)
-        return address
+        workers = list(self.queues[consumerType].keys())
+        rand = randrange(len(workers))
+        worker = workers[rand]
+        self.queues[consumerType].pop(worker, None)
+        return worker
