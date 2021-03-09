@@ -10,8 +10,6 @@ from hkube_python_wrapper.util.logger import log
 
 class ZMQServers(object):
     def __init__(self, port, replyFunc, config):
-        self._isServing = False
-        self._active = True
         self._replyFunc = replyFunc
         self._url_worker = "inproc://workers"
         self._url_client = "tcp://*:" + str(port)

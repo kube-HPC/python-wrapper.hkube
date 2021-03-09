@@ -6,13 +6,13 @@ import time
 
 class MessageListener(DaemonThread):
 
-    def __init__(self, options, receiverNode, errorHandler=None, onReady=None, onNotReady=None):
+    def __init__(self, options, consumerType, errorHandler=None, onReady=None, onNotReady=None):
         self.errorHandler = errorHandler
         remoteAddress = options['remoteAddress']
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
-        self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode, onReady, onNotReady)
         self.messageOriginNodeName = options['messageOriginNodeName']
+        self.adapater = ZMQListener(remoteAddress, consumerType, self.messageOriginNodeName, self.onMessage, self._encoding, onReady, onNotReady)
         self.messageListeners = []
         DaemonThread.__init__(self, "MessageListener-" + str(self.messageOriginNodeName))
 
@@ -39,7 +39,6 @@ class MessageListener(DaemonThread):
         return self._encoding.encode({'duration': round(duration, 4)}, plainEncode=True)
 
     def run(self):
-        log.info("Start receiving from {node}", node=self.messageOriginNodeName)
         try:
             self.adapater.start()
         except Exception as e:

@@ -25,7 +25,6 @@ from threading import Thread, current_thread
 
 
 class Algorunner(DaemonThread):
-    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self._url = None
         self._originalAlgorithm = dict()
