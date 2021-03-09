@@ -4,26 +4,19 @@ from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from hkube_python_wrapper.util.logger import log
 import time
 
-class MessageListener(DaemonThread):
+class MessageListener():
 
-    def __init__(self, options, receiverNode, errorHandler=None, onReady=None, onNotReady=None):
+    def __init__(self, options, receiverNode, errorHandler=None):
         self.errorHandler = errorHandler
         remoteAddress = options['remoteAddress']
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
-        self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode, onReady, onNotReady)
+        self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode)
         self.messageOriginNodeName = options['messageOriginNodeName']
         self.messageListeners = []
-        DaemonThread.__init__(self, "MessageListener-" + str(self.messageOriginNodeName))
 
     def registerMessageListener(self, listener):
         self.messageListeners.append(listener)
-
-    def ready(self):
-        self.adapater.ready()
-
-    def notReady(self):
-        self.adapater.notReady()
 
     def onMessage(self, messageFlowPattern, header, msg):
         start = time.time()
@@ -37,14 +30,9 @@ class MessageListener(DaemonThread):
         end = time.time()
         duration = float((end - start) * 1000)
         return self._encoding.encode({'duration': round(duration, 4)}, plainEncode=True)
-
-    def run(self):
-        log.info("Start receiving from {node}", node=self.messageOriginNodeName)
-        try:
-            self.adapater.start()
-        except Exception as e:
-            if (self.errorHandler):
-                self.errorHandler(e)
+    
+    def fetch(self):
+        self.adapater.fetch()
 
     def close(self, force=True):
         try:

@@ -1,11 +1,10 @@
 import threading
-
 from .MessageListener import MessageListener
 from .MessageProducer import MessageProducer
 from hkube_python_wrapper.util.logger import log
+from hkube_python_wrapper.util.DaemonThread import DaemonThread
 
-
-class StreamingManager():
+class StreamingManager(DaemonThread):
     threadLocalStorage = threading.local()
 
     def __init__(self, errorHandler):
@@ -14,9 +13,11 @@ class StreamingManager():
         self._messageListeners = dict()
         self._inputListener = []
         self.listeningToMessages = False
+        self._isStarted = False
         self.parsedFlows = {}
         self.defaultFlow = None
         self.listenerLock = threading.Lock()
+        DaemonThread.__init__(self, "StreamingManager")
 
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
@@ -39,11 +40,10 @@ class StreamingManager():
                     options.update(listenerConfig)
                     options['remoteAddress'] = remoteAddressUrl
                     options['messageOriginNodeName'] = predecessor['nodeName']
-                    listener = MessageListener(options, nodeName, self.errorHandler, self._onReady, self._onNotReady)
+                    listener = MessageListener(options, nodeName, self.errorHandler)
                     listener.registerMessageListener(self._onMessage)
                     self._messageListeners[remoteAddressUrl] = listener
-                    if (self.listeningToMessages):
-                        listener.start()
+
                 if (predecessor['type'] == 'Del'):
                     if (self.listeningToMessages):
                         self._messageListeners[remoteAddressUrl].close()
@@ -51,18 +51,6 @@ class StreamingManager():
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
-
-    def _onReady(self, address):
-        with self.listenerLock:
-            for k, v in self._messageListeners.items():
-                if(k != address):
-                    v.ready()
-
-    def _onNotReady(self, address):
-        with self.listenerLock:
-            for k, v in self._messageListeners.items():
-                if(k != address):
-                    v.notReady()
 
     def _onMessage(self, messageFlowPattern, msg, origin):
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern
@@ -73,12 +61,17 @@ class StreamingManager():
                 log.error("hkube_api message listener through exception: {e}", e=str(e))
         self.threadLocalStorage.messageFlowPattern = []
 
+    def run(self):
+        while(self.listeningToMessages):
+            listeners = list(self._messageListeners.values())
+            for listener in listeners:
+                listener.fetch()
+
     def startMessageListening(self):
         self.listeningToMessages = True
-        with self.listenerLock:
-            for listener in self._messageListeners.values():
-                if not (listener.is_alive()):
-                    listener.start()
+        if(self._isStarted is False):
+            self._isStarted = True
+            self.start()
 
     def sendMessage(self, msg, flowName=None):
         if (self.messageProducer is None):

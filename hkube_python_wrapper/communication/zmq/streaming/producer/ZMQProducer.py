@@ -11,10 +11,8 @@ from hkube_python_wrapper.util.logger import log
 from hkube_python_wrapper.communication.zmq.streaming.signals import *
 import zmq
 
-HEARTBEAT_INTERVAL = 10
 HEARTBEAT_LIVENESS = 5
-CYCLE_LENGTH_MS = 1
-PURGE_INTERVAL = 10
+CYCLE_LENGTH_MS = 1000
 
 context = zmq.Context()
 
@@ -32,8 +30,6 @@ class ZMQProducer(object):
         log.info("Producer listening on tcp://*:{port}", port=port)
         self.active = True
         self.watingForResponse = {}
-        self._nextPurgeTime = time.time() + PURGE_INTERVAL
-        self._nextHeartbeat = time.time() + HEARTBEAT_INTERVAL
 
     def produce(self, header, message, messageFlowPattern=[]):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
@@ -43,7 +39,6 @@ class ZMQProducer(object):
     def start(self):  # pylint: disable=too-many-branches
         poll_workers = zmq.Poller()
         poll_workers.register(self._backend, zmq.POLLIN)
-        workers = WorkerQueue(self.consumerTypes)
 
         while self.active:  # pylint: disable=too-many-nested-blocks
             try:
@@ -65,42 +60,28 @@ class ZMQProducer(object):
 
                     if (not consumerType in self.consumerTypes):
                         log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
-                        continue
+                        continue    
 
-                    if (signal in (PPP_NOT_READY, PPP_DISCONNECT)):
-                        workers.notReady(consumerType, address)
-                        continue
+                    if (signal == PPP_READY):
+                        if(result != PPP_EMPTY):
+                            sentTime = self.watingForResponse.get(address)
+                            if (sentTime):
+                                now = time.time()
+                                del self.watingForResponse[address]
+                                self.responseAccumulator(result, consumerType, round((now - sentTime) * 1000, 4))
+                            else:
+                                log.error('missing from watingForResponse:' + str(signal))
 
-                    if (signal == PPP_DONE):
-                        sentTime = self.watingForResponse.get(address)
-                        if (sentTime):
-                            now = time.time()
-                            del self.watingForResponse[address]
-                            self.responseAccumulator(result, consumerType, round((now - sentTime) * 1000, 4))
-                        else:
-                            log.error('missing from watingForResponse:' + str(signal))
-
-                    if (address not in self.watingForResponse and signal in (PPP_INIT, PPP_READY, PPP_HEARTBEAT, PPP_DONE)):
-                        workers.ready(consumerType, address)
-
-                    if time.time() >= self._nextHeartbeat:
-                        for workersOfType in workers.queues.values():
-                            for worker in workersOfType.values():
-                                self._send([worker.address, PPP_HEARTBEAT])
-
-                        self._nextHeartbeat = time.time() + HEARTBEAT_INTERVAL
-
-                for consumerType, workerQueue in workers.queues.items():
-                    if (workerQueue):
                         message = self.messageQueue.pop(consumerType)
                         if (message):
                             messageFlowPattern, header, payload = message
-                            worker = workers.nextWorker(consumerType)
                             flow = Flow(messageFlowPattern)
                             flowMsg = self.encoding.encode(flow.getRestOfFlow(self.nodeName), plainEncode=True)
-                            frames = [worker, PPP_MSG, flowMsg, header, payload]
-                            self.watingForResponse[worker] = time.time()
+                            frames = [address, PPP_MSG, flowMsg, header, payload]
+                            self.watingForResponse[address] = time.time()
                             self._send(frames)
+                        else:
+                            self._send([address, PPP_NO_MSG])
 
             except Exception as e:
                 if (self.active):
@@ -108,9 +89,6 @@ class ZMQProducer(object):
                 else:
                     break
 
-            if(time.time() > self._nextPurgeTime):
-                self._nextPurgeTime = time.time() + PURGE_INTERVAL
-                workers.purge()
 
     def _send(self, frames):
         self._backend.send_multipart(frames, copy=False)
