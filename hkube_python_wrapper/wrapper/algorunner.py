@@ -288,7 +288,7 @@ class Algorunner(DaemonThread):
             self.sendError(e)
 
     def _discovery_update(self, discovery):
-        log.info('Got discovery update {discovery}', discovery=discovery)
+        log.debug('Got discovery update {discovery}', discovery=discovery)
         messageListenerConfig = {'encoding': config.discovery['encoding']}
         self.streamingManager.setupStreamingListeners(
             messageListenerConfig, discovery, self._job.nodeName)

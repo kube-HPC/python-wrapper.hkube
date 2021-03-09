@@ -81,9 +81,9 @@ class ZMQListener(object):
                     signal = frames[0]
 
                     if (signal == signals.PPP_MSG):
-                        self.onNotReady()
+                        # self.onNotReady() Segmentation fault (core dumped)
                         result = self._handleAMessage(frames)
-                        self.onReady()
+                        # self.onReady() Segmentation fault (core dumped)
                         self._send(self._worker, signals.PPP_DONE, result)
 
                     self._interval = INTERVAL_INIT
