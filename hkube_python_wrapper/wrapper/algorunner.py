@@ -16,12 +16,12 @@ from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
 from hkube_python_wrapper.util.timerImpl import Timer
+from hkube_python_wrapper.util.memoyTrace import memoryReporting
 from hkube_python_wrapper.util.logger import log
 import os
 import sys
 import importlib
 import traceback
-import tracemalloc
 from threading import Thread, current_thread
 
 
@@ -194,7 +194,7 @@ class Algorunner(DaemonThread):
         log.info('connecting to {url}', url=self._url)
         self._wsc.start()
         self.start()
-        self._memoryReporting(120*1000)
+        memoryReporting(120*1000)
         return [self._wsc, self]
 
     def handle(self, command, data):
@@ -296,7 +296,6 @@ class Algorunner(DaemonThread):
             messageListenerConfig, discovery, self._job.nodeName)
 
     def _setupStreamingProducer(self, nodeName):
-        
         def onStatistics(statistics):
             self._sendCommand(messages.outgoing.streamingStatistics, statistics)
 
@@ -399,23 +398,6 @@ class Algorunner(DaemonThread):
             Timer(interval, reportInterval, name='reportIntervalTimer').start()
 
         reportInterval()
-
-
-    def _memoryReporting(self, interval=None):
-        if (interval is None):
-            return
-        if (os.environ.get('PYTHONTRACEMALLOC', None) is None):
-            return
-        interval = interval / 1000
-
-        def memoryDumpInterval():
-            filename='/tmp/dump-{name}-{timestr}'.format(name=os.environ.get('ALGORITHM_TYPE'), timestr=time.strftime("%Y%m%d-%H%M%S"))
-            tracemalloc.take_snapshot().dump(filename)
-            Timer(interval, memoryDumpInterval, name='memoryDumpInterval').start()
-
-        memoryDumpInterval()
-
-
 
     def _reportServingStatus(self):
         if (self._dataServer):
