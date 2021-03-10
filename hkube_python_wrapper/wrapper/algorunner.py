@@ -16,7 +16,7 @@ from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
 from hkube_python_wrapper.util.timerImpl import Timer
-from hkube_python_wrapper.util.memoyTrace import memoryReporting
+from hkube_python_wrapper.util.memoryTrace import memoryReporting
 from hkube_python_wrapper.util.logger import log
 import os
 import sys
