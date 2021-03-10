@@ -414,17 +414,21 @@ class Algorunner(DaemonThread):
                 method = self._getMethod('stop')
                 if (method is not None):
                     method(options)
+
+                forceStop = options.get('forceStop', False)
+                if(forceStop is False):
+                    log.info('stopping using force flag')
+                else:
+                    log.info('stopping gracefully')
+
                 if (self._job.isStreaming):
-                    if (options.get('forceStop') is False):
-                        log.debug('entering stopping soon')
+                    if (forceStop is False):
                         stoppingState = True
 
                         def stopping():
-                            log.debug('in stopping')
                             while (stoppingState):
                                 self._sendCommand(messages.outgoing.stopping, None)
                                 time.sleep(1)
-                            log.info('Done stopping')
 
                         stoppingThread = Thread(target=stopping)
                         stoppingThread.start()
@@ -439,7 +443,9 @@ class Algorunner(DaemonThread):
                 if (self._runningStartThread):
                     self._runningStartThread.join()
                     log.info('Joined threads algorithm and stop algorithm')
+
                 self._sendCommand(messages.outgoing.stopped, None)
+
             except Exception as e:
                 self.sendError(e)
 

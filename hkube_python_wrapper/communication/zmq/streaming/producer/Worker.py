@@ -1,6 +1,6 @@
 import time
 
-EXPIRY = 30
+EXPIRY = 10
 
 class Worker(object):
     def __init__(self, address):

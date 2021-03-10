@@ -51,10 +51,7 @@ class ZMQProducer(object):
 
                 if socks.get(self._backend) == zmq.POLLIN:
 
-                    frames = self._backend.recv_multipart()
-
-                    if not frames:
-                        raise Exception("Unexpected router no frames on receive, no address frame")
+                    frames = self._backend.recv_multipart() or []
 
                     if(len(frames) != 4):
                         log.warning("got {len} frames {frames}", len=len(frames), frames=frames)
@@ -88,7 +85,7 @@ class ZMQProducer(object):
                     if (address not in self.watingForResponse and signal in (signals.PPP_INIT, signals.PPP_READY, signals.PPP_HEARTBEAT, signals.PPP_DONE)):
                         workers.ready(consumerType, address)
 
-                    if time.time() >= self._nextHeartbeat:
+                    if (time.time() >= self._nextHeartbeat):
                         for workersOfType in workers.queues.values():
                             for worker in workersOfType.values():
                                 self._send([worker.address, signals.PPP_HEARTBEAT])
@@ -127,13 +124,14 @@ class ZMQProducer(object):
         return self.messageQueue.sent[consumerType]
 
     def close(self, force=True):
-        log.info('queue size during close = ' + str(len(self.messageQueue.queue)))
+        log.info('queue size before close = {len}', len=len(self.messageQueue.queue))
         while self.messageQueue.queue and not force:
+            log.info('queue size during close = {len}', len=len(self.messageQueue.queue))
             time.sleep(1)
-        log.info('queue empty, closing producer')
+        time.sleep(5)
+        log.info('queue size after close = {len}', len=len(self.messageQueue.queue))
+        linger = None
+        if(force is True):
+            linger = 0
+        self._backend.close(linger)
         self.active = False
-        if not force:
-            time.sleep(HEARTBEAT_LIVENESS + 1)
-            self._backend.close(10)
-        else:
-            self._backend.close(0)
