@@ -16,6 +16,7 @@ from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
 from hkube_python_wrapper.util.timerImpl import Timer
+from hkube_python_wrapper.util.memoryTrace import memoryReporting
 from hkube_python_wrapper.util.logger import log
 import os
 import sys
@@ -193,6 +194,7 @@ class Algorunner(DaemonThread):
         log.info('connecting to {url}', url=self._url)
         self._wsc.start()
         self.start()
+        memoryReporting(120*1000)
         return [self._wsc, self]
 
     def handle(self, command, data):
@@ -294,10 +296,8 @@ class Algorunner(DaemonThread):
             messageListenerConfig, discovery, self._job.nodeName)
 
     def _setupStreamingProducer(self, nodeName):
-
         def onStatistics(statistics):
-            self._sendCommand(
-                messages.outgoing.streamingStatistics, statistics)
+            self._sendCommand(messages.outgoing.streamingStatistics, statistics)
 
         producerConfig = {}
         producerConfig["port"] = config.discovery['streaming']['port']
