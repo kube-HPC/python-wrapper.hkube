@@ -45,7 +45,7 @@ def test_streaming_manager():
         streamingManagaerB.startMessageListening()
 
         messageListener.start()
-        time.sleep(1)
+        time.sleep(2)
         streamingManagaerA.sendMessage('klum')
         time.sleep(4)
         assert resultsAtC['flowLength'] == 1

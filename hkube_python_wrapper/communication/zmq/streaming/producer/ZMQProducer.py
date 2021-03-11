@@ -128,7 +128,6 @@ class ZMQProducer(object):
         while self.messageQueue.queue and not force:
             log.info('queue size during close = {len}', len=len(self.messageQueue.queue))
             time.sleep(1)
-        time.sleep(5)
         log.info('queue size after close = {len}', len=len(self.messageQueue.queue))
         self._backend.close()
         self.active = False

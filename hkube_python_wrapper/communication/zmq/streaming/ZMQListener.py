@@ -34,7 +34,7 @@ class ZMQListener(object):
         self._interval = INTERVAL_INIT
         self._lastSentTime = time.time()
         self._lastReceiveTime = time.time()
-        self._ready = False
+        self._ready = None
         self._readySent = False
         self._notReadySent = False
         self._isClosed = False
