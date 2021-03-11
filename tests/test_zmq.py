@@ -32,8 +32,8 @@ def test_zmq_streaming():
         time.sleep(0.1)
         return b'5'
 
-    listener1 = ZMQListener('tcp://localhost:5559', 'a', 'b', doSomething, encoding)
-    listener2 = ZMQListener('tcp://localhost:5559', 'a', 'c', doSomething2, encoding)
+    listener1 = ZMQListener('tcp://localhost:5559', 'b', 'a', doSomething, encoding)
+    listener2 = ZMQListener('tcp://localhost:5559', 'c', 'a', doSomething2, encoding)
     runThread = Thread(name="Listener1", target=listener1.start)
     runThread.start()
     runThread = Thread(name="Listener2", target=listener2.start)
