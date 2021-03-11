@@ -416,7 +416,7 @@ class Algorunner(DaemonThread):
                     method(options)
 
                 forceStop = options.get('forceStop', False)
-                if(forceStop is False):
+                if(forceStop is True):
                     log.info('stopping using force flag')
                 else:
                     log.info('stopping gracefully')
@@ -432,13 +432,12 @@ class Algorunner(DaemonThread):
 
                         stoppingThread = Thread(target=stopping)
                         stoppingThread.start()
-                        self._hkubeApi.stopStreaming(False)
+                        self._hkubeApi.stopStreaming(force=False)
                         stoppingState = False
                         stoppingThread.join()
                         log.info('Joined threads send stopping and stop streaming')
                     else:
-                        log.debug('forcing stop')
-                        self._hkubeApi.stopStreaming(True)
+                        self._hkubeApi.stopStreaming(force=True)
 
                 if (self._runningStartThread):
                     self._runningStartThread.join()
@@ -459,7 +458,7 @@ class Algorunner(DaemonThread):
             if (self._job.isStreaming):
                 if (self.streamingManager.messageProducer):
                     try:
-                        log.info('Messages left in queue on exit' + str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
+                        log.info('Messages left in queue on exit=' + str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
                     except Exception:
                         log.error('Failed to print number of messages left in queue')
                 else:

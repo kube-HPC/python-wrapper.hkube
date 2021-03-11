@@ -10,6 +10,7 @@ class MessageListener(DaemonThread):
         self.errorHandler = errorHandler
         remoteAddress = options['remoteAddress']
         encodingType = options['encoding']
+        self.address = remoteAddress
         self._encoding = Encoding(encodingType)
         self.messageOriginNodeName = options['messageOriginNodeName']
         self.adapater = ZMQListener(remoteAddress, consumerType, self.messageOriginNodeName, self.onMessage, self._encoding, onReady, onNotReady)

@@ -138,11 +138,11 @@ class ZMQListener(object):
         self._ready = False
 
     def onReady(self):
-        if(self._onReady):
+        if(self._onReady and self._active):
             self._onReady(self._remoteAddress)
 
     def onNotReady(self):
-        if(self._onNotReady):
+        if(self._onNotReady and self._active):
             self._onNotReady(self._remoteAddress)
 
     def close(self, force=True):
@@ -161,8 +161,6 @@ class ZMQListener(object):
             log.warning("unable to close zmqListener, worker is none")
             return
 
-        self._send(self._worker, signals.PPP_DISCONNECT)
-
         if (self._closeForce is False):
             try:
                 readAfterStopped = 0
@@ -175,13 +173,15 @@ class ZMQListener(object):
                         if (signal == signals.PPP_MSG):
                             self._handleAMessage(frames)
                             readAfterStopped += 1
-                            log.warning('Read after stop {readAfterStopped}', readAfterStopped=readAfterStopped)
-                            break
+                            log.warning('read message during stop {readAfterStopped}', readAfterStopped=readAfterStopped)
+                        else:
+                            log.warning('Read signal {signal} during stop', signal=signal)
                     finally:
                         lock.release()
                     result = self._worker.poll(STOP_TIMEOUT_MS)
             except Exception as e:
                 log.error('Error on zmqListener close {e}', e=str(e))
 
+        self._send(self._worker, signals.PPP_DISCONNECT)
         self._worker.close()
         self._isClosed = True
