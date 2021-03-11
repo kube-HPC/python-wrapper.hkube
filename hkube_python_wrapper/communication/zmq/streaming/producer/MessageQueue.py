@@ -77,16 +77,17 @@ class MessageQueue(object):
 
     def loseMessage(self):
         with self.lock:
-            out = self.queue.pop(0)
-            messageFlowPattern, _, msg = out
-            self.sizeSum -= len(msg)
-            for consumerType in self.indexPerConsumer.keys():
-                if self.indexPerConsumer[consumerType] > 0:
-                    self.indexPerConsumer[consumerType] = self.indexPerConsumer[consumerType] - 1
-                else:
-                    flow = Flow(messageFlowPattern)
-                    if (flow.isNextInFlow(consumerType, self.nodeName)):
-                        self.lostMessages[consumerType] += 1
+            if (self.queue):
+                out = self.queue.pop(0)
+                messageFlowPattern, _, msg = out
+                self.sizeSum -= len(msg)
+                for consumerType in self.indexPerConsumer.keys():
+                    if self.indexPerConsumer[consumerType] > 0:
+                        self.indexPerConsumer[consumerType] = self.indexPerConsumer[consumerType] - 1
+                    else:
+                        flow = Flow(messageFlowPattern)
+                        if (flow.isNextInFlow(consumerType, self.nodeName)):
+                            self.lostMessages[consumerType] += 1
 
     def append(self, messageFlowPattern, header, msg):
         with self.lock:
