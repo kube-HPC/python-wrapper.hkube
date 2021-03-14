@@ -51,7 +51,7 @@ class ZMQListener(object):
         return worker
 
     def _send(self, worker, signal, result=signals.PPP_EMPTY):
-        if(worker and (self._active or signal == signals.PPP_DISCONNECT)):
+        if(worker):
             arr = [signal, self._consumerType, result]
             worker.send_multipart(arr, copy=False)
             self._lastSentTime = time.time()
@@ -118,15 +118,15 @@ class ZMQListener(object):
         self._close()
 
     def _sendHeartBeat(self):
-        if (time.time() - self._lastSentTime > HEARTBEAT_INTERVAL):
+        if (time.time() - self._lastSentTime > HEARTBEAT_INTERVAL and self._active is True):
             self._send(self._worker, signals.PPP_HEARTBEAT)
 
     def _checkReady(self):
-        if(self._ready is True and self._readySent is False):
+        if(self._ready is True and self._active is True and self._readySent is False):
             self._readySent = True
             self._notReadySent = False
             self._send(self._worker, signals.PPP_READY)
-        elif (self._ready is False and self._notReadySent is False):
+        elif (self._ready is False and self._active is True and self._notReadySent is False):
             self._notReadySent = True
             self._readySent = False
             self._send(self._worker, signals.PPP_NOT_READY)
@@ -149,20 +149,25 @@ class ZMQListener(object):
         if (self._active is False):
             log.warning("Attempting to close inactive ZMQListener")
         else:
-            log.info("start closing connection for node {node} in address {address}", node=self._nodeName, address=self._remoteAddress)
             self._active = False
             self._closeForce = force
-            while(self._isClosed is False):
-                time.sleep(1)
-            log.info("finish closing connection for node {node} in address {address}", node=self._nodeName, address=self._remoteAddress)
+
+    def waitForClose(self):
+        log.info("start closing connection for node {node} in address {address}", node=self._nodeName, address=self._remoteAddress)
+        while(self._isClosed is False):
+            time.sleep(1)
+        log.info("finish closing connection for node {node} in address {address}", node=self._nodeName, address=self._remoteAddress)
 
     def _close(self):
         if (self._worker is None):
             log.warning("unable to close zmqListener, worker is none")
             return
 
+        self._send(self._worker, signals.PPP_DISCONNECT)
+
         if (self._closeForce is False):
             try:
+                time.sleep(2)
                 readAfterStopped = 0
                 result = self._worker.poll(STOP_TIMEOUT_MS)
                 while result == zmq.POLLIN:
@@ -171,17 +176,17 @@ class ZMQListener(object):
                         frames = self._worker.recv_multipart()
                         signal = frames[0]
                         if (signal == signals.PPP_MSG):
-                            self._handleAMessage(frames)
+                            result = self._handleAMessage(frames)
+                            self._send(self._worker, signals.PPP_DONE_DISCONNECT, result)
                             readAfterStopped += 1
                             log.warning('read message during stop {readAfterStopped}', readAfterStopped=readAfterStopped)
                         else:
-                            log.warning('Read signal {signal} during stop', signal=signal)
+                            log.warning('read signal {signal} during stop', signal=signal)
                     finally:
                         lock.release()
                     result = self._worker.poll(STOP_TIMEOUT_MS)
             except Exception as e:
                 log.error('Error on zmqListener close {e}', e=str(e))
 
-        self._send(self._worker, signals.PPP_DISCONNECT)
         self._worker.close()
         self._isClosed = True

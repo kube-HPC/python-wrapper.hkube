@@ -104,6 +104,8 @@ class StreamingManager():
             try:
                 for listener in self._messageListeners.values():
                     listener.close(force)
+                for listener in self._messageListeners.values():
+                    listener.waitForClose()
                 self._messageListeners = dict()
             finally:
                 self.listeningToMessages = False

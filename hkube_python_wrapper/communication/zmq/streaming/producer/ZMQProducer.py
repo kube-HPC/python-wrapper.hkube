@@ -14,7 +14,7 @@ import zmq
 HEARTBEAT_INTERVAL = 10
 HEARTBEAT_LIVENESS = 5
 CYCLE_LENGTH_MS = 1
-PURGE_INTERVAL = 10
+PURGE_INTERVAL = 5
 
 context = zmq.Context()
 
@@ -64,16 +64,11 @@ class ZMQProducer(object):
                         log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
                         continue
 
-                    if (signal == signals.PPP_DISCONNECT):
-                        hasRes = self.watingForResponse.get(address)
-                        if(hasRes):
-                            del self.watingForResponse[address]
-
                     if (signal in (signals.PPP_NOT_READY, signals.PPP_DISCONNECT)):
                         workers.notReady(consumerType, address)
                         continue
 
-                    if (signal == signals.PPP_DONE):
+                    if (signal in (signals.PPP_DONE, signals.PPP_DONE_DISCONNECT)):
                         sentTime = self.watingForResponse.get(address)
                         if (sentTime):
                             now = time.time()
