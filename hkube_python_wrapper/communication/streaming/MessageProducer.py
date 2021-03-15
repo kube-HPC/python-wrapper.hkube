@@ -17,15 +17,17 @@ class MessageProducer(DaemonThread):
         encodingType = options['encoding']
         statisticsInterval = options['statisticsInterval']
         self._encoding = Encoding(encodingType)
-        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, consumerTypes=self.nodeNames, encoding=self._encoding, nodeName=nodeName)
+        self.adapter = ZMQProducer(port, maxMemorySize, self.responseAccumulator, self.queueTimeAccumulator, consumerTypes=self.nodeNames, encoding=self._encoding, nodeName=nodeName)
         self.durationsCache = {}
         self.grossDurationCache = {}
+        self.queueTimeCache = {}
         self.responseCount = {}
         self.active = True
         self.printStatistics = 0
         for consumer in consumerNodes:
             self.durationsCache[consumer] = FifoArray(RESPONSE_CACHE)
             self.grossDurationCache[consumer] = FifoArray(RESPONSE_CACHE)
+            self.queueTimeCache[consumer] = FifoArray(RESPONSE_CACHE)
             self.responseCount[consumer] = 0
         self.listeners = []
 
@@ -49,7 +51,11 @@ class MessageProducer(DaemonThread):
         duration = decodedResponse['duration']
         self.durationsCache[consumerType].append(float(duration))
         self.grossDurationCache[consumerType].append(grossDuration)
+        self.grossDurationCache[consumerType].append(grossDuration)
         self.responseCount[consumerType] += 1
+
+    def queueTimeAccumulator(self, consumerType, queueTime):
+        self.queueTimeCache[consumerType].append(queueTime)
 
     def resetDurationsCache(self, consumerType):
         durationPerNode = self.durationsCache[consumerType].getAsArray()
@@ -59,6 +65,11 @@ class MessageProducer(DaemonThread):
     def resetGrossDurationsCache(self, consumerType):
         durationPerNode = self.grossDurationCache[consumerType].getAsArray()
         self.grossDurationCache[consumerType].reset()
+        return durationPerNode
+
+    def resetQueueDurationsCache(self, consumerType):
+        durationPerNode = self.queueTimeCache[consumerType].getAsArray()
+        self.queueTimeCache[consumerType].reset()
         return durationPerNode
 
     def getResponseCount(self, consumerType):
@@ -72,9 +83,12 @@ class MessageProducer(DaemonThread):
         for nodeName in self.nodeNames:
             queueSize = self.adapter.queueSize(nodeName)
             sent = self.adapter.sent(nodeName)
-            singleNodeStatistics = {"nodeName": nodeName, "sent": sent, "queueSize": queueSize,
+            singleNodeStatistics = {"nodeName": nodeName,
+                                    "sent": sent,
+                                    "queueSize": queueSize,
                                     "netDurations": self.resetDurationsCache(nodeName),
                                     "durations": self.resetGrossDurationsCache(nodeName),
+                                    "queueDurations": self.resetQueueDurationsCache(nodeName),
                                     "responses": self.getResponseCount(nodeName),
                                     "dropped": self.adapter.messageQueue.lostMessages[nodeName]}
             statistics.append(singleNodeStatistics)

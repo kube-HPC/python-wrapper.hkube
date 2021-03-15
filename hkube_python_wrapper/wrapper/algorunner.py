@@ -25,7 +25,6 @@ from threading import Thread, current_thread
 
 
 class Algorunner(DaemonThread):
-    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self._url = None
         self._originalAlgorithm = dict()
@@ -289,16 +288,14 @@ class Algorunner(DaemonThread):
             self.sendError(e)
 
     def _discovery_update(self, discovery):
-        log.info('Got discovery update {discovery}', discovery=discovery)
+        log.debug('Got discovery update {discovery}', discovery=discovery)
         messageListenerConfig = {'encoding': config.discovery['encoding']}
         self.streamingManager.setupStreamingListeners(
             messageListenerConfig, discovery, self._job.nodeName)
 
     def _setupStreamingProducer(self, nodeName):
-
         def onStatistics(statistics):
-            self._sendCommand(
-                messages.outgoing.streamingStatistics, statistics)
+            self._sendCommand(messages.outgoing.streamingStatistics, statistics)
 
         producerConfig = {}
         producerConfig["port"] = config.discovery['streaming']['port']
@@ -415,32 +412,37 @@ class Algorunner(DaemonThread):
                 method = self._getMethod('stop')
                 if (method is not None):
                     method(options)
+
+                forceStop = options.get('forceStop', False)
+                if(forceStop is True):
+                    log.info('stopping using force flag')
+                else:
+                    log.info('stopping gracefully')
+
                 if (self._job.isStreaming):
-                    if (options.get('forceStop') is False):
-                        log.debug('entering stopping soon')
+                    if (forceStop is False):
                         stoppingState = True
 
                         def stopping():
-                            log.debug('in stopping')
                             while (stoppingState):
                                 self._sendCommand(messages.outgoing.stopping, None)
                                 time.sleep(1)
-                            log.info('Done stopping')
 
                         stoppingThread = Thread(target=stopping)
                         stoppingThread.start()
-                        self._hkubeApi.stopStreaming(False)
+                        self._hkubeApi.stopStreaming(force=False)
                         stoppingState = False
                         stoppingThread.join()
                         log.info('Joined threads send stopping and stop streaming')
                     else:
-                        log.debug('forcing stop')
-                        self._hkubeApi.stopStreaming(True)
+                        self._hkubeApi.stopStreaming(force=True)
 
                 if (self._runningStartThread):
                     self._runningStartThread.join()
                     log.info('Joined threads algorithm and stop algorithm')
+
                 self._sendCommand(messages.outgoing.stopped, None)
+
             except Exception as e:
                 self.sendError(e)
 
@@ -454,7 +456,7 @@ class Algorunner(DaemonThread):
             if (self._job.isStreaming):
                 if (self.streamingManager.messageProducer):
                     try:
-                        log.info('Messages left in queue on exit' + str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
+                        log.info('Messages left in queue on exit=' + str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
                     except Exception:
                         log.error('Failed to print number of messages left in queue')
                 else:

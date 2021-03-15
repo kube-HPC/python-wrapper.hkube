@@ -45,24 +45,24 @@ class StreamingManager():
                     if (self.listeningToMessages):
                         listener.start()
                 if (predecessor['type'] == 'Del'):
-                    if (self.listeningToMessages):
-                        self._messageListeners[remoteAddressUrl].close()
+                    listener = self._messageListeners.get(remoteAddressUrl)
+                    if (self.listeningToMessages and listener):
+                        listener.close(force=False)
+                    if (listener):
                         del self._messageListeners[remoteAddressUrl]
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
 
     def _onReady(self, address):
-        with self.listenerLock:
-            for k, v in self._messageListeners.items():
-                if(k != address):
-                    v.ready()
+        for k, v in list(self._messageListeners.items()):
+            if(k != address):
+                v.ready()
 
     def _onNotReady(self, address):
-        with self.listenerLock:
-            for k, v in self._messageListeners.items():
-                if(k != address):
-                    v.notReady()
+        for k, v in list(self._messageListeners.items()):
+            if(k != address):
+                v.notReady()
 
     def _onMessage(self, messageFlowPattern, msg, origin):
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern
@@ -104,6 +104,8 @@ class StreamingManager():
             try:
                 for listener in self._messageListeners.values():
                     listener.close(force)
+                for listener in self._messageListeners.values():
+                    listener.waitForClose()
                 self._messageListeners = dict()
             finally:
                 self.listeningToMessages = False

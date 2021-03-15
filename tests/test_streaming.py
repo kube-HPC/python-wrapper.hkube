@@ -19,7 +19,7 @@ def test_streaming_manager():
     streamingManagaerB = StreamingManager(None)
     streamingManagaerB.setParsedFlows(parsedFlows, 'analyze')
 
-    messageListener = MessageListener(listen_toB_config, receiverNode='C')
+    messageListener = MessageListener(listen_toB_config, consumerType='C')
     resultsAtC = {}
 
     def onMessageB2C(flow, msg, origin):
@@ -45,7 +45,7 @@ def test_streaming_manager():
         streamingManagaerB.startMessageListening()
 
         messageListener.start()
-        time.sleep(1)
+        time.sleep(2)
         streamingManagaerA.sendMessage('klum')
         time.sleep(4)
         assert resultsAtC['flowLength'] == 1
@@ -101,7 +101,7 @@ def test_Messaging():
         time.sleep(2)
         assert asserts['stats'][0]['queueSize'] == 3
         assert asserts['stats'][0]['sent'] == 0
-        messageListener = MessageListener(listenr_config, receiverNode='a')
+        messageListener = MessageListener(listenr_config, consumerType='a')
         messageListener.registerMessageListener(onMessage)
         messageListener.start()
         for _ in range(1,5):
@@ -176,7 +176,7 @@ def test_MessagingSplit():
         assert asserts['stats'][0]['queueSize'] == 3
         assert asserts['stats'][0]['sent'] == 0
 
-        messageListener = MessageListener(listenr_config_c, receiverNode='a')
+        messageListener = MessageListener(listenr_config_c, consumerType='a')
         messageListener.registerMessageListener(onMessage)
         messageListener.start()
         for _ in range(1,5):
@@ -190,7 +190,7 @@ def test_MessagingSplit():
         assert asserts['stats'][1]['queueSize'] == 3
         assert asserts['stats'][1]['sent'] == 0
         assert asserts['responses'] == 3
-        messageListener2 = MessageListener(listenr_config_c, receiverNode='b')
+        messageListener2 = MessageListener(listenr_config_c, consumerType='b')
         messageListener2.registerMessageListener(onMessage)
         messageListener2.start()
         time.sleep(20)

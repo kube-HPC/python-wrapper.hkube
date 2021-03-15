@@ -8,21 +8,22 @@ from .Flow import Flow
 from .WorkerQueue import WorkerQueue
 from .MessageQueue import MessageQueue
 from hkube_python_wrapper.util.logger import log
-from hkube_python_wrapper.communication.zmq.streaming.signals import *
+import hkube_python_wrapper.communication.zmq.streaming.signals as signals
 import zmq
 
 HEARTBEAT_INTERVAL = 10
 HEARTBEAT_LIVENESS = 5
 CYCLE_LENGTH_MS = 1
-PURGE_INTERVAL = 10
+PURGE_INTERVAL = 5
 
 context = zmq.Context()
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize, responseAccumulator, consumerTypes, encoding, nodeName):
+    def __init__(self, port, maxMemorySize, responseAccumulator, queueTimeAccumulator, consumerTypes, encoding, nodeName):
         self.nodeName = nodeName
         self.encoding = encoding
         self.responseAccumulator = responseAccumulator
+        self.queueTimeAccumulator = queueTimeAccumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
         self.consumerTypes = consumerTypes
@@ -36,9 +37,10 @@ class ZMQProducer(object):
         self._nextHeartbeat = time.time() + HEARTBEAT_INTERVAL
 
     def produce(self, header, message, messageFlowPattern=[]):
+        appendTime = time.time()
         while (self.messageQueue.sizeSum > self.maxMemorySize):
             self.messageQueue.loseMessage()
-        self.messageQueue.append(messageFlowPattern, header, message)
+        self.messageQueue.append(messageFlowPattern, header, message, appendTime)
 
     def start(self):  # pylint: disable=too-many-branches
         poll_workers = zmq.Poller()
@@ -51,10 +53,7 @@ class ZMQProducer(object):
 
                 if socks.get(self._backend) == zmq.POLLIN:
 
-                    frames = self._backend.recv_multipart()
-
-                    if not frames:
-                        raise Exception("Unexpected router no frames on receive, no address frame")
+                    frames = self._backend.recv_multipart() or []
 
                     if(len(frames) != 4):
                         log.warning("got {len} frames {frames}", len=len(frames), frames=frames)
@@ -67,26 +66,26 @@ class ZMQProducer(object):
                         log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
                         continue
 
-                    if (signal in (PPP_NOT_READY, PPP_DISCONNECT)):
+                    if (signal in (signals.PPP_NOT_READY, signals.PPP_DISCONNECT)):
                         workers.notReady(consumerType, address)
                         continue
 
-                    if (signal == PPP_DONE):
+                    if (signal in (signals.PPP_DONE, signals.PPP_DONE_DISCONNECT)):
                         sentTime = self.watingForResponse.get(address)
                         if (sentTime):
-                            now = time.time()
                             del self.watingForResponse[address]
-                            self.responseAccumulator(result, consumerType, round((now - sentTime) * 1000, 4))
+                            roundTripTime = round((time.time() - sentTime) * 1000, 4)
+                            self.responseAccumulator(result, consumerType, roundTripTime)
                         else:
                             log.error('missing from watingForResponse:' + str(signal))
 
-                    if (address not in self.watingForResponse and signal in (PPP_INIT, PPP_READY, PPP_HEARTBEAT, PPP_DONE)):
+                    if (address not in self.watingForResponse and signal in (signals.PPP_INIT, signals.PPP_READY, signals.PPP_HEARTBEAT, signals.PPP_DONE)):
                         workers.ready(consumerType, address)
 
-                    if time.time() >= self._nextHeartbeat:
+                    if (time.time() >= self._nextHeartbeat):
                         for workersOfType in workers.queues.values():
                             for worker in workersOfType.values():
-                                self._send([worker.address, PPP_HEARTBEAT])
+                                self._send([worker.address, signals.PPP_HEARTBEAT])
 
                         self._nextHeartbeat = time.time() + HEARTBEAT_INTERVAL
 
@@ -94,12 +93,14 @@ class ZMQProducer(object):
                     if (workerQueue):
                         message = self.messageQueue.pop(consumerType)
                         if (message):
-                            messageFlowPattern, header, payload = message
+                            messageFlowPattern, header, payload, appendTime = message
                             worker = workers.nextWorker(consumerType)
                             flow = Flow(messageFlowPattern)
                             flowMsg = self.encoding.encode(flow.getRestOfFlow(self.nodeName), plainEncode=True)
-                            frames = [worker, PPP_MSG, flowMsg, header, payload]
+                            frames = [worker, signals.PPP_MSG, flowMsg, header, payload]
                             self.watingForResponse[worker] = time.time()
+                            queueTime = round((time.time() - appendTime) * 1000, 4)
+                            self.queueTimeAccumulator(consumerType, queueTime)
                             self._send(frames)
 
             except Exception as e:
@@ -122,13 +123,10 @@ class ZMQProducer(object):
         return self.messageQueue.sent[consumerType]
 
     def close(self, force=True):
-        log.info('queue size during close = ' + str(len(self.messageQueue.queue)))
+        log.info('queue size before close = {len}', len=len(self.messageQueue.queue))
         while self.messageQueue.queue and not force:
+            log.info('queue size during close = {len}', len=len(self.messageQueue.queue))
             time.sleep(1)
-        log.info('queue empty, closing producer')
+        log.info('queue size after close = {len}', len=len(self.messageQueue.queue))
+        self._backend.close()
         self.active = False
-        time.sleep(HEARTBEAT_LIVENESS + 1)
-        if not force:
-            self._backend.close(10)
-        else:
-            self._backend.close(0)
