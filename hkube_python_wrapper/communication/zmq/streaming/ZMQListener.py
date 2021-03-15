@@ -67,7 +67,7 @@ class ZMQListener(object):
 
         while self._active: # pylint: disable=too-many-nested-blocks
             try:
-                lockRes = lock.acquire(blocking=False)
+                lockRes = lock.acquire(False)
                 if(lockRes is False):
                     self._checkReady()
                     continue
@@ -171,7 +171,7 @@ class ZMQListener(object):
                 readAfterStopped = 0
                 result = self._worker.poll(STOP_TIMEOUT_MS)
                 while result == zmq.POLLIN:
-                    lock.acquire(blocking=True)
+                    lock.acquire()
                     try:
                         frames = self._worker.recv_multipart()
                         signal = frames[0]
