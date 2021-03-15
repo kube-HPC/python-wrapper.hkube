@@ -100,7 +100,7 @@ class StreamingManager():
 
     def stopStreaming(self, force=True):
         if (self.listeningToMessages):
-            self.listenerLock.acquire()
+            self.listenerLock.acquire(blocking=True)
             try:
                 for listener in self._messageListeners.values():
                     listener.close(force)

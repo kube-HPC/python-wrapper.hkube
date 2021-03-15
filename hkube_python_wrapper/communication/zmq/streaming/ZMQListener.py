@@ -171,7 +171,7 @@ class ZMQListener(object):
                 readAfterStopped = 0
                 result = self._worker.poll(STOP_TIMEOUT_MS)
                 while result == zmq.POLLIN:
-                    lock.acquire()
+                    lock.acquire(blocking=True)
                     try:
                         frames = self._worker.recv_multipart()
                         signal = frames[0]
