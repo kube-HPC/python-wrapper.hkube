@@ -19,10 +19,11 @@ PURGE_INTERVAL = 5
 context = zmq.Context()
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize, responseAccumulator, consumerTypes, encoding, nodeName):
+    def __init__(self, port, maxMemorySize, responseAccumulator, queueTimeAccumulator, consumerTypes, encoding, nodeName):
         self.nodeName = nodeName
         self.encoding = encoding
         self.responseAccumulator = responseAccumulator
+        self.queueTimeAccumulator = queueTimeAccumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
         self.consumerTypes = consumerTypes
@@ -36,9 +37,10 @@ class ZMQProducer(object):
         self._nextHeartbeat = time.time() + HEARTBEAT_INTERVAL
 
     def produce(self, header, message, messageFlowPattern=[]):
+        appendTime = time.time()
         while (self.messageQueue.sizeSum > self.maxMemorySize):
             self.messageQueue.loseMessage()
-        self.messageQueue.append(messageFlowPattern, header, message)
+        self.messageQueue.append(messageFlowPattern, header, message, appendTime)
 
     def start(self):  # pylint: disable=too-many-branches
         poll_workers = zmq.Poller()
@@ -71,9 +73,9 @@ class ZMQProducer(object):
                     if (signal in (signals.PPP_DONE, signals.PPP_DONE_DISCONNECT)):
                         sentTime = self.watingForResponse.get(address)
                         if (sentTime):
-                            now = time.time()
                             del self.watingForResponse[address]
-                            self.responseAccumulator(result, consumerType, round((now - sentTime) * 1000, 4))
+                            roundTripTime = round((time.time() - sentTime) * 1000, 4)
+                            self.responseAccumulator(result, consumerType, roundTripTime)
                         else:
                             log.error('missing from watingForResponse:' + str(signal))
 
@@ -91,12 +93,14 @@ class ZMQProducer(object):
                     if (workerQueue):
                         message = self.messageQueue.pop(consumerType)
                         if (message):
-                            messageFlowPattern, header, payload = message
+                            messageFlowPattern, header, payload, appendTime = message
                             worker = workers.nextWorker(consumerType)
                             flow = Flow(messageFlowPattern)
                             flowMsg = self.encoding.encode(flow.getRestOfFlow(self.nodeName), plainEncode=True)
                             frames = [worker, signals.PPP_MSG, flowMsg, header, payload]
                             self.watingForResponse[worker] = time.time()
+                            queueTime = round((time.time() - appendTime) * 1000, 4)
+                            self.queueTimeAccumulator(consumerType, queueTime)
                             self._send(frames)
 
             except Exception as e:
