@@ -51,7 +51,6 @@ class MessageProducer(DaemonThread):
         duration = decodedResponse['duration']
         self.durationsCache[consumerType].append(float(duration))
         self.grossDurationCache[consumerType].append(grossDuration)
-        self.grossDurationCache[consumerType].append(grossDuration)
         self.responseCount[consumerType] += 1
 
     def queueTimeAccumulator(self, consumerType, queueTime):
