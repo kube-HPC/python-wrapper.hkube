@@ -233,6 +233,9 @@ class Algorunner(DaemonThread):
             self._wsc.shutDown()
         self._active = False
 
+    def getCurrentJob(self):
+        return self._job
+
     def _initDataServer(self, options):
         enable = options.discovery.get("enable")
         if (enable and self._storage != 'v1' and self._job is not None):
