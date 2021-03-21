@@ -2,7 +2,6 @@ import time
 import zmq
 import uuid
 import threading
-import datetime
 import hkube_python_wrapper.communication.zmq.streaming.signals as signals
 from hkube_python_wrapper.util.logger import log
 
@@ -15,11 +14,6 @@ INTERVAL_MAX = 32
 
 context = zmq.Context()
 lock = threading.Lock()
-
-def timeFormat():
-    now = datetime.datetime.now()
-    return now.strftime('%Y-%m-%dT%H:%M:%S')
-
 
 class ZMQListener(object):
     """ZMQListener
@@ -48,9 +42,9 @@ class ZMQListener(object):
     def _worker_socket(self, remoteAddress):
         """Helper function that returns a new configured socket
            connected to the Paranoid Pirate queue"""
-        self._identity = str(uuid.uuid4()).encode()
+        identity = str(uuid.uuid4()).encode()
         worker = context.socket(zmq.DEALER)  # DEALER
-        worker.setsockopt(zmq.IDENTITY, self._identity)
+        worker.setsockopt(zmq.IDENTITY, identity)
         worker.setsockopt(zmq.LINGER, 0)
         worker.connect(remoteAddress)
         self._send(worker, signals.PPP_INIT)
@@ -91,7 +85,6 @@ class ZMQListener(object):
                     signal = frames[0]
 
                     if (signal == signals.PPP_MSG):
-                        print('{time} handling message by {identity}'.format(time=timeFormat(), identity=self._identity))
                         self.onNotReady()
                         result = self._handleAMessage(frames)
                         self.onReady()
