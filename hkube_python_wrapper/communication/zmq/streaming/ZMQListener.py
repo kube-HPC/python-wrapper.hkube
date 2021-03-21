@@ -11,6 +11,7 @@ HEARTBEAT_INTERVAL = 10
 HEARTBEAT_LIVENESS_TIMEOUT = 30
 INTERVAL_INIT = 1
 INTERVAL_MAX = 32
+MILLISECOND = 0.001
 
 context = zmq.Context()
 lock = threading.Lock()
@@ -73,6 +74,7 @@ class ZMQListener(object):
                     if(notified):
                         lock.acquire()
                     else:
+                        time.sleep(MILLISECOND)
                         continue
 
                 result = self._worker.poll(POLL_TIMEOUT_MS)
@@ -109,11 +111,11 @@ class ZMQListener(object):
                         self._sendHeartBeat()
 
                 lock.release()
-                time.sleep(0.001)
+                time.sleep(MILLISECOND)
 
             except Exception as e:
                 lock.release()
-                time.sleep(0.001)
+                time.sleep(MILLISECOND)
                 if (self._active):
                     log.error('Error in ZMQListener {e}', e=str(e))
                     raise e
