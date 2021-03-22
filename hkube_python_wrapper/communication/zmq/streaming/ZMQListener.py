@@ -44,7 +44,6 @@ class ZMQListener(object):
         """Helper function that returns a new configured socket
            connected to the Paranoid Pirate queue"""
         identity = str(uuid.uuid4()).encode()
-        self.identity = identity
         worker = context.socket(zmq.DEALER)  # DEALER
         worker.setsockopt(zmq.IDENTITY, identity)
         worker.setsockopt(zmq.LINGER, 0)
@@ -65,7 +64,7 @@ class ZMQListener(object):
 
     def start(self):  # pylint: disable=too-many-branches
         self._worker = self._worker_socket(self._remoteAddress)
-        log.info("start {identity} receiving from node {node} in address {address}", identity=self.identity, node=self._nodeName, address=self._remoteAddress)
+        log.info("start receiving from node {node} in address {address}", node=self._nodeName, address=self._remoteAddress)
 
         while self._active: # pylint: disable=too-many-nested-blocks
             try:
@@ -86,7 +85,6 @@ class ZMQListener(object):
                     signal = frames[0]
 
                     if (signal == signals.PPP_MSG):
-                        print('got Message for {identity}'.format(identity=self._remoteAddress))
                         self.onNotReady()
                         time.sleep(MILLISECOND)
                         result = self._handleAMessage(frames)
@@ -131,20 +129,16 @@ class ZMQListener(object):
             self._readySent = True
             self._notReadySent = False
             self._send(self._worker, signals.PPP_READY)
-            print('sending READY for {identity}'.format(identity=self._remoteAddress))
         elif (self._ready is False and self._active is True and self._notReadySent is False):
             self._notReadySent = True
             self._readySent = False
             self._send(self._worker, signals.PPP_NOT_READY)
-            print('sending NOT_READY for {identity}'.format(identity=self._remoteAddress))
 
     def ready(self):
         self._ready = True
-        print('status to READY for {identity}'.format(identity=self._remoteAddress))
 
     def notReady(self):
         self._ready = False
-        print('status to NOT_READY for {identity}'.format(identity=self._remoteAddress))
 
     def onReady(self):
         if(self._onReady and self._active):
