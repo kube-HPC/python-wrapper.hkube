@@ -5,13 +5,13 @@ import threading
 import hkube_python_wrapper.communication.zmq.streaming.signals as signals
 from hkube_python_wrapper.util.logger import log
 
-POLL_TIMEOUT_MS = 1000
+POLL_TIMEOUT_MS = 1
 STOP_TIMEOUT_MS = 5000
 HEARTBEAT_INTERVAL = 10
 HEARTBEAT_LIVENESS_TIMEOUT = 30
 INTERVAL_INIT = 1
 INTERVAL_MAX = 32
-MILLISECOND = 0.001
+MILLISECOND = 0.0001
 
 context = zmq.Context()
 lock = threading.Lock()
@@ -44,6 +44,7 @@ class ZMQListener(object):
         """Helper function that returns a new configured socket
            connected to the Paranoid Pirate queue"""
         identity = str(uuid.uuid4()).encode()
+        self.identity = identity
         worker = context.socket(zmq.DEALER)  # DEALER
         worker.setsockopt(zmq.IDENTITY, identity)
         worker.setsockopt(zmq.LINGER, 0)
@@ -63,22 +64,20 @@ class ZMQListener(object):
         return self._onMessage(messageFlowPattern, header, message)
 
     def start(self):  # pylint: disable=too-many-branches
-        log.info("start receiving from node {node} in address {address}", node=self._nodeName, address=self._remoteAddress)
         self._worker = self._worker_socket(self._remoteAddress)
+        log.info("start {identity} receiving from node {node} in address {address}", identity=self.identity, node=self._nodeName, address=self._remoteAddress)
 
         while self._active: # pylint: disable=too-many-nested-blocks
             try:
                 lockRes = lock.acquire(False)
+                self._checkReady()
                 if(lockRes is False):
-                    notified = self._checkReady()
-                    if(notified):
-                        lock.acquire()
-                    else:
-                        time.sleep(MILLISECOND)
-                        continue
+                    time.sleep(MILLISECOND)
+                    continue
 
                 result = self._worker.poll(POLL_TIMEOUT_MS)
-                if result == zmq.POLLIN:
+
+                if (result == zmq.POLLIN):
                     frames = self._worker.recv_multipart()
 
                     if not frames:
@@ -87,7 +86,9 @@ class ZMQListener(object):
                     signal = frames[0]
 
                     if (signal == signals.PPP_MSG):
+                        print('got Message for {identity}'.format(identity=self._remoteAddress))
                         self.onNotReady()
+                        time.sleep(MILLISECOND)
                         result = self._handleAMessage(frames)
                         self.onReady()
                         self._send(self._worker, signals.PPP_DONE, result)
@@ -106,16 +107,14 @@ class ZMQListener(object):
                             log.info("reconnecting to node {node} in address {address}", node=self._nodeName, address=self._remoteAddress)
                             self._worker.close()
                             self._worker = self._worker_socket(self._remoteAddress)
-
                     else:
                         self._sendHeartBeat()
 
                 lock.release()
-                time.sleep(MILLISECOND)
+                time.sleep(MILLISECOND * 2)
 
             except Exception as e:
                 lock.release()
-                time.sleep(MILLISECOND)
                 if (self._active):
                     log.error('Error in ZMQListener {e}', e=str(e))
                     raise e
@@ -128,24 +127,24 @@ class ZMQListener(object):
             self._send(self._worker, signals.PPP_HEARTBEAT)
 
     def _checkReady(self):
-        notified = False
-        if(self._ready is True and self._active is True and self._readySent is False):
+        if (self._ready is True and self._active is True and self._readySent is False):
             self._readySent = True
             self._notReadySent = False
             self._send(self._worker, signals.PPP_READY)
-            notified = True
+            print('sending READY for {identity}'.format(identity=self._remoteAddress))
         elif (self._ready is False and self._active is True and self._notReadySent is False):
             self._notReadySent = True
             self._readySent = False
             self._send(self._worker, signals.PPP_NOT_READY)
-            notified = True
-        return notified
+            print('sending NOT_READY for {identity}'.format(identity=self._remoteAddress))
 
     def ready(self):
         self._ready = True
+        print('status to READY for {identity}'.format(identity=self._remoteAddress))
 
     def notReady(self):
         self._ready = False
+        print('status to NOT_READY for {identity}'.format(identity=self._remoteAddress))
 
     def onReady(self):
         if(self._onReady and self._active):
