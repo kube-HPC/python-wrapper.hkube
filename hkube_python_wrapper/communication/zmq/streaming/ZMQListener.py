@@ -13,13 +13,9 @@ class ZMQListener(object):
         self._encoding = encoding
         self._onMessage = onMessage
         self._consumerType = self._encoding.encode(consumerType, plainEncode=True)
-        self._remoteAddress = remoteAddress
         self._active = True
-        self._result = None
-        self._worker = None
-        self._context = None
-        self._working = False
-        self._worker = self._worker_socket(self._remoteAddress)
+        self._working = None
+        self._worker = self._worker_socket(remoteAddress)
 
     def _worker_socket(self, remoteAddress):
         """Helper function that returns a new configured socket
@@ -46,13 +42,14 @@ class ZMQListener(object):
         self._send(PPP_READY)
         result = self._worker.poll(POLL_MS)
 
-        if result == zmq.POLLIN:
+        if (result == zmq.POLLIN):
             frames = self._worker.recv_multipart()
             signal = frames[0]
 
             if (signal == PPP_MSG):
                 msgResult = self._handleAMessage(frames)
                 self._send(PPP_DONE, msgResult)
+
         self._working = False
 
     def close(self, force=True):

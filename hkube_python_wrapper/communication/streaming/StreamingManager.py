@@ -50,8 +50,9 @@ class StreamingManager(DaemonThread):
 
             if (parent['type'] == 'Del'):
                 if(self._messageListeners.get(parentName) is not None):
-                    self._messageListeners[parentName][remoteAddressUrl].close()
+                    listener = self._messageListeners[parentName][remoteAddressUrl]
                     del self._messageListeners[parentName][remoteAddressUrl]
+                    listener.close(force=False)
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
@@ -70,9 +71,6 @@ class StreamingManager(DaemonThread):
             for listeners in list(self._messageListeners.values()):
                 for listener in list(listeners.values()):
                     listener.fetch()
-
-    def fetch(self, listener):
-        listener.fetch()
 
     def startMessageListening(self):
         self.listeningToMessages = True

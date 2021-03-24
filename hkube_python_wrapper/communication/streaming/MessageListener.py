@@ -1,6 +1,5 @@
 from hkube_python_wrapper.communication.zmq.streaming.ZMQListener import ZMQListener
 from hkube_python_wrapper.util.encoding import Encoding
-from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from hkube_python_wrapper.util.logger import log
 import time
 
@@ -30,9 +29,12 @@ class MessageListener():
         end = time.time()
         duration = float((end - start) * 1000)
         return self._encoding.encode({'duration': round(duration, 4)}, plainEncode=True)
-    
+
     def fetch(self):
-        self.adapater.fetch()
+        try:
+            self.adapater.fetch()
+        except Exception as e:
+            log.error('Exception in adapater.fetch {e}', e=str(e))
 
     def close(self, force=True):
         try:

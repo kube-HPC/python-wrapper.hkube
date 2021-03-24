@@ -99,13 +99,10 @@ class ZMQProducer(object):
         return self.messageQueue.sent[consumerType]
 
     def close(self, force=True):
-        log.info('queue size during close = ' + str(len(self.messageQueue.queue)))
+        log.info('queue size before close = {len}', len=len(self.messageQueue.queue))
         while self.messageQueue.queue and not force:
+            log.info('queue size during close = {len}', len=len(self.messageQueue.queue))
             time.sleep(1)
-        log.info('queue empty, closing producer')
+        log.info('queue size after close = {len}', len=len(self.messageQueue.queue))
+        self._backend.close()
         self.active = False
-        time.sleep(HEARTBEAT_LIVENESS + 1)
-        if not force:
-            self._backend.close(10)
-        else:
-            self._backend.close(0)
