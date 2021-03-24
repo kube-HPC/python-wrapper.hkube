@@ -5,7 +5,6 @@
 #
 import time
 from .Flow import Flow
-from .WorkerQueue import WorkerQueue
 from .MessageQueue import MessageQueue
 from hkube_python_wrapper.util.logger import log
 from hkube_python_wrapper.communication.zmq.streaming.signals import *
@@ -60,18 +59,18 @@ class ZMQProducer(object):
 
                     if (not consumerType in self.consumerTypes):
                         log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
-                        continue    
+                        continue
 
-                    if (signal == PPP_READY):
-                        if(result != PPP_EMPTY):
-                            sentTime = self.watingForResponse.get(address)
-                            if (sentTime):
-                                now = time.time()
-                                del self.watingForResponse[address]
-                                self.responseAccumulator(result, consumerType, round((now - sentTime) * 1000, 4))
-                            else:
-                                log.error('missing from watingForResponse:' + str(signal))
+                    if(signal == PPP_DONE):
+                        sentTime = self.watingForResponse.get(address)
+                        if (sentTime):
+                            now = time.time()
+                            del self.watingForResponse[address]
+                            self.responseAccumulator(result, consumerType, round((now - sentTime) * 1000, 4))
+                        else:
+                            log.error('missing from watingForResponse:' + str(signal))
 
+                    elif (signal == PPP_READY):
                         message = self.messageQueue.pop(consumerType)
                         if (message):
                             messageFlowPattern, header, payload = message
