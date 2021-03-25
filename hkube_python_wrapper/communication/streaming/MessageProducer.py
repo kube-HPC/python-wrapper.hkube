@@ -81,6 +81,8 @@ class MessageProducer(DaemonThread):
             statistics.append(singleNodeStatistics)
         for listener in self.listeners:
             listener(statistics)
+        if (self.printStatistics % 30 == 0):
+            log.debug("statistics {stats}", stats=str(statistics))
         self.printStatistics += 1
 
     def run(self):
