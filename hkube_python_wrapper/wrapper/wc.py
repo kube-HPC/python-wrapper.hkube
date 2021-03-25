@@ -20,7 +20,7 @@ class WebsocketClient(Thread):
         self._active = True
         self._firstConnect = False
         self._printThrottleMessages = {
-            messages.outgoing.streamingStatistics: {"delay": 30, "lastPrint": None}
+            messages.outgoing.streamingStatistics: {"delay": 240, "lastPrint": None}
         }
         self._encoding = Encoding(encoding)
         self._ws_opcode = ABNF.OPCODE_BINARY if self._encoding.isBinary else ABNF.OPCODE_TEXT

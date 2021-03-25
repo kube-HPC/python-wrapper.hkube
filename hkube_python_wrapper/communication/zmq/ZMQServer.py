@@ -35,7 +35,6 @@ class ZMQServer(DaemonThread):
             except Exception as e:
                 log.error('socket closed: {e}', e=str(e))
                 break
-        log.info('ZmqServer run loop exit')
         self.close()
 
     def _send(self, message):

@@ -1,13 +1,16 @@
+import time
 from hkube_python_wrapper.communication.zmq.streaming.producer.MessageQueue import MessageQueue
+
 flow1 =   [{'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}]
 flow2 =  [{'source': 'B', 'next': ['A', 'C']}, {'source': 'C', 'next': ['D']},{'source': 'D', 'next': ['E']}]
 
 def test_queue_statistics():
     queue2 = MessageQueue(['A','C'],'B')
-    queue2.append(flow2,'header1','message1')
-    queue2.append(flow2, 'header2', 'message2')
-    queue2.append(flow2, 'header3', 'message3')
-    queue2.append(flow1, 'header4', 'message4')
+    appendTime = time.time()
+    queue2.append(flow2,'header1','message1', appendTime)
+    queue2.append(flow2, 'header2', 'message2', appendTime)
+    queue2.append(flow2, 'header3', 'message3', appendTime)
+    queue2.append(flow1, 'header4', 'message4', appendTime)
     assert queue2.size('A') == 3
     queue2.pop('A')
     assert queue2.size('A') == 2
