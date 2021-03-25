@@ -5,6 +5,31 @@ from hkube_python_wrapper.util.encoding import Encoding
 size = 1 * 1024
 
 def test_none_encoding():
+  
+    dic = {
+        'a': {
+            'tcp://address1': 'hello',
+            'tcp://address2': 'hello',
+            'tcp://address3': 'hello'
+         },
+         'b': {
+            'tcp://address1': 'hello',
+            'tcp://address2': 'hello',
+            'tcp://address3': 'hello'
+         }
+    }
+    workers = list(dic.values())
+    dic['a'].pop('tcp://address1')
+    dic['a'].pop('tcp://address2')
+    dic['a'].pop('tcp://address3')
+
+    arr = ['a', 'b', 'c']
+    for i, a in enumerate(arr):
+        arr.pop(i)
+
+    # dic['a']['tcp://address3'] = 'hello'
+   
+
     encoding = Encoding('msgpack')
     decoded = encoding.decode(header=None, value=None)
     assert decoded is None

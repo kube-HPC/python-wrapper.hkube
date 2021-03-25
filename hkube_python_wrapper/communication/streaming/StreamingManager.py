@@ -1,15 +1,13 @@
 import threading
-import concurrent.futures
 from .MessageListener import MessageListener
 from .MessageProducer import MessageProducer
+from .StreamingListener import StreamingListener
 from hkube_python_wrapper.util.logger import log
-from hkube_python_wrapper.util.DaemonThread import DaemonThread
 
-class StreamingManager(DaemonThread):
+class StreamingManager():
     threadLocalStorage = threading.local()
 
-    def __init__(self, errorHandler):
-        self.errorHandler = errorHandler
+    def __init__(self):
         self.messageProducer = None
         self._messageListeners = dict()
         self._inputListener = []
@@ -17,8 +15,7 @@ class StreamingManager(DaemonThread):
         self._isStarted = False
         self.parsedFlows = {}
         self.defaultFlow = None
-        self.listenerLock = threading.Lock()
-        DaemonThread.__init__(self, "StreamingManager")
+        self._streamingListener = None
 
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
@@ -38,21 +35,19 @@ class StreamingManager(DaemonThread):
             remoteAddressUrl = 'tcp://{host}:{port}'.format(host=remoteAddress['host'], port=remoteAddress['port'])
 
             if (parent['type'] == 'Add'):
-                if(self._messageListeners.get(parentName) is None):
-                    self._messageListeners[parentName] = {}
                 options = {}
                 options.update(listenerConfig)
                 options['remoteAddress'] = remoteAddressUrl
                 options['messageOriginNodeName'] = parentName
-                listener = MessageListener(options, nodeName, self.errorHandler)
+                listener = MessageListener(options, nodeName)
                 listener.registerMessageListener(self._onMessage)
-                self._messageListeners[parentName][remoteAddressUrl] = listener
+                self._messageListeners[remoteAddressUrl] = listener
 
             if (parent['type'] == 'Del'):
-                if(self._messageListeners.get(parentName) is not None):
-                    listener = self._messageListeners[parentName][remoteAddressUrl]
-                    del self._messageListeners[parentName][remoteAddressUrl]
+                listener = self._messageListeners.get(remoteAddressUrl)
+                if(listener):
                     listener.close(force=False)
+                    self._messageListeners.pop(remoteAddressUrl, None)
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
@@ -66,17 +61,15 @@ class StreamingManager(DaemonThread):
                 log.error("hkube_api message listener through exception: {e}", e=str(e))
         self.threadLocalStorage.messageFlowPattern = []
 
-    def run(self):
-        while(self.listeningToMessages):
-            for listeners in list(self._messageListeners.values()):
-                for listener in list(listeners.values()):
-                    listener.fetch()
+    def _getMessageListeners(self):
+        return self._messageListeners
 
     def startMessageListening(self):
         self.listeningToMessages = True
         if(self._isStarted is False):
             self._isStarted = True
-            self.start()
+            self._streamingListener = StreamingListener(self._getMessageListeners)
+            self._streamingListener.start()
 
     def sendMessage(self, msg, flowName=None):
         if (self.messageProducer is None):
@@ -98,18 +91,16 @@ class StreamingManager(DaemonThread):
 
     def stopStreaming(self, force=True):
         if (self.listeningToMessages):
+            self._isStarted = False
             self.listeningToMessages = False
-            for listeners in list(self._messageListeners.values()):
-                for listener in list(listeners.values()):
-                    listener.close(force)
+            if (self._streamingListener):
+                self._streamingListener.stop(force)
             self._messageListeners = dict()
 
         self._inputListener = []
         if (self.messageProducer is not None):
             self.messageProducer.close(force)
             self.messageProducer = None
-
-        self.join()
 
     def clearMessageListeners(self):
         self._messageListeners = dict()

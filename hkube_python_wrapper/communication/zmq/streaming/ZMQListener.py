@@ -1,12 +1,13 @@
 import zmq
 import uuid
 import time
-import threading
 from hkube_python_wrapper.util.logger import log
 from hkube_python_wrapper.communication.zmq.streaming.signals import *
 
 context = zmq.Context()
 POLL_MS = 1000
+MIN_TIME_OUT = 100
+MAX_TIME_OUT = 3200
 
 class ZMQListener(object):
     def __init__(self, remoteAddress, onMessage, encoding, consumerType):
@@ -14,7 +15,8 @@ class ZMQListener(object):
         self._onMessage = onMessage
         self._consumerType = self._encoding.encode(consumerType, plainEncode=True)
         self._active = True
-        self._working = None
+        self._working = True
+        self._timeout = MIN_TIME_OUT
         self._worker = self._worker_socket(remoteAddress)
 
     def _worker_socket(self, remoteAddress):
@@ -38,19 +40,32 @@ class ZMQListener(object):
         return self._onMessage(messageFlowPattern, header, message)
 
     def fetch(self):
-        self._working = True
-        self._send(PPP_READY)
-        result = self._worker.poll(POLL_MS)
+        try:
+            if (self._active is False):
+                return
 
-        if (result == zmq.POLLIN):
-            frames = self._worker.recv_multipart()
-            signal = frames[0]
+            self._send(PPP_READY)
+            result = self._worker.poll(POLL_MS)
 
-            if (signal == PPP_MSG):
-                msgResult = self._handleAMessage(frames)
-                self._send(PPP_DONE, msgResult)
+            if (result == zmq.POLLIN):
+                frames = self._worker.recv_multipart()
+                signal = frames[0]
 
-        self._working = False
+                if (signal == PPP_MSG):
+                    self._timeout = 0
+                    msgResult = self._handleAMessage(frames)
+                    self._send(PPP_DONE, msgResult)
+                else:
+                    print('SLEEPING....')
+                    time.sleep(self._timeout / 1000)
+                    if(self._timeout < MAX_TIME_OUT):
+                        self._timeout *= 2
+              
+        except Exception as e:
+            log.error('Exception in ZMQListener.fetch {e}', e=str(e))
+        finally:
+            if(self._active is False):
+                self._working = False
 
     def close(self, force=True):
         if (self._active is False):

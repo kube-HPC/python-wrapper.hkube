@@ -5,8 +5,7 @@ import time
 
 class MessageListener():
 
-    def __init__(self, options, receiverNode, errorHandler=None):
-        self.errorHandler = errorHandler
+    def __init__(self, options, receiverNode):
         remoteAddress = options['remoteAddress']
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
@@ -31,10 +30,7 @@ class MessageListener():
         return self._encoding.encode({'duration': round(duration, 4)}, plainEncode=True)
 
     def fetch(self):
-        try:
-            self.adapater.fetch()
-        except Exception as e:
-            log.error('Exception in adapater.fetch {e}', e=str(e))
+        self.adapater.fetch()
 
     def close(self, force=True):
         try:
