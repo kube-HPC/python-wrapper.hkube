@@ -59,6 +59,16 @@ class DataAdapter:
     def _isStorage(self, value):
         return typeCheck.isString(value) and value.startswith('$$')
 
+    def setAlgorithmStorage(self, jobId, taskId, input):
+        storage = {}
+        mappedInput = []
+        for item in input:
+            (header, data) = self.encode(item)
+            storageInfo = self.setData({'jobId': jobId, 'taskId': taskId, 'header': header, 'data': data})
+            storage[taskId] = {'storageInfo': storageInfo}
+            mappedInput.append('$${taskId}'.format(taskId=taskId))
+        return (storage, mappedInput)
+
     @trace()
     def setData(self, options):
         jobId = options.get('jobId')

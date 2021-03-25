@@ -45,10 +45,7 @@ class ZMQProducer(object):
 
                 if socks.get(self._backend) == zmq.POLLIN:
 
-                    frames = self._backend.recv_multipart()
-
-                    if not frames:
-                        raise Exception("Unexpected router no frames on receive, no address frame")
+                    frames = self._backend.recv_multipart() or []
 
                     if(len(frames) != 4):
                         log.warning("got {len} frames {frames}", len=len(frames), frames=frames)

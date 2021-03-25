@@ -37,5 +37,3 @@ class MessageListener():
             self.adapater.close(force)
         except Exception as e:
             log.error('Exception in adapater.close {e}', e=str(e))
-        finally:
-            self.messageListeners = []

@@ -2,15 +2,37 @@ from websocket_server import WebsocketServer
 from hkube_python_wrapper.util.encoding import Encoding
 from tests.mocks import mockdata
 from tests.configs import config
+from hkube_python_wrapper.storage.storage_manager import StorageManager
 
 
 class WebSocketServerClass:
     def __init__(self, encoding, server):
+        sm = StorageManager(config.storage)
+        storageEncoding = Encoding(config.storage.get('encoding'))
         self._server = server
         self._server.set_fn_new_client(self.handleConnected)
         self._server.set_fn_client_left(self.handleDisconnected)
         self._server.set_fn_message_received(self.handleMessage)
         self._encoding = Encoding(encoding)
+        def getAlgorithmResult(request):
+            execId = request.get('execId')
+            storage= request.get('storage')
+            storageInput= request.get('storageInput')
+            input= request.get('input')
+            if (not storageInput):
+                response=input
+            else:
+                oneInput = storageInput[0]
+                key = oneInput[2:]
+                storageInfo=storage.get(key).get('storageInfo')
+                (header,encoded)=sm.storage.get(storageInfo)
+                decoded=storageEncoding.decode(header=header, value=encoded)
+                response=[decoded]
+            return {
+                'execId': execId,
+                'storage': storage,
+                'response': response
+            }
         self._commands = {
             "initialized":  {
                 'command': "start",
@@ -18,10 +40,7 @@ class WebSocketServerClass:
             },
             "startAlgorithmExecution": {
                 'command': "algorithmExecutionDone",
-                'data': lambda x: {
-                    'execId': x.get('execId'),
-                    'response': x.get('input')
-                }
+                'data': getAlgorithmResult
             },
             "startStoredSubPipeline": {
                 'command': "subPipelineDone",
