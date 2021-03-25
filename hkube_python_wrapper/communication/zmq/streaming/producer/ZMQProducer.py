@@ -28,7 +28,8 @@ class ZMQProducer(object):
         self._backend = context.socket(zmq.ROUTER)  # ROUTER
         self._backend.bind("tcp://*:" + str(port))  # For workers
         log.info("Producer listening on tcp://*:{port}", port=port)
-        self.active = True
+        self._active = True
+        self._working = True
         self.watingForResponse = {}
 
     def produce(self, header, message, messageFlowPattern=[]):
@@ -41,7 +42,7 @@ class ZMQProducer(object):
         poll_workers = zmq.Poller()
         poll_workers.register(self._backend, zmq.POLLIN)
 
-        while self.active:  # pylint: disable=too-many-nested-blocks
+        while self._active:  # pylint: disable=too-many-nested-blocks
             try:
                 socks = dict(poll_workers.poll(CYCLE_LENGTH_MS))
 
@@ -84,10 +85,13 @@ class ZMQProducer(object):
                             self._send([address, signals.PPP_NO_MSG])
 
             except Exception as e:
-                if (self.active):
+                if (self._active):
                     log.error('Error in ZMQProducer {e}', e=str(e))
                 else:
                     break
+
+        if(self._active is False):
+            self._working = False
 
     def _send(self, frames):
         self._backend.send_multipart(frames, copy=False)
@@ -103,6 +107,8 @@ class ZMQProducer(object):
         while self.messageQueue.queue and not force:
             log.info('queue size during close = {len}', len=len(self.messageQueue.queue))
             time.sleep(1)
-        log.info('queue size after close = {len}', len=len(self.messageQueue.queue))
+        self._active = False
+        while self._working:
+            time.sleep(1)
         self._backend.close()
-        self.active = False
+        log.info('queue size after close = {len}', len=len(self.messageQueue.queue))

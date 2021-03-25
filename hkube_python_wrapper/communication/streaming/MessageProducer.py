@@ -34,6 +34,7 @@ class MessageProducer(DaemonThread):
             while (self.active):
                 self.sendStatistics()
                 time.sleep(interval)
+            self.sendStatistics()
 
         if (self.nodeNames):
             runThread = Thread(name="Statistics", target=sendStatisticsEvery, args=[statisticsInterval])
