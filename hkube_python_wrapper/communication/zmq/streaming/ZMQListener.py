@@ -11,6 +11,7 @@ HEARTBEAT_INTERVAL = 10
 HEARTBEAT_LIVENESS_TIMEOUT = 30
 INTERVAL_INIT = 1
 INTERVAL_MAX = 32
+MILLISECOND = 0.0001
 
 context = zmq.Context()
 lock = threading.Lock()
@@ -62,18 +63,20 @@ class ZMQListener(object):
         return self._onMessage(messageFlowPattern, header, message)
 
     def start(self):  # pylint: disable=too-many-branches
-        log.info("start receiving from node {node} in address {address}", node=self._nodeName, address=self._remoteAddress)
         self._worker = self._worker_socket(self._remoteAddress)
+        log.info("start receiving from node {node} in address {address}", node=self._nodeName, address=self._remoteAddress)
 
         while self._active: # pylint: disable=too-many-nested-blocks
             try:
                 lockRes = lock.acquire(False)
+                self._checkReady()
                 if(lockRes is False):
-                    self._checkReady()
+                    time.sleep(MILLISECOND)
                     continue
 
                 result = self._worker.poll(POLL_TIMEOUT_MS)
-                if result == zmq.POLLIN:
+
+                if (result == zmq.POLLIN):
                     frames = self._worker.recv_multipart()
 
                     if not frames:
@@ -83,6 +86,7 @@ class ZMQListener(object):
 
                     if (signal == signals.PPP_MSG):
                         self.onNotReady()
+                        time.sleep(MILLISECOND)
                         result = self._handleAMessage(frames)
                         self.onReady()
                         self._send(self._worker, signals.PPP_DONE, result)
@@ -101,19 +105,18 @@ class ZMQListener(object):
                             log.info("reconnecting to node {node} in address {address}", node=self._nodeName, address=self._remoteAddress)
                             self._worker.close()
                             self._worker = self._worker_socket(self._remoteAddress)
-
                     else:
                         self._sendHeartBeat()
 
+                lock.release()
+                time.sleep(MILLISECOND * 2)
+
             except Exception as e:
+                lock.release()
                 if (self._active):
                     log.error('Error in ZMQListener {e}', e=str(e))
                     raise e
                 break
-
-            finally:
-                if(lock.locked()):
-                    lock.release()
 
         self._close()
 
@@ -122,7 +125,7 @@ class ZMQListener(object):
             self._send(self._worker, signals.PPP_HEARTBEAT)
 
     def _checkReady(self):
-        if(self._ready is True and self._active is True and self._readySent is False):
+        if (self._ready is True and self._active is True and self._readySent is False):
             self._readySent = True
             self._notReadySent = False
             self._send(self._worker, signals.PPP_READY)
