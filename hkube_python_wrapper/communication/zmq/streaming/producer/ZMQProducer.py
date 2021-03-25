@@ -7,7 +7,7 @@ import time
 from .Flow import Flow
 from .MessageQueue import MessageQueue
 from hkube_python_wrapper.util.logger import log
-from hkube_python_wrapper.communication.zmq.streaming.signals import *
+import hkube_python_wrapper.communication.zmq.streaming.signals as signals
 import zmq
 
 HEARTBEAT_LIVENESS = 5
@@ -16,10 +16,11 @@ CYCLE_LENGTH_MS = 1000
 context = zmq.Context()
 
 class ZMQProducer(object):
-    def __init__(self, port, maxMemorySize, responseAccumulator, consumerTypes, encoding, nodeName):
+    def __init__(self, port, maxMemorySize, responseAccumulator, queueTimeAccumulator, consumerTypes, encoding, nodeName):
         self.nodeName = nodeName
         self.encoding = encoding
         self.responseAccumulator = responseAccumulator
+        self.queueTimeAccumulator = queueTimeAccumulator
         self.maxMemorySize = maxMemorySize
         self.port = port
         self.consumerTypes = consumerTypes
@@ -33,7 +34,8 @@ class ZMQProducer(object):
     def produce(self, header, message, messageFlowPattern=[]):
         while (self.messageQueue.sizeSum > self.maxMemorySize):
             self.messageQueue.loseMessage()
-        self.messageQueue.append(messageFlowPattern, header, message)
+        appendTime = time.time()
+        self.messageQueue.append(messageFlowPattern, header, message, appendTime)
 
     def start(self):  # pylint: disable=too-many-branches
         poll_workers = zmq.Poller()
@@ -58,7 +60,7 @@ class ZMQProducer(object):
                         log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
                         continue
 
-                    if(signal == PPP_DONE):
+                    if(signal == signals.PPP_DONE):
                         sentTime = self.watingForResponse.get(address)
                         if (sentTime):
                             now = time.time()
@@ -67,17 +69,19 @@ class ZMQProducer(object):
                         else:
                             log.error('missing from watingForResponse:' + str(signal))
 
-                    elif (signal == PPP_READY):
+                    elif (signal == signals.PPP_READY):
                         message = self.messageQueue.pop(consumerType)
                         if (message):
-                            messageFlowPattern, header, payload = message
+                            messageFlowPattern, header, payload, appendTime = message
                             flow = Flow(messageFlowPattern)
                             flowMsg = self.encoding.encode(flow.getRestOfFlow(self.nodeName), plainEncode=True)
-                            frames = [address, PPP_MSG, flowMsg, header, payload]
+                            frames = [address, signals.PPP_MSG, flowMsg, header, payload]
                             self.watingForResponse[address] = time.time()
+                            queueTime = round((time.time() - appendTime) * 1000, 4)
+                            self.queueTimeAccumulator(consumerType, queueTime)
                             self._send(frames)
                         else:
-                            self._send([address, PPP_NO_MSG])
+                            self._send([address, signals.PPP_NO_MSG])
 
             except Exception as e:
                 if (self.active):

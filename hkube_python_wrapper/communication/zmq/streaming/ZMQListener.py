@@ -2,7 +2,7 @@ import zmq
 import uuid
 import time
 from hkube_python_wrapper.util.logger import log
-from hkube_python_wrapper.communication.zmq.streaming.signals import *
+import hkube_python_wrapper.communication.zmq.streaming.signals as signals
 
 context = zmq.Context()
 POLL_MS = 1000
@@ -31,7 +31,7 @@ class ZMQListener(object):
         return worker
 
     def _send(self, signal, result=None):
-        arr = [signal, self._consumerType, result or PPP_EMPTY]
+        arr = [signal, self._consumerType, result or signals.PPP_EMPTY]
         self._worker.send_multipart(arr, copy=False)
 
     def _handleAMessage(self, frames):
@@ -45,17 +45,17 @@ class ZMQListener(object):
                 time.sleep(0.2)
                 return
 
-            self._send(PPP_READY)
+            self._send(signals.PPP_READY)
             result = self._worker.poll(POLL_MS)
 
             if (result == zmq.POLLIN):
                 frames = self._worker.recv_multipart()
                 signal = frames[0]
 
-                if (signal == PPP_MSG):
+                if (signal == signals.PPP_MSG):
                     self._timeout = MIN_TIME_OUT
                     msgResult = self._handleAMessage(frames)
-                    self._send(PPP_DONE, msgResult)
+                    self._send(signals.PPP_DONE, msgResult)
                 else:
                     time.sleep(0.005)
                     # time.sleep(self._timeout / 1000)
