@@ -1,13 +1,12 @@
 import time
 from threading import Thread
-
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.communication.zmq.streaming.producer.ZMQProducer import ZMQProducer
 from hkube_python_wrapper.util.fifo_array import FifoArray
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from hkube_python_wrapper.util.logger import log
 
-RESPONSE_CACHE = 2000
+RESPONSE_CACHE = 10
 
 class MessageProducer(DaemonThread):
     def __init__(self, options, consumerNodes, nodeName):
@@ -72,7 +71,9 @@ class MessageProducer(DaemonThread):
         for nodeName in self.nodeNames:
             queueSize = self.adapter.queueSize(nodeName)
             sent = self.adapter.sent(nodeName)
-            singleNodeStatistics = {"nodeName": nodeName, "sent": sent, "queueSize": queueSize,
+            singleNodeStatistics = {"nodeName": nodeName,
+                                    "sent": sent,
+                                    "queueSize": queueSize,
                                     "netDurations": self.resetDurationsCache(nodeName),
                                     "durations": self.resetGrossDurationsCache(nodeName),
                                     "responses": self.getResponseCount(nodeName),
@@ -80,10 +81,6 @@ class MessageProducer(DaemonThread):
             statistics.append(singleNodeStatistics)
         for listener in self.listeners:
             listener(statistics)
-        for singleNodeStatisticsForPrint in statistics:
-            singleNodeStatisticsForPrint['durations'] = singleNodeStatisticsForPrint['durations'][:10]
-        if (self.printStatistics % 10 == 0):
-            log.debug("statistics {stats}", stats=str(statistics))
         self.printStatistics += 1
 
     def run(self):

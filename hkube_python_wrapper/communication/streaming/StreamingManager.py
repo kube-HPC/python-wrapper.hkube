@@ -62,7 +62,7 @@ class StreamingManager():
         self.threadLocalStorage.messageFlowPattern = []
 
     def _getMessageListeners(self):
-        return self._messageListeners
+        return list(self._messageListeners.values())
 
     def startMessageListening(self):
         self.listeningToMessages = True

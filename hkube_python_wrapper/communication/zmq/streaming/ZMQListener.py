@@ -6,8 +6,8 @@ from hkube_python_wrapper.communication.zmq.streaming.signals import *
 
 context = zmq.Context()
 POLL_MS = 1000
-MIN_TIME_OUT = 100
-MAX_TIME_OUT = 3200
+MIN_TIME_OUT = 1
+MAX_TIME_OUT = 32
 
 class ZMQListener(object):
     def __init__(self, remoteAddress, onMessage, encoding, consumerType):
@@ -42,6 +42,7 @@ class ZMQListener(object):
     def fetch(self):
         try:
             if (self._active is False):
+                time.sleep(0.2)
                 return
 
             self._send(PPP_READY)
@@ -52,15 +53,15 @@ class ZMQListener(object):
                 signal = frames[0]
 
                 if (signal == PPP_MSG):
-                    self._timeout = 0
+                    self._timeout = MIN_TIME_OUT
                     msgResult = self._handleAMessage(frames)
                     self._send(PPP_DONE, msgResult)
                 else:
-                    print('SLEEPING....')
-                    time.sleep(self._timeout / 1000)
-                    if(self._timeout < MAX_TIME_OUT):
-                        self._timeout *= 2
-              
+                    time.sleep(0.005)
+                    # time.sleep(self._timeout / 1000)
+                    # if(self._timeout < MAX_TIME_OUT):
+                    #     self._timeout *= 2
+
         except Exception as e:
             log.error('Exception in ZMQListener.fetch {e}', e=str(e))
         finally:
@@ -73,5 +74,5 @@ class ZMQListener(object):
         else:
             self._active = False
             while self._working and not force:
-                time.sleep(1)
+                time.sleep(0.2)
             self._worker.close()
