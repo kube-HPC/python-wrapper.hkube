@@ -9,9 +9,9 @@ class StreamingListener(DaemonThread):
         DaemonThread.__init__(self, "StreamingListener")
 
     def run(self):
-        while(self._listeningToMessages):
+        while (self._listeningToMessages):
             messageListeners = self._messageListeners()
-            if(len(messageListeners) == 0):
+            if (not messageListeners):
                 time.sleep(1)  # free some cpu
                 continue
             for listener in messageListeners:
