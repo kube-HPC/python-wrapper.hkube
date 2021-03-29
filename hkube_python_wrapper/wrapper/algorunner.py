@@ -384,7 +384,7 @@ class Algorunner(DaemonThread):
         if (span):
             Tracer.instance.finish_span(span)
         if (self._job.isStreaming):
-            self._hkubeApi.stopStreaming(False)
+            self._hkubeApi.stopStreaming(force=False)
         self._sendCommand(messages.outgoing.done, None)
 
     def _reportServing(self, interval=None):
@@ -433,12 +433,13 @@ class Algorunner(DaemonThread):
 
                         stoppingThread = Thread(target=stopping)
                         stoppingThread.start()
-                        self._hkubeApi.stopStreaming(force=False)
+                        self._hkubeApi.stopStreaming(force=forceStop)
                         stoppingState = False
                         stoppingThread.join()
                         log.info('Joined threads send stopping and stop streaming')
+                        self._checkQueueSize(event='scale down')
                     else:
-                        self._hkubeApi.stopStreaming(force=True)
+                        self._hkubeApi.stopStreaming(force=forceStop)
 
                 if (self._runningStartThread):
                     self._runningStartThread.join()
@@ -456,14 +457,7 @@ class Algorunner(DaemonThread):
             method = self._getMethod('exit')
             if (method is not None):
                 method(options)
-            if (self._job.isStreaming):
-                if (self.streamingManager.messageProducer):
-                    try:
-                        log.info('Messages left in queue on exit=' + str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
-                    except Exception:
-                        log.error('Failed to print number of messages left in queue')
-                else:
-                    log.info('MessageProducer already None on exit')
+            self._checkQueueSize(event='exit')
             option = options if options is not None else dict()
             code = option.get('exitCode', 0)
             self._active = False
@@ -474,6 +468,16 @@ class Algorunner(DaemonThread):
             log.error('Got error during exit: {e}', e=e)
             # pylint: disable=protected-access
             os._exit(0)
+
+    def _checkQueueSize(self, event):
+        if (self._job.isStreaming):
+            if (self.streamingManager.messageProducer):
+                try:
+                    log.info('Messages left in queue on {event}={queue}', event=event, queue=str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
+                except Exception:
+                    log.error('Failed to print number of messages left in queue on {event}', event=event)
+            else:
+                log.info('MessageProducer already None on {event}', event=event)
 
     def _sendCommand(self, command, data):
         try:

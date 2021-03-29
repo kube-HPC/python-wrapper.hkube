@@ -33,7 +33,9 @@ class MessageListener():
         self.adapater.fetch()
 
     def close(self, force=True):
+        closed = False
         try:
-            self.adapater.close(force)
+            closed = self.adapater.close(force)
         except Exception as e:
             log.error('Exception in adapater.close {e}', e=str(e))
+        return closed

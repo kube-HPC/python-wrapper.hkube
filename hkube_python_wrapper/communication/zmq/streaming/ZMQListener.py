@@ -6,8 +6,6 @@ import hkube_python_wrapper.communication.zmq.streaming.signals as signals
 
 context = zmq.Context()
 POLL_MS = 1000
-MIN_TIME_OUT = 1
-MAX_TIME_OUT = 32
 
 class ZMQListener(object):
     def __init__(self, remoteAddress, onMessage, encoding, consumerType):
@@ -16,7 +14,8 @@ class ZMQListener(object):
         self._consumerType = self._encoding.encode(consumerType, plainEncode=True)
         self._active = True
         self._working = True
-        self._timeout = MIN_TIME_OUT
+        self._pollTimeoutCount = 0
+        self._remoteAddress = remoteAddress
         self._worker = self._worker_socket(remoteAddress)
 
     def _worker_socket(self, remoteAddress):
@@ -45,34 +44,57 @@ class ZMQListener(object):
                 time.sleep(0.2)
                 return
 
+            if (self._pollTimeoutCount == 3):
+                log.warning('ZMQListener poll timeout reached')
+                self._pollTimeoutCount = 0
+                self._worker = self._worker_socket(self._remoteAddress)
+
+            if (self._pollTimeoutCount > 0):
+                self._readMessage()
+                return
+
             self._send(signals.PPP_READY)
-            result = self._worker.poll(POLL_MS)
-
-            if (result == zmq.POLLIN):
-                frames = self._worker.recv_multipart()
-                signal = frames[0]
-
-                if (signal == signals.PPP_MSG):
-                    self._timeout = MIN_TIME_OUT
-                    msgResult = self._handleAMessage(frames)
-                    self._send(signals.PPP_DONE, msgResult)
-                else:
-                    time.sleep(0.005)
-                    # time.sleep(self._timeout / 1000)
-                    # if(self._timeout < MAX_TIME_OUT):
-                    #     self._timeout *= 2
+            self._readMessage()
 
         except Exception as e:
-            log.error('Exception in ZMQListener.fetch {e}', e=str(e))
+            log.error('ZMQListener.fetch {e}', e=str(e))
         finally:
             if(self._active is False):
                 self._working = False
 
+    def _readMessage(self, timeout=POLL_MS):
+        hasMsg = False
+        result = self._worker.poll(timeout)
+        if (result == zmq.POLLIN):
+            frames = self._worker.recv_multipart()
+            signal = frames[0]
+
+            if (signal == signals.PPP_MSG):
+                hasMsg = True
+                self._pollTimeoutCount = 0
+                msgResult = self._handleAMessage(frames)
+                self._send(signals.PPP_DONE, msgResult)
+            else:
+                time.sleep(0.005)
+        else:
+            self._pollTimeoutCount += 1
+        return hasMsg
+
     def close(self, force=True):
+        closed = False
         if (self._active is False):
-            log.warning("Attempting to close inactive ZMQListener")
+            log.warning('attempting to close inactive ZMQListener')
         else:
             self._active = False
             while self._working and not force:
                 time.sleep(0.2)
+
+            if (self._pollTimeoutCount):
+                log.warning('trying to read message from socket after close')
+                hasMsg = self._readMessage(timeout=POLL_MS * 5)
+                if (hasMsg):
+                    log.warning('success reading message from socket after close')
+
             self._worker.close()
+            closed = True
+        return closed

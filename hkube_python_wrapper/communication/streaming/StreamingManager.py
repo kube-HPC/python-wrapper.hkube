@@ -46,14 +46,18 @@ class StreamingManager():
             if (parent['type'] == 'Del'):
                 listener = self._messageListeners.get(remoteAddressUrl)
                 if(listener):
-                    listener.close(force=False)
-                    self._messageListeners.pop(remoteAddressUrl, None)
+                    closed = listener.close(force=False)
+                    if (closed):
+                        self._messageListeners.pop(remoteAddressUrl, None)
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
 
     def _onMessage(self, messageFlowPattern, msg, origin):
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern
+        if(len(self._inputListener) == 0):
+            log.error('no input listeners on _onMessage method')
+            return
         for listener in self._inputListener:
             try:
                 listener(msg, origin)
@@ -88,6 +92,8 @@ class StreamingManager():
             if (parsedFlow is None):
                 raise Exception("No such flow " + flowName)
             self.messageProducer.produce(parsedFlow, msg)
+        else:
+            log.error("messageProducer has no consumers")
 
     def stopStreaming(self, force=True):
         if (self.listeningToMessages):
@@ -96,8 +102,8 @@ class StreamingManager():
             if (self._streamingListener):
                 self._streamingListener.stop(force)
             self._messageListeners = dict()
+            self._inputListener = []
 
-        self._inputListener = []
         if (self.messageProducer is not None):
             self.messageProducer.close(force)
             self.messageProducer = None

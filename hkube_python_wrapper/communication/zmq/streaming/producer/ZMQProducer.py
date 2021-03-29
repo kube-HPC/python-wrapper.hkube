@@ -85,13 +85,9 @@ class ZMQProducer(object):
                             self._send([address, signals.PPP_NO_MSG])
 
             except Exception as e:
-                if (self._active):
-                    log.error('Error in ZMQProducer {e}', e=str(e))
-                else:
-                    break
+                log.error('Error in ZMQProducer {e}', e=str(e))
 
-        if(self._active is False):
-            self._working = False
+        self._working = False
 
     def _send(self, frames):
         self._backend.send_multipart(frames, copy=False)
