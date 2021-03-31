@@ -47,6 +47,7 @@ class ZMQListener(object):
             if (self._pollTimeoutCount == 3):
                 log.warning('ZMQListener poll timeout reached')
                 self._pollTimeoutCount = 0
+                self._worker.close()
                 self._worker = self._worker_socket(self._remoteAddress)
 
             if (self._pollTimeoutCount > 0):
@@ -77,6 +78,7 @@ class ZMQListener(object):
             else:
                 time.sleep(0.005)
         else:
+            log.warning('ZMQListener poll timeout')
             self._pollTimeoutCount += 1
         return hasMsg
 
