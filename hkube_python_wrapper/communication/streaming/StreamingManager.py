@@ -55,7 +55,7 @@ class StreamingManager():
 
     def _onMessage(self, messageFlowPattern, msg, origin):
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern
-        if(len(self._inputListener) == 0):
+        if(not self._inputListener):
             log.error('no input listeners on _onMessage method')
             return
         for listener in self._inputListener:
