@@ -1,22 +1,21 @@
 import threading
-
 from .MessageListener import MessageListener
 from .MessageProducer import MessageProducer
+from .StreamingListener import StreamingListener
 from hkube_python_wrapper.util.logger import log
-
 
 class StreamingManager():
     threadLocalStorage = threading.local()
 
-    def __init__(self, errorHandler):
-        self.errorHandler = errorHandler
+    def __init__(self):
         self.messageProducer = None
         self._messageListeners = dict()
         self._inputListener = []
         self.listeningToMessages = False
+        self._isStarted = False
         self.parsedFlows = {}
         self.defaultFlow = None
-        self.listenerLock = threading.Lock()
+        self._streamingListener = None
 
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
@@ -29,56 +28,52 @@ class StreamingManager():
             self.messageProducer.start()
 
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
-        with self.listenerLock:
-            log.debug("parents {parents}", parents=str(parents))
-            for predecessor in parents:
-                remoteAddress = predecessor['address']
-                remoteAddressUrl = 'tcp://{host}:{port}'.format(host=remoteAddress['host'], port=remoteAddress['port'])
-                if (predecessor['type'] == 'Add'):
-                    options = {}
-                    options.update(listenerConfig)
-                    options['remoteAddress'] = remoteAddressUrl
-                    options['messageOriginNodeName'] = predecessor['nodeName']
-                    listener = MessageListener(options, nodeName, self.errorHandler, self._onReady, self._onNotReady)
-                    listener.registerMessageListener(self._onMessage)
-                    self._messageListeners[remoteAddressUrl] = listener
-                    if (self.listeningToMessages):
-                        listener.start()
-                if (predecessor['type'] == 'Del'):
-                    listener = self._messageListeners.get(remoteAddressUrl)
-                    if (self.listeningToMessages and listener):
-                        listener.close(force=False)
-                    if (listener):
-                        del self._messageListeners[remoteAddressUrl]
+        log.debug("parents {parents}", parents=str(parents))
+        for parent in parents:
+            parentName = parent['nodeName']
+            remoteAddress = parent['address']
+            remoteAddressUrl = 'tcp://{host}:{port}'.format(host=remoteAddress['host'], port=remoteAddress['port'])
+
+            if (parent['type'] == 'Add'):
+                options = {}
+                options.update(listenerConfig)
+                options['remoteAddress'] = remoteAddressUrl
+                options['messageOriginNodeName'] = parentName
+                listener = MessageListener(options, nodeName)
+                listener.registerMessageListener(self._onMessage)
+                self._messageListeners[remoteAddressUrl] = listener
+
+            if (parent['type'] == 'Del'):
+                listener = self._messageListeners.get(remoteAddressUrl)
+                if(listener):
+                    closed = listener.close(force=False)
+                    if (closed):
+                        self._messageListeners.pop(remoteAddressUrl, None)
 
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
 
-    def _onReady(self, address):
-        for k, v in list(self._messageListeners.items()):
-            if(k != address):
-                v.ready()
-
-    def _onNotReady(self, address):
-        for k, v in list(self._messageListeners.items()):
-            if(k != address):
-                v.notReady()
-
     def _onMessage(self, messageFlowPattern, msg, origin):
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern
+        if(not self._inputListener):
+            log.error('no input listeners on _onMessage method')
+            return
         for listener in self._inputListener:
             try:
                 listener(msg, origin)
             except Exception as e:
-                log.error("hkube_api message listener through exception: {e}", e=str(e))
+                log.error("hkube_api message listener threw exception: {e}", e=str(e))
         self.threadLocalStorage.messageFlowPattern = []
+
+    def _getMessageListeners(self):
+        return list(self._messageListeners.values())
 
     def startMessageListening(self):
         self.listeningToMessages = True
-        with self.listenerLock:
-            for listener in self._messageListeners.values():
-                if not (listener.is_alive()):
-                    listener.start()
+        if(self._isStarted is False):
+            self._isStarted = True
+            self._streamingListener = StreamingListener(self._getMessageListeners)
+            self._streamingListener.start()
 
     def sendMessage(self, msg, flowName=None):
         if (self.messageProducer is None):
@@ -97,24 +92,21 @@ class StreamingManager():
             if (parsedFlow is None):
                 raise Exception("No such flow " + flowName)
             self.messageProducer.produce(parsedFlow, msg)
+        else:
+            log.error("messageProducer has no consumers")
 
     def stopStreaming(self, force=True):
         if (self.listeningToMessages):
-            self.listenerLock.acquire()
-            try:
-                for listener in self._messageListeners.values():
-                    listener.close(force)
-                for listener in self._messageListeners.values():
-                    listener.waitForClose()
-                self._messageListeners = dict()
-            finally:
-                self.listeningToMessages = False
-                self.listenerLock.release()
-        self._inputListener = []
+            self._isStarted = False
+            self.listeningToMessages = False
+            if (self._streamingListener):
+                self._streamingListener.stop(force)
+            self._messageListeners = dict()
+            self._inputListener = []
+
         if (self.messageProducer is not None):
             self.messageProducer.close(force)
             self.messageProducer = None
 
     def clearMessageListeners(self):
-        with self.listenerLock:
-            self._messageListeners = dict()
+        self._messageListeners = dict()

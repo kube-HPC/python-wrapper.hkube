@@ -1,30 +1,20 @@
 from hkube_python_wrapper.communication.zmq.streaming.ZMQListener import ZMQListener
 from hkube_python_wrapper.util.encoding import Encoding
-from hkube_python_wrapper.util.DaemonThread import DaemonThread
 from hkube_python_wrapper.util.logger import log
 import time
 
-class MessageListener(DaemonThread):
+class MessageListener():
 
-    def __init__(self, options, consumerType, errorHandler=None, onReady=None, onNotReady=None):
-        self.errorHandler = errorHandler
+    def __init__(self, options, receiverNode):
         remoteAddress = options['remoteAddress']
         encodingType = options['encoding']
-        self.address = remoteAddress
         self._encoding = Encoding(encodingType)
+        self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode)
         self.messageOriginNodeName = options['messageOriginNodeName']
-        self.adapater = ZMQListener(remoteAddress, consumerType, self.messageOriginNodeName, self.onMessage, self._encoding, onReady, onNotReady)
         self.messageListeners = []
-        DaemonThread.__init__(self, "MessageListener-" + str(self.messageOriginNodeName))
 
     def registerMessageListener(self, listener):
         self.messageListeners.append(listener)
-
-    def ready(self):
-        self.adapater.ready()
-
-    def notReady(self):
-        self.adapater.notReady()
 
     def onMessage(self, messageFlowPattern, header, msg):
         start = time.time()
@@ -39,19 +29,13 @@ class MessageListener(DaemonThread):
         duration = float((end - start) * 1000)
         return self._encoding.encode({'duration': round(duration, 4)}, plainEncode=True)
 
-    def run(self):
-        try:
-            self.adapater.start()
-        except Exception as e:
-            if (self.errorHandler):
-                self.errorHandler(e)
+    def fetch(self):
+        self.adapater.fetch()
 
     def close(self, force=True):
+        closed = False
         try:
-            self.adapater.close(force)
+            closed = self.adapater.close(force)
         except Exception as e:
             log.error('Exception in adapater.close {e}', e=str(e))
-
-    def waitForClose(self):
-        self.adapater.waitForClose()
-        self.messageListeners = []
+        return closed
