@@ -6,6 +6,7 @@ import hkube_python_wrapper.communication.zmq.streaming.signals as signals
 
 context = zmq.Context()
 POLL_MS = 1000
+MAX_POLLS = 5
 
 class ZMQListener(object):
     def __init__(self, remoteAddress, onMessage, encoding, consumerType):
@@ -22,8 +23,7 @@ class ZMQListener(object):
         """Helper function that returns a new configured socket
            connected to the Paranoid Pirate queue"""
         identity = str(uuid.uuid4()).encode()
-        worker = context.socket(zmq.DEALER)  # DEALER
-        worker.setsockopt(zmq.LINGER, 0)
+        worker = context.socket(zmq.DEALER)
         worker.setsockopt(zmq.IDENTITY, identity)
         worker.connect(remoteAddress)
         log.info("zmq listener connecting to {addr}", addr=remoteAddress)
@@ -44,7 +44,7 @@ class ZMQListener(object):
                 time.sleep(0.2)
                 return
 
-            if (self._pollTimeoutCount == 3):
+            if (self._pollTimeoutCount == MAX_POLLS):
                 log.warning('ZMQListener poll timeout reached')
                 self._pollTimeoutCount = 0
                 self._worker.close()
@@ -67,19 +67,19 @@ class ZMQListener(object):
         hasMsg = False
         result = self._worker.poll(timeout)
         if (result == zmq.POLLIN):
+            self._pollTimeoutCount = 0
             frames = self._worker.recv_multipart()
             signal = frames[0]
 
             if (signal == signals.PPP_MSG):
                 hasMsg = True
-                self._pollTimeoutCount = 0
                 msgResult = self._handleAMessage(frames)
                 self._send(signals.PPP_DONE, msgResult)
             else:
                 time.sleep(0.005)
         else:
-            log.warning('ZMQListener poll timeout')
             self._pollTimeoutCount += 1
+            log.warning('ZMQListener poll timeout {count}', count=self._pollTimeoutCount)
         return hasMsg
 
     def close(self, force=True):
@@ -89,7 +89,7 @@ class ZMQListener(object):
         else:
             self._active = False
             while self._working and not force:
-                time.sleep(0.2)
+                time.sleep(0.02)
 
             if (self._pollTimeoutCount):
                 log.warning('trying to read message from socket after close')

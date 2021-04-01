@@ -5,6 +5,7 @@ class StreamingListener(DaemonThread):
 
     def __init__(self, messageListeners):
         self._listeningToMessages = True
+        self._working = True
         self._messageListeners = messageListeners
         DaemonThread.__init__(self, "StreamingListener")
 
@@ -16,9 +17,12 @@ class StreamingListener(DaemonThread):
                 continue
             for listener in messageListeners:
                 listener.fetch()
+        self._working = False
 
     def stop(self, force=True):
         messageListeners = self._messageListeners()
         for listener in messageListeners:
             listener.close(force)
         self._listeningToMessages = False
+        while self._working:
+            time.sleep(0.2)
