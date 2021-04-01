@@ -7,7 +7,6 @@ from .execution import Execution
 from .waitFor import WaitForData
 from hkube_python_wrapper.util.queueImpl import Empty
 from hkube_python_wrapper.util.logger import log
-from hkube_python_wrapper.util.uid import uid
 
 
 class HKubeApi:
@@ -108,7 +107,7 @@ class HKubeApi:
         execution = Execution(execId, includeResult, WaitForData(True))
         self._executions[execId] = execution
         if self._storage == 'v3':
-            (storage, mappedInput) = self._dataAdapter.setAlgorithmStorage(self._wrapper.getCurrentJob().jobId, uid(8), input)
+            (storage, mappedInput) = self._dataAdapter.setAlgorithmStorage(self._wrapper.getCurrentJob().jobId, input)
             message = {
                 "command": messages.outgoing.startAlgorithmExecution,
                 "data": {

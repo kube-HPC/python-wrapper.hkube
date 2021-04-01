@@ -9,6 +9,7 @@ from hkube_python_wrapper.storage.storage_manager import StorageManager
 from hkube_python_wrapper.communication.DataRequest import DataRequest
 from hkube_python_wrapper.cache.caching import Cache
 from hkube_python_wrapper.util.logger import log
+from hkube_python_wrapper.util.uid import uid
 from ..config import config
 
 
@@ -59,10 +60,11 @@ class DataAdapter:
     def _isStorage(self, value):
         return typeCheck.isString(value) and value.startswith('$$')
 
-    def setAlgorithmStorage(self, jobId, taskId, input):
+    def setAlgorithmStorage(self, jobId, input):
         storage = {}
         mappedInput = []
         for item in input:
+            taskId = uid(8)
             (header, data) = self.encode(item)
             storageInfo = self.setData({'jobId': jobId, 'taskId': taskId, 'header': header, 'data': data})
             storage[taskId] = {'storageInfo': storageInfo}
