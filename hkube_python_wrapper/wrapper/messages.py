@@ -19,6 +19,7 @@ class Outgoing(object):
         self.startRawSubPipeline = "startRawSubPipeline"
         self.startStoredSubPipeline = "startStoredSubPipeline"
         self.stopSubPipeline = "stopSubPipeline"
+        self.sendMessage = "sendMessage"
 
 
 class Incoming(object):
@@ -35,6 +36,7 @@ class Incoming(object):
         self.subPipelineDone = "subPipelineDone"
         self.subPipelineStopped = "subPipelineStopped"
         self.serviceDiscoveryUpdate = "serviceDiscoveryUpdate"
+        self.message = "message"
 
 
 class Messages(object):

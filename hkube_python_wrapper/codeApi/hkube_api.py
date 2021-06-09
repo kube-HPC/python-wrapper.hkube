@@ -28,7 +28,18 @@ class HKubeApi:
         self.streamingManager.startMessageListening()
 
     def sendMessage(self, msg, flowName=None):
-        self.streamingManager.sendMessage(msg, flowName)
+        if (self._storage == "v1"):
+            message = {
+                "command": messages.outgoing.sendMessage,
+                "data": {
+                    "message": msg,
+                    "flowName": flowName,
+                    "sendMessageId":self.streamingManager.sendMessageId
+                }
+            }
+            self._wc.send(message)
+        else:
+            self.streamingManager.sendMessage(msg, flowName)
 
     def stopStreaming(self, force=True):
         self.streamingManager.stopStreaming(force)

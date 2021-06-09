@@ -198,10 +198,12 @@ class Algorunner(DaemonThread):
     def handle(self, command, data):
         if (command == messages.incoming.initialize):
             self._init(data)
-        elif (command == messages.incoming.start):
+        elif command == messages.incoming.start:
             self._start(data)
         elif (command == messages.incoming.stop):
             self._stopAlgorithm(data)
+        elif (command == messages.incoming.message):
+            self.streamingManager._onMessage(messageFlowPattern=None, msg=data['payload'], origin=data['origin'], sendMessageId=data['sendMessageId'])
         elif (command == messages.incoming.serviceDiscoveryUpdate):
             self._discovery_update(data)
         elif (command == messages.incoming.exit):
@@ -239,7 +241,7 @@ class Algorunner(DaemonThread):
     def _initDataServer(self, options):
         enable = options.discovery.get("enable")
         if (enable and self._storage != 'v1' and self._job is not None):
-            if(self._job.isStreaming and self._dataServer is not None):
+            if (self._job.isStreaming and self._dataServer is not None):
                 self._dataServer.shutDown()
                 self._dataServer = None
 
@@ -311,7 +313,7 @@ class Algorunner(DaemonThread):
     def _start(self, options):
         if (self._job.isStreaming):
             self.streamingManager.setParsedFlows(self._job.parsedFlow, self._job.defaultFlow)
-            if(self._job.childs):
+            if (self._job.childs):
                 self._setupStreamingProducer(self._job.nodeName)
                 self.streamingManager.clearMessageListeners()
         # pylint: disable=unused-argument
@@ -417,7 +419,7 @@ class Algorunner(DaemonThread):
                     method(options)
 
                 forceStop = options.get('forceStop', False)
-                if(forceStop is True):
+                if (forceStop is True):
                     log.info('stopping using force flag')
                 else:
                     log.info('stopping gracefully')
