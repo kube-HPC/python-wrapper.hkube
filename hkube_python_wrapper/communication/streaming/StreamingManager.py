@@ -6,9 +6,10 @@ from hkube_python_wrapper.util.logger import log
 
 
 class StreamingManager():
-    threadLocalStorage = threading.local()
 
     def __init__(self):
+        self.threadLocalStorage = threading.local()
+        self.threadLocalStorage.sendMessageId = None
         self.messageProducer = None
         self._messageListeners = dict()
         self._inputListener = []
@@ -17,7 +18,7 @@ class StreamingManager():
         self.parsedFlows = {}
         self.defaultFlow = None
         self._streamingListener = None
-        self.sendMessageId = None
+
 
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
@@ -56,7 +57,7 @@ class StreamingManager():
         self._inputListener.append(onMessage)
 
     def _onMessage(self, messageFlowPattern, msg, origin, sendMessageId=None):
-        self.sendMessageId = sendMessageId
+        self.threadLocalStorage.sendMessageId = sendMessageId
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern
         if (not self._inputListener):
             log.error('no input listeners on _onMessage method')

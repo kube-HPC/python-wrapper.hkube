@@ -7,6 +7,7 @@ from .execution import Execution
 from .waitFor import WaitForData
 from hkube_python_wrapper.util.queueImpl import Empty
 from hkube_python_wrapper.util.logger import log
+import threading
 
 
 class HKubeApi:
@@ -29,17 +30,24 @@ class HKubeApi:
 
     def sendMessage(self, msg, flowName=None):
         if (self._storage == "v1"):
+
             message = {
                 "command": messages.outgoing.sendMessage,
                 "data": {
                     "message": msg,
                     "flowName": flowName,
-                    "sendMessageId":self.streamingManager.sendMessageId
+                    "sendMessageId": self.get_local_sendMessage()
                 }
             }
             self._wc.send(message)
         else:
             self.streamingManager.sendMessage(msg, flowName)
+
+    def get_local_sendMessage(self):
+        try:
+            return self.streamingManager.threadLocalStorage.sendMessageId
+        except AttributeError as e:
+            return None
 
     def stopStreaming(self, force=True):
         self.streamingManager.stopStreaming(force)

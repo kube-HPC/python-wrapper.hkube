@@ -196,24 +196,25 @@ class Algorunner(DaemonThread):
         return [self._wsc, self]
 
     def handle(self, command, data):
-        if (command == messages.incoming.initialize):
+        if command == messages.incoming.initialize:
             self._init(data)
         elif command == messages.incoming.start:
             self._start(data)
-        elif (command == messages.incoming.stop):
+        elif command == messages.incoming.stop:
             self._stopAlgorithm(data)
-        elif (command == messages.incoming.message):
+        elif command == messages.incoming.message:
             self.streamingManager._onMessage(messageFlowPattern=None, msg=data['payload'], origin=data['origin'], sendMessageId=data['sendMessageId'])
-        elif (command == messages.incoming.serviceDiscoveryUpdate):
+            self._wsc.send({'command': messages.outgoing.doneMessage,'data': {'sendMessageId': data['sendMessageId']}})
+        elif command == messages.incoming.serviceDiscoveryUpdate:
             self._discovery_update(data)
-        elif (command == messages.incoming.exit):
+        elif command == messages.incoming.exit:
             # call exit on different thread to prevent deadlock
             Timer(0.1, lambda: self._exit(data), name="Exit timer").start()
-        elif (command in [messages.incoming.algorithmExecutionDone, messages.incoming.algorithmExecutionError]):
+        elif command in [messages.incoming.algorithmExecutionDone, messages.incoming.algorithmExecutionError]:
             self._hkubeApi.algorithmExecutionDone(data)
-        elif (command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError, messages.incoming.subPipelineStopped]):
+        elif command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError, messages.incoming.subPipelineStopped]:
             self._hkubeApi.subPipelineDone(data)
-        elif (command == messages.incoming.dataSourceResponse):
+        elif command == messages.incoming.dataSourceResponse:
             self._hkubeApi.dataSourceResponse(data)
 
     def get_message(self, blocking=True):

@@ -20,6 +20,7 @@ class Outgoing(object):
         self.startStoredSubPipeline = "startStoredSubPipeline"
         self.stopSubPipeline = "stopSubPipeline"
         self.sendMessage = "sendMessage"
+        self.doneMessage = "doneMessage"
 
 
 class Incoming(object):
