@@ -7,7 +7,7 @@ from .execution import Execution
 from .waitFor import WaitForData
 from hkube_python_wrapper.util.queueImpl import Empty
 from hkube_python_wrapper.util.logger import log
-import threading
+
 
 
 class HKubeApi:
@@ -30,7 +30,7 @@ class HKubeApi:
     def startMessageListening(self):
         self.streamingManager.startMessageListening()
 
-    def sendMessage(self, msg, flowName=None):
+    def sendMessage(self, msg, flowName=None): # pylint: disable=method-hidden
         self.streamingManager.sendMessage(msg, flowName)
 
     def sendRemoteStorage(self, msg, flowName=None):
@@ -47,7 +47,7 @@ class HKubeApi:
     def get_local_sendMessage(self):
         try:
             return self.streamingManager.threadLocalStorage.sendMessageId
-        except AttributeError as e:
+        except Exception:
             return None
 
     def stopStreaming(self, force=True):
