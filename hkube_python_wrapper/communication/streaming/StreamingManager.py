@@ -43,7 +43,7 @@ class StreamingManager():
                 options['remoteAddress'] = remoteAddressUrl
                 options['messageOriginNodeName'] = parentName
                 listener = MessageListener(options, nodeName)
-                listener.registerMessageListener(self._onMessage)
+                listener.registerMessageListener(self.onMessage)
                 self._messageListeners[remoteAddressUrl] = listener
 
             if (parent['type'] == 'Del'):
@@ -56,7 +56,7 @@ class StreamingManager():
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
 
-    def _onMessage(self, messageFlowPattern, msg, origin, sendMessageId=None):
+    def onMessage(self, messageFlowPattern, msg, origin, sendMessageId=None):
         self.threadLocalStorage.sendMessageId = sendMessageId
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern
         if (not self._inputListener):

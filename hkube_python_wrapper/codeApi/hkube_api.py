@@ -21,6 +21,8 @@ class HKubeApi:
         self._executions = {}
         self._lastExecId = 0
         self.streamingManager = streamingManager
+        if self._storage == "v1":
+            self.sendMessage = self.sendRemoteStorage
 
     def registerInputListener(self, onMessage):
         self.streamingManager.registerInputListener(onMessage)
@@ -29,19 +31,18 @@ class HKubeApi:
         self.streamingManager.startMessageListening()
 
     def sendMessage(self, msg, flowName=None):
-        if (self._storage == "v1"):
+        self.streamingManager.sendMessage(msg, flowName)
 
-            message = {
-                "command": messages.outgoing.sendMessage,
-                "data": {
-                    "message": msg,
-                    "flowName": flowName,
-                    "sendMessageId": self.get_local_sendMessage()
-                }
+    def sendRemoteStorage(self, msg, flowName=None):
+        message = {
+            "command": messages.outgoing.streamingOutMessage,
+            "data": {
+                "message": msg,
+                "flowName": flowName,
+                "sendMessageId": self.get_local_sendMessage()
             }
-            self._wc.send(message)
-        else:
-            self.streamingManager.sendMessage(msg, flowName)
+        }
+        self._wc.send(message)
 
     def get_local_sendMessage(self):
         try:

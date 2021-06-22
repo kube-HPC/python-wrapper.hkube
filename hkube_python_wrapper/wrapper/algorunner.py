@@ -202,9 +202,9 @@ class Algorunner(DaemonThread):
             self._start(data)
         elif command == messages.incoming.stop:
             self._stopAlgorithm(data)
-        elif command == messages.incoming.message:
-            self.streamingManager._onMessage(messageFlowPattern=None, msg=data['payload'], origin=data['origin'], sendMessageId=data['sendMessageId'])
-            self._wsc.send({'command': messages.outgoing.doneMessage,'data': {'sendMessageId': data['sendMessageId']}})
+        elif command == messages.incoming.streamingInMessage:
+            self.streamingManager.onMessage(messageFlowPattern=None, msg=data['payload'], origin=data['origin'], sendMessageId=data['sendMessageId'])
+            self._wsc.send({'command': messages.outgoing.streamingInMessageDone, 'data': {'sendMessageId': data['sendMessageId']}})
         elif command == messages.incoming.serviceDiscoveryUpdate:
             self._discovery_update(data)
         elif command == messages.incoming.exit:
