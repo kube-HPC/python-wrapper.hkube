@@ -196,22 +196,25 @@ class Algorunner(DaemonThread):
         return [self._wsc, self]
 
     def handle(self, command, data):
-        if (command == messages.incoming.initialize):
+        if command == messages.incoming.initialize:
             self._init(data)
-        elif (command == messages.incoming.start):
+        elif command == messages.incoming.start:
             self._start(data)
-        elif (command == messages.incoming.stop):
+        elif command == messages.incoming.stop:
             self._stopAlgorithm(data)
-        elif (command == messages.incoming.serviceDiscoveryUpdate):
+        elif command == messages.incoming.streamingInMessage:
+            self.streamingManager.onMessage(messageFlowPattern=None, msg=data['payload'], origin=data['origin'], sendMessageId=data['sendMessageId'])
+            self._wsc.send({'command': messages.outgoing.streamingInMessageDone, 'data': {'sendMessageId': data['sendMessageId']}})
+        elif command == messages.incoming.serviceDiscoveryUpdate:
             self._discovery_update(data)
-        elif (command == messages.incoming.exit):
+        elif command == messages.incoming.exit:
             # call exit on different thread to prevent deadlock
             Timer(0.1, lambda: self._exit(data), name="Exit timer").start()
-        elif (command in [messages.incoming.algorithmExecutionDone, messages.incoming.algorithmExecutionError]):
+        elif command in [messages.incoming.algorithmExecutionDone, messages.incoming.algorithmExecutionError]:
             self._hkubeApi.algorithmExecutionDone(data)
-        elif (command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError, messages.incoming.subPipelineStopped]):
+        elif command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError, messages.incoming.subPipelineStopped]:
             self._hkubeApi.subPipelineDone(data)
-        elif (command == messages.incoming.dataSourceResponse):
+        elif command == messages.incoming.dataSourceResponse:
             self._hkubeApi.dataSourceResponse(data)
 
     def get_message(self, blocking=True):
@@ -239,7 +242,7 @@ class Algorunner(DaemonThread):
     def _initDataServer(self, options):
         enable = options.discovery.get("enable")
         if (enable and self._storage != 'v1' and self._job is not None):
-            if(self._job.isStreaming and self._dataServer is not None):
+            if (self._job.isStreaming and self._dataServer is not None):
                 self._dataServer.shutDown()
                 self._dataServer = None
 
@@ -311,7 +314,7 @@ class Algorunner(DaemonThread):
     def _start(self, options):
         if (self._job.isStreaming):
             self.streamingManager.setParsedFlows(self._job.parsedFlow, self._job.defaultFlow)
-            if(self._job.childs):
+            if (self._job.childs):
                 self._setupStreamingProducer(self._job.nodeName)
                 self.streamingManager.clearMessageListeners()
         # pylint: disable=unused-argument
@@ -417,7 +420,7 @@ class Algorunner(DaemonThread):
                     method(options)
 
                 forceStop = options.get('forceStop', False)
-                if(forceStop is True):
+                if (forceStop is True):
                     log.info('stopping using force flag')
                 else:
                     log.info('stopping gracefully')

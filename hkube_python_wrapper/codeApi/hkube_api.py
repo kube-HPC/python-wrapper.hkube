@@ -9,6 +9,7 @@ from hkube_python_wrapper.util.queueImpl import Empty
 from hkube_python_wrapper.util.logger import log
 
 
+
 class HKubeApi:
     """Hkube interface for code-api operations"""
 
@@ -20,6 +21,8 @@ class HKubeApi:
         self._executions = {}
         self._lastExecId = 0
         self.streamingManager = streamingManager
+        if self._storage == "v1":
+            self.sendMessage = self.sendRemoteStorage
 
     def registerInputListener(self, onMessage):
         self.streamingManager.registerInputListener(onMessage)
@@ -27,8 +30,25 @@ class HKubeApi:
     def startMessageListening(self):
         self.streamingManager.startMessageListening()
 
-    def sendMessage(self, msg, flowName=None):
+    def sendMessage(self, msg, flowName=None): # pylint: disable=method-hidden
         self.streamingManager.sendMessage(msg, flowName)
+
+    def sendRemoteStorage(self, msg, flowName=None):
+        message = {
+            "command": messages.outgoing.streamingOutMessage,
+            "data": {
+                "message": msg,
+                "flowName": flowName,
+                "sendMessageId": self.get_local_sendMessage()
+            }
+        }
+        self._wc.send(message)
+
+    def get_local_sendMessage(self):
+        try:
+            return self.streamingManager.threadLocalStorage.sendMessageId
+        except Exception:
+            return None
 
     def stopStreaming(self, force=True):
         self.streamingManager.stopStreaming(force)

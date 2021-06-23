@@ -4,10 +4,12 @@ from .MessageProducer import MessageProducer
 from .StreamingListener import StreamingListener
 from hkube_python_wrapper.util.logger import log
 
+
 class StreamingManager():
-    threadLocalStorage = threading.local()
 
     def __init__(self):
+        self.threadLocalStorage = threading.local()
+        self.threadLocalStorage.sendMessageId = None
         self.messageProducer = None
         self._messageListeners = dict()
         self._inputListener = []
@@ -16,6 +18,7 @@ class StreamingManager():
         self.parsedFlows = {}
         self.defaultFlow = None
         self._streamingListener = None
+
 
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
@@ -40,12 +43,12 @@ class StreamingManager():
                 options['remoteAddress'] = remoteAddressUrl
                 options['messageOriginNodeName'] = parentName
                 listener = MessageListener(options, nodeName)
-                listener.registerMessageListener(self._onMessage)
+                listener.registerMessageListener(self.onMessage)
                 self._messageListeners[remoteAddressUrl] = listener
 
             if (parent['type'] == 'Del'):
                 listener = self._messageListeners.get(remoteAddressUrl)
-                if(listener):
+                if (listener):
                     closed = listener.close(force=False)
                     if (closed):
                         self._messageListeners.pop(remoteAddressUrl, None)
@@ -53,9 +56,10 @@ class StreamingManager():
     def registerInputListener(self, onMessage):
         self._inputListener.append(onMessage)
 
-    def _onMessage(self, messageFlowPattern, msg, origin):
+    def onMessage(self, messageFlowPattern, msg, origin, sendMessageId=None):
+        self.threadLocalStorage.sendMessageId = sendMessageId
         self.threadLocalStorage.messageFlowPattern = messageFlowPattern
-        if(not self._inputListener):
+        if (not self._inputListener):
             log.error('no input listeners on _onMessage method')
             return
         for listener in self._inputListener:
@@ -70,7 +74,7 @@ class StreamingManager():
 
     def startMessageListening(self):
         self.listeningToMessages = True
-        if(self._isStarted is False):
+        if (self._isStarted is False):
             self._isStarted = True
             self._streamingListener = StreamingListener(self._getMessageListeners)
             self._streamingListener.start()
