@@ -7,7 +7,7 @@ import time
 from .Flow import Flow
 from .MessageQueue import MessageQueue
 from hkube_python_wrapper.util.logger import log
-import hkube_python_wrapper.communication.zmq.streaming.signals as signals
+from hkube_python_wrapper.communication.zmq.streaming import signals
 import zmq
 
 HEARTBEAT_LIVENESS = 5
