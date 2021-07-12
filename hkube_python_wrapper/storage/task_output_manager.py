@@ -15,7 +15,7 @@ class TaskOutputManager(BaseStorageManager):
     def get(self, jobId, taskId):
         return super(TaskOutputManager, self).get({'path': self.createPath(jobId, taskId)})
 
-    def list(self, jobId):
+    def list(self, jobId): # pylint: disable=arguments-renamed
         return super(TaskOutputManager, self).list({'path': self.createPath(jobId)})
 
     def delete(self, jobId, taskId=''):
