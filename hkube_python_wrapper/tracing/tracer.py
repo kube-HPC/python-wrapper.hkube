@@ -1,8 +1,5 @@
 from jaeger_client import Config
 import opentracing
-# needed for python 3.7+ (workaround
-# https://github.com/jaegertracing/jaeger-client-python/blob/master/README.md#initialization--configuration)
-from tornado import ioloop  # pylint: disable=unused-import
 
 
 class Tracer(object):

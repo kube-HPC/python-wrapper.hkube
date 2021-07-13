@@ -2,7 +2,7 @@ import zmq
 import uuid
 import time
 from hkube_python_wrapper.util.logger import log
-import hkube_python_wrapper.communication.zmq.streaming.signals as signals
+from hkube_python_wrapper.communication.zmq.streaming import signals
 
 context = zmq.Context()
 POLL_MS = 1000
