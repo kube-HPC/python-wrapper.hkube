@@ -24,7 +24,8 @@ requires = [
     "wsaccel==0.6.2",
     "six==1.15.0",
     'pyzmq<=22.0.3',
-    "jaeger-client>=4.4.0",
+    'jaeger-client==4.0.0; python_version < "3.2.0"',
+    'jaeger-client>=4.4.0; python_version >= "3.2.0"',
     "pympler==0.9"
 ]
 
