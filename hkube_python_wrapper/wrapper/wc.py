@@ -39,6 +39,7 @@ class WebsocketClient(Thread):
             log.error(error)
 
     def on_close(self,code,reason):
+        # pylint: disable=unused-argument
         if(code == 1007):
             log.error('Other client already connected for debug')
         self.events.on_disconnect()
