@@ -17,6 +17,8 @@ packages = setuptools.find_packages()
 requires = [
     'Events==0.4',
     'websocket-client==0.57.0',
+    'websocket-server==0.5.1; python_version >= "3.2.0"',
+    'websocket-server==0.4; python_version < "3.2.0"',
     'simplejson==3.17.2',
     'pymongo==3.11.3',
     'msgpack==1.0.2',
