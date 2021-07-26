@@ -1,7 +1,5 @@
 import sys
 from events import Events
-from datetime import datetime
-import json
 
 
 def stdout_redirector():
@@ -35,7 +33,9 @@ def stdout_redirector():
             if ('\n' in self._lineBuffer or '\r' in self._lineBuffer):
                 lines = self._lineBuffer.splitlines()
                 self._lineBuffer = ''
-                self._buffer.append(message)
+                for line in lines:
+                    self._buffer.append(line)
+
 
             if (self.events and not self._sending and len(self._buffer) > self._bufferSize):
                 self._send()
