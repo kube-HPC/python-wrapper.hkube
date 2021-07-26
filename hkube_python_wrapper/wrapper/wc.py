@@ -9,6 +9,7 @@ from hkube_python_wrapper.wrapper.messages import messages
 from hkube_python_wrapper.util.logger import log
 
 
+
 class WebsocketClient(Thread):
     def __init__(self, msg_queue, encoding, url):
         Thread.__init__(self, name='WebsocketClient')
@@ -46,7 +47,8 @@ class WebsocketClient(Thread):
         self.events.on_connection()
 
     def send(self, message):
-        self._printThrottle(message)
+        if (message.get('command') != messages.outgoing.logData):
+            self._printThrottle(message)
         self._ws.send(self._encoding.encode(message, plainEncode=True), opcode=self._ws_opcode)
 
     def _printThrottle(self, message):

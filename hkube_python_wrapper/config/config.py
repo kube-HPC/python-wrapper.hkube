@@ -40,6 +40,7 @@ discovery = {
 algorithm = {
     "path": os.environ.get('ALGORITHM_PATH', "algorithm_unique_folder"),
     "entryPoint": os.environ.get('ALGORITHM_ENTRY_POINT', "main.py"),
+    "redirectLogs": os.environ.get('REDIRECT_LOGS', False)
 }
 storage = {
     "clusterName": os.environ.get('CLUSTER_NAME', 'local'),
