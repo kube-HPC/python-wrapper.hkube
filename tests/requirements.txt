@@ -3,6 +3,6 @@ pylint
 pytest
 pytest-mock
 pytest-cov
-websocket_server
+websocket_server==0.4
 requests
 wheel
