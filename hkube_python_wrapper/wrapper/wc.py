@@ -38,9 +38,9 @@ class WebsocketClient(Thread):
         if self._firstConnect:
             log.error(error)
 
-    def on_close(self,code,reason):
+    def on_close(self, code, reason):
         # pylint: disable=unused-argument
-        if(code == 1013):
+        if (code == 1013):
             log.error('Other client already connected for debug')
         self.events.on_disconnect()
 
@@ -56,17 +56,17 @@ class WebsocketClient(Thread):
         command = message["command"]
         setting = self._printThrottleMessages.get(command)
         shouldPrint = True
-        if(setting):
+        if (setting):
             delay = setting["delay"]
             lastPrint = setting["lastPrint"]
 
-            if(lastPrint is None or time.time() - lastPrint > delay):
+            if (lastPrint is None or time.time() - lastPrint > delay):
                 shouldPrint = True
                 setting.update({"lastPrint": time.time()})
             else:
                 shouldPrint = False
 
-        if(shouldPrint):
+        if (shouldPrint):
             log.info('sending message to worker: {command}', command=command)
 
     def run(self):
