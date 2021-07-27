@@ -6,7 +6,7 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = '2.2.0-dev3'
+VERSION = '2.2.0-dev4'
 
 
 
