@@ -21,6 +21,7 @@ class Outgoing(object):
         self.stopSubPipeline = "stopSubPipeline"
         self.streamingOutMessage = "streamingOutMessage"
         self.streamingInMessageDone = "streamingInMessageDone"
+        self.logData = "logData"
 
 
 class Incoming(object):
