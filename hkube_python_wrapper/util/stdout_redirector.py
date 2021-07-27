@@ -52,13 +52,3 @@ def stdout_redirector():
             sys.stderr = self._stderr
 
     return Logger()
-
-    # _stdout = sys.stdout
-    # _stderr = sys.stderr
-    # sys.stdout = logger
-    # sys.stderr = logger
-    # try:
-    #     yield logger
-    # finally:
-    #     sys.stdout = _stdout
-    #     sys.stderr = _stderr

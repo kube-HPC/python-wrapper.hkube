@@ -85,6 +85,7 @@ class Algorunner(DaemonThread):
         This method blocks forever
 
         Args:
+            debug_url (string) The websocket url of the debug algorithm in the kubernetes cluster.
             start (function): The entry point of the algorithm. Called for every invocation.
             init (function): Optional init method. Called for every invocation before the start.
             stop (function): Optional stop method. Called when the parent pipeline is stopped.
