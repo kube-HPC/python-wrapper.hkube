@@ -1,4 +1,5 @@
 from __future__ import print_function, division, absolute_import
+import sys
 import time
 from events import Events
 from websocket import ABNF
@@ -39,7 +40,11 @@ class WebsocketClient(Thread):
         if self._firstConnect:
             log.error(error)
 
-    def on_close(self):
+    def on_close(self, code, reason):
+        # pylint: disable=unused-argument
+        if (code == 1013):
+            log.error('Another client is already connected for debug')
+            sys.exit(0)
         self.events.on_disconnect()
 
     def on_open(self):
@@ -55,17 +60,17 @@ class WebsocketClient(Thread):
         command = message["command"]
         setting = self._printThrottleMessages.get(command)
         shouldPrint = True
-        if(setting):
+        if (setting):
             delay = setting["delay"]
             lastPrint = setting["lastPrint"]
 
-            if(lastPrint is None or time.time() - lastPrint > delay):
+            if (lastPrint is None or time.time() - lastPrint > delay):
                 shouldPrint = True
                 setting.update({"lastPrint": time.time()})
             else:
                 shouldPrint = False
 
-        if(shouldPrint):
+        if (shouldPrint):
             log.info('sending message to worker: {command}', command=command)
 
     def run(self):
