@@ -27,36 +27,36 @@ master_sha=$(curl -s --request GET \
   --header 'accept: application/vnd.github.v3+json' \
   --header "authorization: token ${GH_TOKEN}" | jq -r .sha)
   echo $master_sha
-version=$(python setup.py --version)
-branch_name="update_python_wrapper_to_${version//./_}"
-echo $branch_name
-curl --request POST \
-  --url https://api.github.com/repos/kube-hpc/hkube/git/refs \
-  --header 'accept: application/vnd.github.v3+json' \
-  --header "authorization: token ${GH_TOKEN}" \
-  --header 'content-type: application/json' \
-  --data '{
-      "sha": "'"$master_sha"'",
-      "ref":"refs/heads/'"$branch_name"'"
-  }'
-content=$(echo "hkube-python-wrapper==$version" | base64)
-curl --request PUT \
-  --url https://api.github.com/repos/kube-hpc/hkube/contents/core/algorithm-builder/environments/python/wrapper/requirements.txt \
-  --header 'accept: application/vnd.github.v3+json' \
-  --header "authorization: token ${GH_TOKEN}" \
-  --data '{
-      "message":"update python wrapper in builder to version '"$version"'",
-      "content": "'"$content"'",
-      "branch": "'"$branch_name"'",
-      "sha": "'"$file_sha"'"
-  }'
-
-  curl --request POST \
-  --url https://api.github.com/repos/kube-hpc/hkube/pulls \
-  --header 'accept: application/vnd.github.v3+json' \
-  --header "authorization: token ${GH_TOKEN}" \
-  --data '{
-      "title":"update python wrapper in builder to version '"$version"'",
-      "head": "'"$branch_name"'",
-      "base": "master"
-        }'
+#version=$(python setup.py --version)
+#branch_name="update_python_wrapper_to_${version//./_}"
+#echo $branch_name
+#curl --request POST \
+#  --url https://api.github.com/repos/kube-hpc/hkube/git/refs \
+#  --header 'accept: application/vnd.github.v3+json' \
+#  --header "authorization: token ${GH_TOKEN}" \
+#  --header 'content-type: application/json' \
+#  --data '{
+#      "sha": "'"$master_sha"'",
+#      "ref":"refs/heads/'"$branch_name"'"
+#  }'
+#content=$(echo "hkube-python-wrapper==$version" | base64)
+#curl --request PUT \
+#  --url https://api.github.com/repos/kube-hpc/hkube/contents/core/algorithm-builder/environments/python/wrapper/requirements.txt \
+#  --header 'accept: application/vnd.github.v3+json' \
+#  --header "authorization: token ${GH_TOKEN}" \
+#  --data '{
+#      "message":"update python wrapper in builder to version '"$version"'",
+#      "content": "'"$content"'",
+#      "branch": "'"$branch_name"'",
+#      "sha": "'"$file_sha"'"
+#  }'
+#
+#  curl --request POST \
+#  --url https://api.github.com/repos/kube-hpc/hkube/pulls \
+#  --header 'accept: application/vnd.github.v3+json' \
+#  --header "authorization: token ${GH_TOKEN}" \
+#  --data '{
+#      "title":"update python wrapper in builder to version '"$version"'",
+#      "head": "'"$branch_name"'",
+#      "base": "master"
+#        }'

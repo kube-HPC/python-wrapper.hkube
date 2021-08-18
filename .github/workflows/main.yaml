@@ -62,3 +62,13 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
+      - name: set version
+        run: echo `version=$(python setup.py --version)`>> $GITHUB_ENV
+      - name: trigger artifacts registry
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/kube-HPC/artifacts-registry/dispatches
+          event_type: trigger
+          client_payload: "{\"version\": \"${{env.version}}\" , \"wrapper\": \"python\" , \"action\": \"dev-version\" }"
+        env:
+          GITHUB_TOKEN: '${{ secrets.GH_TOKEN }}'
