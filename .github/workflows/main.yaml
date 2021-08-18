@@ -63,7 +63,7 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
       - name: set version
-        run: echo `version=$(python setup.py --version)`>> $GITHUB_ENV
+        run: echo version=`python setup.py --version`>> $GITHUB_ENV
       - name: trigger artifacts registry
         uses: octokit/request-action@v2.x
         with:
