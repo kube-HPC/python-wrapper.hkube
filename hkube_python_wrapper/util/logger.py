@@ -16,14 +16,7 @@ log = Adapter(logging.getLogger('wrapper'), {})
 
 def setup():
     level = config.logging.get('level', 'INFO')
-    if level in ['0', '1']:
-        level = 'DEBUG'
-    elif level == '2':
-        level = 'INFO'
-    elif level == '3':
-        level = 'WARNING'
-    elif level == '4':
-        level = 'ERROR'
+    level = level.upper()
     logger = logging.getLogger('wrapper')
     logger.propagate = False
     logger.setLevel(level)
