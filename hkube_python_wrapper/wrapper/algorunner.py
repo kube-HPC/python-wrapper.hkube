@@ -170,7 +170,7 @@ class Algorunner(DaemonThread):
                         self._originalAlgorithm['start'] = lambda args, api: self._originalAlgorithm['startOrig'](
                             args)
                     log.info('found method {methodName}', methodName=methodName)
-                except Exception as e:
+                except Exception:
                     mandatory = "mandatory" if isMandatory else "optional"
                     error = 'unable to find {mandatory} method {methodName}'.format(
                         mandatory=mandatory, methodName=methodName)
