@@ -5,6 +5,9 @@ def getIntEnv(name, defaultValue):
     strValue = os.environ.get(name, defaultValue)
     return int(strValue)
 
+def getBoolEnv(name, defaultValue):
+    strValue = os.environ.get(name, defaultValue)
+    return strValue.lower() == 'true'
 
 socket = {
     "port": os.environ.get('WORKER_SOCKET_PORT', "3001"),
@@ -37,7 +40,8 @@ storage = {
     "s3": {
         "accessKeyId": os.environ.get('AWS_ACCESS_KEY_ID', 'AKIAIOSFODNN7EXAMPLE'),
         "secretAccessKey": os.environ.get('AWS_SECRET_ACCESS_KEY', 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'),
-        "endpoint": os.environ.get('AWS_ENDPOINT', 'http://127.0.0.1:9000')
+        "endpoint": os.environ.get('AWS_ENDPOINT', 'http://127.0.0.1:9000'),
+        "verify_ssl": getBoolEnv('S3_VERIFY_SSL', 'False')
     }
 }
 tracer = {

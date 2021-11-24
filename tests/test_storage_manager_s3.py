@@ -2,9 +2,9 @@ import os
 import pytest
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.storage.storage_manager import StorageManager
-from tests.configs import config
+from tests.configs import config as config_orig
 
-config = config.storage.copy()
+config = config_orig.storage.copy()
 config['type'] = 's3'
 
 bucket = 'local-hkube'
@@ -64,4 +64,17 @@ def test_task_output_put_get():
     obj_path = sm.hkube.put('myJobId', 'myTaksId', header=header, value=payload)
     assert obj_path == {'path': bucket + '/myJobId/myTaksId'}
     (header1, payload1) = sm.hkube.get('myJobId', 'myTaksId')
+    assert encoding.decode(header=header1, value=payload1) == raw
+
+def test_s3_ssl():
+    config_ss3 = config_orig.storage.copy()
+    config_ss3['type'] = 's3'
+    config_ss3['s3']['verify_ssl'] = False
+    config_ss3['s3']['endpoint']='https://127.0.0.1:9001'
+    
+    sm_ssl = StorageManager(config_ss3)
+    sm_ssl.storage.adapter.init({'bucket': bucket})
+    options = {'path': bucket + os.path.sep + 'key1', 'header': header, 'data': payload}
+    sm_ssl.storage.put(options)
+    (header1, payload1) = sm_ssl.storage.get(options)
     assert encoding.decode(header=header1, value=payload1) == raw

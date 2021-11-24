@@ -12,7 +12,8 @@ class S3Adapter:
             's3',
             aws_access_key_id=accessKeyId,
             aws_secret_access_key=secretAccessKey,
-            endpoint_url=endpoint
+            endpoint_url=endpoint,
+            verify=config["verify_ssl"]
         )
 
     def init(self, options):
