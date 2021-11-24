@@ -2,8 +2,8 @@
 
 set -e
 
-git config --global user.email "travis@travis-ci.org"
-git config --global user.name "Travis CI"
+git config --global user.email "action@github.com"
+git config --global user.name "GitHub Action"
 # git remote set-url --push origin "https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git"
 # git remote -v
 git checkout -f -b version-branch
