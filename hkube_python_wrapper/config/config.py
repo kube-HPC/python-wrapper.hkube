@@ -57,6 +57,7 @@ storage = {
         "endpoint": os.environ.get('S3_ENDPOINT_URL', 'http://127.0.0.1:9000'),
         "region": os.environ.get('S3_REGION', ''),
         "bucketName": os.environ.get('S3_BUCKET_NAME', None),
+        "verify_ssl": getBoolEnv('S3_VERIFY_SSL', 'False')
     }
 }
 tracer = {
