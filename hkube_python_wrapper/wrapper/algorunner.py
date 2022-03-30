@@ -17,9 +17,11 @@ from hkube_python_wrapper.communication.streaming.StreamingManager import Stream
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
 from hkube_python_wrapper.util.timerImpl import Timer
 from hkube_python_wrapper.util.logger import log
+from hkube_python_wrapper.util.url_encode_impl import url_encode
 from hkube_python_wrapper.util.stdout_redirector import stdout_redirector
 import os
 import sys
+import platform
 import importlib
 import traceback
 from threading import Thread, current_thread
@@ -205,7 +207,8 @@ class Algorunner(DaemonThread):
 
         self._url += '?storage={storage}&encoding={encoding}'.format(
             storage=self._storage, encoding=encoding)
-
+        if (self._redirectLogs):
+            self._url += '&hostname={hostname}'.format(hostname=url_encode(platform.node()))
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initDataAdapter(options)
         self.streamingManager = StreamingManager()
@@ -238,6 +241,10 @@ class Algorunner(DaemonThread):
             self._hkubeApi.subPipelineDone(data)
         elif command == messages.incoming.dataSourceResponse:
             self._hkubeApi.dataSourceResponse(data)
+        elif command == messages.incoming.alreadyConnectedError:
+            log.error('Debugger already connected from {hostname}'.format(hostname=data['hostname']))
+            # pylint: disable=protected-access
+            os._exit(1)
 
     def get_message(self, blocking=True):
         return self._msg_queue.get(block=blocking, timeout=0.1)

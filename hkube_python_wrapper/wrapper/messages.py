@@ -39,6 +39,7 @@ class Incoming(object):
         self.subPipelineStopped = "subPipelineStopped"
         self.serviceDiscoveryUpdate = "serviceDiscoveryUpdate"
         self.streamingInMessage = "streamingInMessage"
+        self.alreadyConnectedError = "alreadyConnected"
 
 
 class Messages(object):
