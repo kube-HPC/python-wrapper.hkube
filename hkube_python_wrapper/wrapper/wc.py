@@ -1,5 +1,4 @@
 from __future__ import print_function, division, absolute_import
-import sys
 import time
 from events import Events
 from websocket import ABNF
@@ -42,9 +41,7 @@ class WebsocketClient(Thread):
 
     def on_close(self, code, reason):
         # pylint: disable=unused-argument
-        if (code == 1013):
-            log.error('Another client is already connected for debug')
-            sys.exit(0)
+
         self.events.on_disconnect()
 
     def on_open(self):
