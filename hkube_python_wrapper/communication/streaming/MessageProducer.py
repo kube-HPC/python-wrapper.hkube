@@ -8,6 +8,7 @@ from hkube_python_wrapper.util.logger import log
 
 RESPONSE_CACHE = 10
 
+
 class MessageProducer(DaemonThread):
     def __init__(self, options, consumerNodes, nodeName):
         self.nodeNames = consumerNodes
@@ -90,7 +91,7 @@ class MessageProducer(DaemonThread):
             statisticsPerNode.append(singleNodeStatistics)
         statistics = {"binarySize": self.adapter.messageQueue.sizeSum,
                       "configuredMaxBinarySize": self.adapter.maxMemorySize,
-                      "statisticsPerNode":statisticsPerNode
+                      "statisticsPerNode": statisticsPerNode
                       }
         return statistics
 
