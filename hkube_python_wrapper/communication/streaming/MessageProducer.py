@@ -77,6 +77,23 @@ class MessageProducer(DaemonThread):
     def registerStatisticsListener(self, listener):
         self.listeners.append(listener)
 
+    def getStatistics(self):
+        statisticsPerNode = []
+        for nodeName in self.nodeNames:
+            queueSize = self.adapter.queueSize(nodeName)
+            sent = self.adapter.sent(nodeName)
+            singleNodeStatistics = {"nodeName": nodeName,
+                                    "sent": sent,
+                                    "queueSize": queueSize,
+                                    "dropped": self.adapter.messageQueue.lostMessages[nodeName]
+                                    }
+            statisticsPerNode.append(singleNodeStatistics)
+        statistics = {"binarySize": self.adapter.messageQueue.sizeSum,
+                      "configuredMaxBinarySize": self.adapter.maxMemorySize,
+                      "statisticsPerNode":statisticsPerNode
+                      }
+        return statistics
+
     def sendStatistics(self):
         statistics = []
         for nodeName in self.nodeNames:
