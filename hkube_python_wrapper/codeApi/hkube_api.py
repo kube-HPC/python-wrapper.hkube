@@ -57,7 +57,7 @@ class HKubeApi:
         return self.streamingManager.listeningToMessages
 
     def get_streaming_statistics(self):
-        self.streamingManager.messageProducer.getStatistics()
+        return self.streamingManager.messageProducer.getStatistics()
 
     def _generateExecId(self):
         self._lastExecId += 1
