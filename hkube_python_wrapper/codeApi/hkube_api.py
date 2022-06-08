@@ -9,7 +9,6 @@ from hkube_python_wrapper.util.queueImpl import Empty
 from hkube_python_wrapper.util.logger import log
 
 
-
 class HKubeApi:
     """Hkube interface for code-api operations"""
 
@@ -30,7 +29,7 @@ class HKubeApi:
     def startMessageListening(self):
         self.streamingManager.startMessageListening()
 
-    def sendMessage(self, msg, flowName=None): # pylint: disable=method-hidden
+    def sendMessage(self, msg, flowName=None):  # pylint: disable=method-hidden
         self.streamingManager.sendMessage(msg, flowName)
 
     def sendRemoteStorage(self, msg, flowName=None):
@@ -57,13 +56,13 @@ class HKubeApi:
         return self.streamingManager.listeningToMessages
 
     def get_streaming_statistics(self):
-        if(self.streamingManager.messageProducer is not None):
+        if (self.streamingManager.messageProducer is not None):
             return self.streamingManager.messageProducer.getStatistics()
         print("get_streaming_statistics returns no value in debug")
         return {"nodeName": "NextNodeName",
-                                    "sent": -1,
-                                    "queueSize": -1,
-                                    "dropped": -1}
+                "sent": -1,
+                "queueSize": -1,
+                "dropped": -1}
 
     def _generateExecId(self):
         self._lastExecId += 1
