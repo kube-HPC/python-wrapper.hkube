@@ -61,195 +61,195 @@ class HKubeApi:
         print("get_streaming_statistics returns no value in debug")
         return {"statisticsPerNode": [{"nodeName": "NextNodeName", "sent": -1, "queueSize": -1, "dropped": -1}], "binarySize": -1, "configuredMaxBinarySize": -1}
 
-        def _generateExecId(self):
-            self._lastExecId += 1
-            return str(self._lastExecId)
+    def _generateExecId(self):
+        self._lastExecId += 1
+        return str(self._lastExecId)
 
-        def algorithmExecutionDone(self, data):
-            execId = data.get('execId')
-            self._handleExecutionDone(execId, data)
+    def algorithmExecutionDone(self, data):
+        execId = data.get('execId')
+        self._handleExecutionDone(execId, data)
 
-        def subPipelineDone(self, data):
-            subPipelineId = data.get('subPipelineId')
-            self._handleExecutionDone(subPipelineId, data)
+    def subPipelineDone(self, data):
+        subPipelineId = data.get('subPipelineId')
+        self._handleExecutionDone(subPipelineId, data)
 
-        def dataSourceResponse(self, data):
-            requestId = data.get('requestId')
-            execution = self._executions.get(requestId)
-            try:
-                error = data.get('error')
-                dataSource = None
-                if (not error):
-                    dataSource = data.get('response')
-                execution.waiter.set((error, dataSource))
-            except Exception as e:
-                execution.waiter.set(e)
-            finally:
-                self._executions.pop(requestId)
+    def dataSourceResponse(self, data):
+        requestId = data.get('requestId')
+        execution = self._executions.get(requestId)
+        try:
+            error = data.get('error')
+            dataSource = None
+            if (not error):
+                dataSource = data.get('response')
+            execution.waiter.set((error, dataSource))
+        except Exception as e:
+            execution.waiter.set(e)
+        finally:
+            self._executions.pop(requestId)
 
-        def _handleExecutionDone(self, execId, data):
-            execution = self._executions.get(execId)
-            # pylint: disable=too-many-nested-blocks
-            try:
-                error = data.get('error')
-                if (error):
-                    execution.waiter.set(error)
+    def _handleExecutionDone(self, execId, data):
+        execution = self._executions.get(execId)
+        # pylint: disable=too-many-nested-blocks
+        try:
+            error = data.get('error')
+            if (error):
+                execution.waiter.set(error)
 
-                elif (execution.includeResult):
-                    response = data.get('response')
-                    result = response
-                    if (typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v3'):
-                        result = self._dataAdapter.tryGetDataFromPeerOrStorage(
-                            response)
-                    if self._storage == 'v3' and typeCheck.isList(result):
-                        for node in result:
-                            if typeCheck.isDict(node) and getPath(node, 'info.isBigData') is True:
-                                nodeResult = self._dataAdapter.tryGetDataFromPeerOrStorage({"storageInfo": node['info']})
-                                node['result'] = nodeResult
-                    execution.waiter.set(result)
-                else:
-                    execution.waiter.set(None)
-
-            except Exception as e:
-                execution.waiter.set(e)
-            finally:
-                self._executions.pop(execId)
-
-        def start_algorithm(self, algorithmName, input=[], includeResult=True):
-            """Starts algorithm execution.
-
-            starts an invocation of algorithm with input, and waits for results
-
-            Args:
-                algorithmName (string): The name of the algorithm to start.
-                input (array): Optional input for the algorithm.
-                includeResult (bool): if True, returns the result of the algorithm execution.
-            Returns:
-                Returns the result of the algorithm
-            """
-            log.info('start_algorithm called with {name}', name=algorithmName)
-            execId = self._generateExecId()
-            execution = Execution(execId, includeResult, WaitForData(True))
-            self._executions[execId] = execution
-            if self._storage == 'v3':
-                (storage, mappedInput) = self._dataAdapter.setAlgorithmStorage(self._wrapper.getCurrentJob().jobId, input)
-                message = {
-                    "command": messages.outgoing.startAlgorithmExecution,
-                    "data": {
-                        "execId": execId,
-                        "algorithmName": algorithmName,
-                        "storageInput": mappedInput,
-                        "storage": storage,
-                        "includeResult": includeResult
-                    }
-                }
+            elif (execution.includeResult):
+                response = data.get('response')
+                result = response
+                if (typeCheck.isDict(response) and response.get('storageInfo') and self._storage == 'v3'):
+                    result = self._dataAdapter.tryGetDataFromPeerOrStorage(
+                        response)
+                if self._storage == 'v3' and typeCheck.isList(result):
+                    for node in result:
+                        if typeCheck.isDict(node) and getPath(node, 'info.isBigData') is True:
+                            nodeResult = self._dataAdapter.tryGetDataFromPeerOrStorage({"storageInfo": node['info']})
+                            node['result'] = nodeResult
+                execution.waiter.set(result)
             else:
-                message = {
-                    "command": messages.outgoing.startAlgorithmExecution,
-                    "data": {
-                        "execId": execId,
-                        "algorithmName": algorithmName,
-                        "input": input,
-                        "includeResult": includeResult
-                    }
-                }
-            self._wc.send(message)
+                execution.waiter.set(None)
 
-            return self._waitForResult(execution)
+        except Exception as e:
+            execution.waiter.set(e)
+        finally:
+            self._executions.pop(execId)
 
-        def getDataSource(self, dataSource):
-            log.info('getDataSource called')
-            requestId = self._generateExecId()
-            execution = Execution(requestId, False, WaitForData(True))
-            self._executions[requestId] = execution
+    def start_algorithm(self, algorithmName, input=[], includeResult=True):
+        """Starts algorithm execution.
 
+        starts an invocation of algorithm with input, and waits for results
+
+        Args:
+            algorithmName (string): The name of the algorithm to start.
+            input (array): Optional input for the algorithm.
+            includeResult (bool): if True, returns the result of the algorithm execution.
+        Returns:
+            Returns the result of the algorithm
+        """
+        log.info('start_algorithm called with {name}', name=algorithmName)
+        execId = self._generateExecId()
+        execution = Execution(execId, includeResult, WaitForData(True))
+        self._executions[execId] = execution
+        if self._storage == 'v3':
+            (storage, mappedInput) = self._dataAdapter.setAlgorithmStorage(self._wrapper.getCurrentJob().jobId, input)
             message = {
-                "command": messages.outgoing.dataSourceRequest,
+                "command": messages.outgoing.startAlgorithmExecution,
                 "data": {
-                    "requestId": requestId,
-                    "dataSource": dataSource
-                }
-            }
-            self._wc.send(message)
-
-            return self._waitForResult(execution)
-
-        def start_stored_subpipeline(self, name, flowInput={}, includeResult=True):
-            """Starts pipeline execution.
-
-            starts an invocation of a sub-pipeline with input, and waits for results
-
-            Args:
-                name (string): The name of the pipeline to start.
-                flowInput (dict): Optional flowInput for the pipeline.
-                includeResult (bool): if True, returns the result of the pipeline execution.
-                    default: True
-            Returns:
-                Returns the result of the pipeline
-            """
-            log.info('start_stored_subpipeline called with {name}', name=name)
-            execId = self._generateExecId()
-            execution = Execution(execId, includeResult, WaitForData(True))
-            self._executions[execId] = execution
-
-            message = {
-                "command": messages.outgoing.startStoredSubPipeline,
-                "data": {
-                    "subPipeline": {
-                        "name": name,
-                        "flowInput": flowInput
-                    },
-                    "subPipelineId": execId,
+                    "execId": execId,
+                    "algorithmName": algorithmName,
+                    "storageInput": mappedInput,
+                    "storage": storage,
                     "includeResult": includeResult
                 }
             }
-            self._wc.send(message)
-            return self._waitForResult(execution)
-
-        def start_raw_subpipeline(self, name, nodes, flowInput, options={}, webhooks={}, includeResult=True):
-            """Starts pipeline execution.
-
-            starts an invocation of a sub-pipeline with input, nodes, options, and optionally waits for results
-
-            Args:
-                name (string): The name of the pipeline to start.
-                nodes (array): array of node definitions (like in the pipeline descriptor)
-                options (dict): pipeline options (like in the pipeline descriptor)
-                webhooks (dict): webhook options (like in the pipeline descriptor)
-                flowInput (dict): flowInput for the pipeline.
-                includeResult (bool): if True, returns the result of the pipeline execution.
-                    default: True
-            Returns:
-                Returns the result of the pipeline
-            """
-            log.info('start_raw_subpipeline called with {name}', name=name)
-            execId = self._generateExecId()
-            execution = Execution(execId, includeResult, WaitForData(True))
-            self._executions[execId] = execution
-
+        else:
             message = {
-                "command": messages.outgoing.startRawSubPipeline,
+                "command": messages.outgoing.startAlgorithmExecution,
                 "data": {
-                    "subPipeline": {
-                        "name": name,
-                        "nodes": nodes,
-                        "options": options,
-                        "webhooks": webhooks,
-                        "flowInput": flowInput
-                    },
-                    "subPipelineId": execId,
+                    "execId": execId,
+                    "algorithmName": algorithmName,
+                    "input": input,
                     "includeResult": includeResult
                 }
             }
-            self._wc.send(message)
-            return self._waitForResult(execution)
+        self._wc.send(message)
 
-        def _waitForResult(self, execution):
-            while not execution.waiter.ready():
-                try:
-                    (command, data) = self._wrapper.get_message(False)
-                    self._wrapper.handle(command, data)
-                except Empty:
-                    pass
-                time.sleep(0.01)
-            return execution.waiter.get()
+        return self._waitForResult(execution)
+
+    def getDataSource(self, dataSource):
+        log.info('getDataSource called')
+        requestId = self._generateExecId()
+        execution = Execution(requestId, False, WaitForData(True))
+        self._executions[requestId] = execution
+
+        message = {
+            "command": messages.outgoing.dataSourceRequest,
+            "data": {
+                "requestId": requestId,
+                "dataSource": dataSource
+            }
+        }
+        self._wc.send(message)
+
+        return self._waitForResult(execution)
+
+    def start_stored_subpipeline(self, name, flowInput={}, includeResult=True):
+        """Starts pipeline execution.
+
+        starts an invocation of a sub-pipeline with input, and waits for results
+
+        Args:
+            name (string): The name of the pipeline to start.
+            flowInput (dict): Optional flowInput for the pipeline.
+            includeResult (bool): if True, returns the result of the pipeline execution.
+                default: True
+        Returns:
+            Returns the result of the pipeline
+        """
+        log.info('start_stored_subpipeline called with {name}', name=name)
+        execId = self._generateExecId()
+        execution = Execution(execId, includeResult, WaitForData(True))
+        self._executions[execId] = execution
+
+        message = {
+            "command": messages.outgoing.startStoredSubPipeline,
+            "data": {
+                "subPipeline": {
+                    "name": name,
+                    "flowInput": flowInput
+                },
+                "subPipelineId": execId,
+                "includeResult": includeResult
+            }
+        }
+        self._wc.send(message)
+        return self._waitForResult(execution)
+
+    def start_raw_subpipeline(self, name, nodes, flowInput, options={}, webhooks={}, includeResult=True):
+        """Starts pipeline execution.
+
+        starts an invocation of a sub-pipeline with input, nodes, options, and optionally waits for results
+
+        Args:
+            name (string): The name of the pipeline to start.
+            nodes (array): array of node definitions (like in the pipeline descriptor)
+            options (dict): pipeline options (like in the pipeline descriptor)
+            webhooks (dict): webhook options (like in the pipeline descriptor)
+            flowInput (dict): flowInput for the pipeline.
+            includeResult (bool): if True, returns the result of the pipeline execution.
+                default: True
+        Returns:
+            Returns the result of the pipeline
+        """
+        log.info('start_raw_subpipeline called with {name}', name=name)
+        execId = self._generateExecId()
+        execution = Execution(execId, includeResult, WaitForData(True))
+        self._executions[execId] = execution
+
+        message = {
+            "command": messages.outgoing.startRawSubPipeline,
+            "data": {
+                "subPipeline": {
+                    "name": name,
+                    "nodes": nodes,
+                    "options": options,
+                    "webhooks": webhooks,
+                    "flowInput": flowInput
+                },
+                "subPipelineId": execId,
+                "includeResult": includeResult
+            }
+        }
+        self._wc.send(message)
+        return self._waitForResult(execution)
+
+    def _waitForResult(self, execution):
+        while not execution.waiter.ready():
+            try:
+                (command, data) = self._wrapper.get_message(False)
+                self._wrapper.handle(command, data)
+            except Empty:
+                pass
+            time.sleep(0.01)
+        return execution.waiter.get()
