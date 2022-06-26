@@ -243,7 +243,7 @@ class HKubeApi:
         }
         self._wc.send(message)
         return self._waitForResult(execution)
-
+    # reset all pending messages to zero.
     def resetQueue(self):
         self.streamingManager.resetQueue()
 
