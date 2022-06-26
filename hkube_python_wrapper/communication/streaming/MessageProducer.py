@@ -43,6 +43,9 @@ class MessageProducer(DaemonThread):
             runThread.start()
         DaemonThread.__init__(self, "MessageProducer")
 
+    def resetQueue(self):
+        self.adapter.resetQueue()
+
     def produce(self, messageFlowPattern, obj):
         header, encodedMessage = self._encoding.encode(obj)
         self.adapter.produce(header, encodedMessage, messageFlowPattern=messageFlowPattern)

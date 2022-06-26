@@ -30,6 +30,9 @@ class StreamingManager():
         if (nextNodes):
             self.messageProducer.start()
 
+    def resetQueue(self):
+        self.messageProducer.resetQueue()
+
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
         log.debug("parents {parents}", parents=str(parents))
         for parent in parents:

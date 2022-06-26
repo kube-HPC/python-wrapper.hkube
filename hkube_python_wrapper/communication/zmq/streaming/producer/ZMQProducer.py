@@ -98,6 +98,9 @@ class ZMQProducer(object):
     def sent(self, consumerType):
         return self.messageQueue.sent[consumerType]
 
+    def resetQueue(self):
+        self.messageQueue.resetAll()
+
     def close(self, force=True):
         log.info('queue size before close = {len}', len=len(self.messageQueue.queue))
         while self.messageQueue.queue and not force:

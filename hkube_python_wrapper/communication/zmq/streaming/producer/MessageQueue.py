@@ -20,6 +20,19 @@ class MessageQueue(object):
         self.sizeSum = 0
         self.queue = []
 
+    def resetAll(self):
+        self.indexPerConsumer = OrderedDict()
+        self.sent = {}
+        self.everAppended = {}
+        self.lostMessages = {}
+        for consumerType in self.consumerTypes:
+            self.indexPerConsumer[consumerType] = 0
+            self.sent[consumerType] = 0
+            self.everAppended[consumerType] = 0
+            self.lostMessages[consumerType] = 0
+        self.sizeSum = 0
+        self.queue = []
+
     def hasItems(self, consumerType):
         return self.indexPerConsumer[consumerType] < len(self.queue)
 

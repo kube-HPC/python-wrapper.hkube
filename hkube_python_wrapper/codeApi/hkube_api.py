@@ -244,6 +244,9 @@ class HKubeApi:
         self._wc.send(message)
         return self._waitForResult(execution)
 
+    def resetQueue(self):
+        self.streamingManager.resetQueue()
+
     def _waitForResult(self, execution):
         while not execution.waiter.ready():
             try:
