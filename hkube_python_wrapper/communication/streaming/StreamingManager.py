@@ -33,6 +33,9 @@ class StreamingManager():
     def resetQueue(self):
         self.messageProducer.resetQueue()
 
+    def resetQueuePartial(self, numberOfMessagesToRemove):
+        self.messageProducer.resetQueuePartial(numberOfMessagesToRemove)
+
     def setupStreamingListeners(self, listenerConfig, parents, nodeName):
         log.debug("parents {parents}", parents=str(parents))
         for parent in parents:

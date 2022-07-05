@@ -33,6 +33,13 @@ class MessageQueue(object):
         self.sizeSum = 0
         self.queue = []
 
+    def reset(self, numberOfMessagesToRemove):
+        for i in range(numberOfMessagesToRemove):
+            if (self.queue):
+                self.loseMessage()
+            else:
+                break
+
     def hasItems(self, consumerType):
         return self.indexPerConsumer[consumerType] < len(self.queue)
 

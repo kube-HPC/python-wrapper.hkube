@@ -247,6 +247,9 @@ class HKubeApi:
     def resetQueue(self):
         self.streamingManager.resetQueue()
 
+    def resetQueuePartial(self, numberOfMessagesToRemove):
+        self.streamingManager.resetQueuePartial(numberOfMessagesToRemove)
+
     def _waitForResult(self, execution):
         while not execution.waiter.ready():
             try:
