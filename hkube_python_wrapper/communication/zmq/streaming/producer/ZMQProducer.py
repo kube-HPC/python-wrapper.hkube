@@ -15,6 +15,7 @@ CYCLE_LENGTH_MS = 1000
 
 context = zmq.Context()
 
+
 class ZMQProducer(object):
     def __init__(self, port, maxMemorySize, responseAccumulator, queueTimeAccumulator, consumerTypes, encoding, nodeName):
         self.nodeName = nodeName
@@ -50,18 +51,18 @@ class ZMQProducer(object):
 
                     frames = self._backend.recv_multipart() or []
 
-                    if(len(frames) != 4):
+                    if (len(frames) != 4):
                         log.warning("got {len} frames {frames}", len=len(frames), frames=frames)
                         continue
 
-                    address, signal, consumer, result = frames # pylint: disable=unbalanced-tuple-unpacking
+                    address, signal, consumer, result = frames  # pylint: disable=unbalanced-tuple-unpacking
                     consumerType = self.encoding.decode(value=consumer, plainEncode=True)
 
                     if (not consumerType in self.consumerTypes):
                         log.warning("Producer got message from unknown consumer: {consumerType}, dropping the message", consumerType=consumerType)
                         continue
 
-                    if(signal == signals.PPP_DONE):
+                    if (signal == signals.PPP_DONE):
                         sentTime = self.watingForResponse.get(address)
                         if (sentTime):
                             now = time.time()
@@ -101,7 +102,7 @@ class ZMQProducer(object):
     def resetQueue(self):
         self.messageQueue.resetAll()
 
-    def resetQueuePartial(self,numberOfMessagesToRemove):
+    def resetQueuePartial(self, numberOfMessagesToRemove):
         self.messageQueue.reset(numberOfMessagesToRemove)
 
     def close(self, force=True):

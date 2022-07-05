@@ -34,7 +34,7 @@ class MessageQueue(object):
         self.queue = []
 
     def reset(self, numberOfMessagesToRemove):
-        for i in range(numberOfMessagesToRemove):
+        for _ in range(numberOfMessagesToRemove):
             if (self.queue):
                 self.loseMessage()
             else:
