@@ -21,17 +21,13 @@ class MessageQueue(object):
         self.queue = []
 
     def resetAll(self):
-        self.indexPerConsumer = OrderedDict()
-        self.sent = {}
-        self.everAppended = {}
-        self.lostMessages = {}
-        for consumerType in self.consumerTypes:
-            self.indexPerConsumer[consumerType] = 0
-            self.sent[consumerType] = 0
-            self.everAppended[consumerType] = 0
-            self.lostMessages[consumerType] = 0
-        self.sizeSum = 0
-        self.queue = []
+        with self.lock:
+            for consumerType in self.indexPerConsumer.keys():
+                 self.lostMessages[consumerType] = self.everAppended[consumerType] - self.sent[consumerType]
+            for consumerType in self.consumerTypes:
+                self.indexPerConsumer[consumerType] = 0
+            self.sizeSum = 0
+            self.queue = []
 
     def reset(self, numberOfMessagesToRemove):
         for _ in range(numberOfMessagesToRemove):
