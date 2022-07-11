@@ -23,7 +23,7 @@ class MessageQueue(object):
     def resetAll(self):
         with self.lock:
             for consumerType in self.indexPerConsumer.keys():
-                 self.lostMessages[consumerType] = self.everAppended[consumerType] - self.sent[consumerType]
+                self.lostMessages[consumerType] = self.everAppended[consumerType] - self.sent[consumerType]
             for consumerType in self.consumerTypes:
                 self.indexPerConsumer[consumerType] = 0
             self.sizeSum = 0
@@ -64,7 +64,7 @@ class MessageQueue(object):
                 index = nextItemIndex + 1
                 self.indexPerConsumer[consumerType] = index
                 self.sent[consumerType] += 1
-                while(self.removeIfNeeded()):
+                while (self.removeIfNeeded()):
                     pass
                 return out
             return None
