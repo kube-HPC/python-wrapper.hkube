@@ -245,10 +245,16 @@ class HKubeApi:
         return self._waitForResult(execution)
     # reset all pending messages to zero.
     def resetQueue(self):
-        self.streamingManager.resetQueue()
+        if (self.streamingManager.messageProducer is not None):
+            self.streamingManager.resetQueue()
+        else:
+            log.info('reset queue does not work when debuging localy')
 
     def resetQueuePartial(self, numberOfMessagesToRemove):
-        self.streamingManager.resetQueuePartial(numberOfMessagesToRemove)
+        if (self.streamingManager.messageProducer is not None):
+            self.streamingManager.resetQueuePartial(numberOfMessagesToRemove)
+        else:
+            log.info('reset queue does not work when debuging localy')
 
     def _waitForResult(self, execution):
         while not execution.waiter.ready():
