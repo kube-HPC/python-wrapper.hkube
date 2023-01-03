@@ -12,9 +12,6 @@ class statelessAlgoWrapper(object):
         self.threadLocalStorage = threading.local()
 
     def _invokeAlgorithm(self, msg, origin):
-        if not (self.originalAlgorithm.get('init') is None):
-            self.originalAlgorithm['init'](msg)
-            # TODO should init be called upon every message
         options = {}
         options.update(self.options)
         options['streamInput'] = {'message': msg, 'origin': origin}
@@ -40,6 +37,8 @@ class statelessAlgoWrapper(object):
 
     def init(self, options):
         self.options = options
+        if self.originalAlgorithm.get('init'):
+            self.originalAlgorithm['init'](options)
 
     def exit(self, data):
         self.active = False
