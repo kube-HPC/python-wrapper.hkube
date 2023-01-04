@@ -12,21 +12,21 @@ pip install --upgrade bump2version wheel
 bump2version build
 
 git commit -am "$(git log -1 --pretty=%B) .... bump version [skip ci]"
-git push origin version-branch:master --follow-tags
+git push origin version-branch:release_v2.4 --follow-tags
 
 rm -rf ./dist
 python setup.py sdist bdist_wheel
 
 file_sha=$(curl -s --request GET \
-  --url https://api.github.com/repos/kube-hpc/hkube/contents/core/algorithm-builder/environments/python/wrapper/requirements.txt \
+  --url https://api.github.com/repos/kube-hpc/hkube/contents/core/algorithm-builder/environments/python/wrapper/requirements.txt?ref=release_v2.4 \
   --header 'accept: application/vnd.github.v3+json' \
   --header "authorization: token ${GH_TOKEN}" | jq -r .sha)
   echo $file_sha
-master_sha=$(curl -s --request GET \
-  --url https://api.github.com/repos/kube-hpc/hkube/commits/master \
+release_v2.4_sha=$(curl -s --request GET \
+  --url https://api.github.com/repos/kube-hpc/hkube/commits/release_v2.4 \
   --header 'accept: application/vnd.github.v3+json' \
   --header "authorization: token ${GH_TOKEN}" | jq -r .sha)
-  echo $master_sha
+  echo $release_v2.4_sha
 #version=$(python setup.py --version)
 #branch_name="update_python_wrapper_to_${version//./_}"
 #echo $branch_name
