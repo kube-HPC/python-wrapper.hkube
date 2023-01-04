@@ -22,11 +22,11 @@ file_sha=$(curl -s --request GET \
   --header 'accept: application/vnd.github.v3+json' \
   --header "authorization: token ${GH_TOKEN}" | jq -r .sha)
   echo $file_sha
-release_v2.4_sha=$(curl -s --request GET \
+release_v2_4_sha=$(curl -s --request GET \
   --url https://api.github.com/repos/kube-hpc/hkube/commits/release_v2.4 \
   --header 'accept: application/vnd.github.v3+json' \
   --header "authorization: token ${GH_TOKEN}" | jq -r .sha)
-  echo $release_v2.4_sha
+  echo $release_v2_4_sha
 #version=$(python setup.py --version)
 #branch_name="update_python_wrapper_to_${version//./_}"
 #echo $branch_name
