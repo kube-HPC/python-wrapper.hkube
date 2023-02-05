@@ -73,6 +73,7 @@ class StreamingManager():
                 listener(msg, origin)
             except Exception as e:
                 log.error("hkube_api message listener threw exception: {e}", e=str(e))
+                log.exception(e)
         self.threadLocalStorage.messageFlowPattern = []
 
     def _getMessageListeners(self):
