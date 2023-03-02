@@ -21,6 +21,7 @@ class statelessAlgoWrapper(object):
                 self._hkubeApi.sendMessage(result)
         except Exception as e:
             log.error('statelessWrapper error, {e}', e=str(e))
+            log.exception(e)
             self.error = e
 
     def start(self, options, hkube_api):

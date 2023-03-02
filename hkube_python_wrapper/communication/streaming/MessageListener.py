@@ -24,6 +24,7 @@ class MessageListener():
                 listener(messageFlowPattern, decodedMsg, self.messageOriginNodeName)
             except Exception as e:
                 log.error('Error during MessageListener onMessage {e}', e=str(e))
+                log.exception(e)
 
         end = time.time()
         duration = float((end - start) * 1000)
