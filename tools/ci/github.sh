@@ -9,7 +9,7 @@ git config --global user.name "Travis CI"
 git checkout -f -b version-branch
 
 pip install --upgrade bump2version wheel
-bump2version patch
+bump2version build
 
 git commit -am "$(git log -1 --pretty=%B) .... bump version [skip ci]"
 git push origin version-branch:release_v2.4 --follow-tags
