@@ -16,7 +16,7 @@ from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
 from hkube_python_wrapper.util.timerImpl import Timer
-from hkube_python_wrapper.util.logger import log
+from hkube_python_wrapper.util.logger import log ,algorithmLogger
 from hkube_python_wrapper.util.url_encode_impl import url_encode
 from hkube_python_wrapper.util.stdout_redirector import stdout_redirector
 import os
@@ -228,8 +228,10 @@ class Algorunner(DaemonThread):
         elif command == messages.incoming.stop:
             self._stopAlgorithm(data)
         elif command == messages.incoming.streamingInMessage:
-            self.streamingManager.onMessage(messageFlowPattern=None, msg=data['payload'], origin=data['origin'], sendMessageId=data['sendMessageId'])
-            self._wsc.send({'command': messages.outgoing.streamingInMessageDone, 'data': {'sendMessageId': data['sendMessageId']}})
+            self.streamingManager.onMessage(messageFlowPattern=None, msg=data['payload'], origin=data['origin'],
+                                            sendMessageId=data['sendMessageId'])
+            self._wsc.send(
+                {'command': messages.outgoing.streamingInMessageDone, 'data': {'sendMessageId': data['sendMessageId']}})
         elif command == messages.incoming.serviceDiscoveryUpdate:
             self._discovery_update(data)
         elif command == messages.incoming.exit:
@@ -237,7 +239,8 @@ class Algorunner(DaemonThread):
             Timer(0.1, lambda: self._exit(data), name="Exit timer").start()
         elif command in [messages.incoming.algorithmExecutionDone, messages.incoming.algorithmExecutionError]:
             self._hkubeApi.algorithmExecutionDone(data)
-        elif command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError, messages.incoming.subPipelineStopped]:
+        elif command in [messages.incoming.subPipelineDone, messages.incoming.subPipelineError,
+                         messages.incoming.subPipelineStopped]:
             self._hkubeApi.subPipelineDone(data)
         elif command == messages.incoming.dataSourceResponse:
             self._hkubeApi.dataSourceResponse(data)
@@ -324,9 +327,9 @@ class Algorunner(DaemonThread):
                     self._algorithm = self._statelessWrapped
                 else:
                     self._algorithm = self._originalAlgorithm
-                method = self._getMethod('init')
-                if (method is not None):
-                    method(options)
+                    method = self._getMethod('init')
+                    if (method is not None):
+                        method(options)
                 self._sendCommand(messages.outgoing.initialized, None)
 
         except Exception as e:
@@ -385,13 +388,17 @@ class Algorunner(DaemonThread):
             span = Tracer.instance.create_span("start", topSpan, jobId, taskId, nodeName)
             newInput = self._dataAdapter.getData(self._input)
             self._input.update({'input': newInput})
+            if self._job.isStreaming and not self._job.isStateful:
+                method = self._getMethod('init')
+                if (method is not None):
+                    method(self._input)
             method = self._getMethod('start')
             algorithmData = method(self._input, self._hkubeApi)
             if not (self._stopped):
                 self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)
 
         except Exception as e:
-            traceback.print_exc()
+            algorithmLogger.exception(e)
             Tracer.instance.finish_span(span, e)
             self.sendError(e)
         finally:
@@ -521,6 +528,7 @@ class Algorunner(DaemonThread):
 
         except Exception as e:
             log.error('Got error during exit: {e}', e=e)
+            algorithmLogger.exception(e)
             # pylint: disable=protected-access
             os._exit(0)
 
@@ -528,7 +536,8 @@ class Algorunner(DaemonThread):
         if (self._job.isStreaming):
             if (self.streamingManager.messageProducer):
                 try:
-                    log.info('Messages left in queue on {event}={queue}', event=event, queue=str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
+                    log.info('Messages left in queue on {event}={queue}', event=event,
+                             queue=str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
                 except Exception:
                     log.error('Failed to print number of messages left in queue on {event}', event=event)
             else:

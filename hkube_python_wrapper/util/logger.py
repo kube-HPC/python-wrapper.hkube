@@ -1,4 +1,6 @@
 import logging
+import traceback
+
 from hkube_python_wrapper.util.type_check import isString
 from logging import LoggerAdapter
 from hkube_python_wrapper.config import config
@@ -10,8 +12,20 @@ class Adapter(LoggerAdapter):
             return msg.format(**kwargs), {}
         return msg, kwargs
 
+    def exception(self, err, *args, exc_info=True, **kwargs):
+        if self.isEnabledFor(logging.ERROR):
+            exc_text = self._format_exception(exc_info)
+            self.error('\n' + str(err) + ' ' + exc_text, *args, **kwargs)
+
+    def _format_exception(self, exc_info):
+        if exc_info:
+            stack_trace = traceback.format_exc().strip()
+            return stack_trace.replace('\n', '\\n')
+        return ''
+
 
 log = Adapter(logging.getLogger('wrapper'), {})
+algorithmLogger = Adapter(logging.getLogger('algorithm'), {})
 
 
 def setup():

@@ -2,7 +2,7 @@ import threading
 from .MessageListener import MessageListener
 from .MessageProducer import MessageProducer
 from .StreamingListener import StreamingListener
-from hkube_python_wrapper.util.logger import log
+from hkube_python_wrapper.util.logger import log, algorithmLogger
 
 
 class StreamingManager():
@@ -73,7 +73,7 @@ class StreamingManager():
                 listener(msg, origin)
             except Exception as e:
                 log.error("hkube_api message listener threw exception: {e}", e=str(e))
-                log.exception(e)
+                algorithmLogger.exception(e)
         self.threadLocalStorage.messageFlowPattern = []
 
     def _getMessageListeners(self):
