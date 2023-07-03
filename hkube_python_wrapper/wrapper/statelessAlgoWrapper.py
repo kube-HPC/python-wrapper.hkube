@@ -1,6 +1,6 @@
 import time
 import threading
-from hkube_python_wrapper.util.logger import log
+from hkube_python_wrapper.util.logger import log, algorithmLogger
 
 class statelessAlgoWrapper(object):
     def __init__(self, algo):
@@ -21,7 +21,7 @@ class statelessAlgoWrapper(object):
                 self._hkubeApi.sendMessage(result)
         except Exception as e:
             log.error('statelessWrapper error, {e}', e=str(e))
-            log.exception(e)
+            algorithmLogger.exception(e)
             self.error = e
 
     def start(self, options, hkube_api):
