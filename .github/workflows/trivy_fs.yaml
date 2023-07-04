@@ -18,8 +18,6 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          severity: 'CRITICAL'
-          args: --license-full
           format: 'sarif'
           output: 'trivy-results.sarif'
       
