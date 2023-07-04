@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: TRIVY-SCAN-FS
+name: TRIVY-SCAN-DOCKER
 
 # Controls when the action will run. 
 on:
@@ -18,7 +18,13 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          severity: CRITICAL
+          severity: 'CRITICAL'
           args: --license-full
-          format: 'table'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif' 
       
