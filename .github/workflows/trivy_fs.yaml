@@ -24,7 +24,6 @@ jobs:
           architecture: x64
           run: |
             `pip install --upgrade wheel
-            rm -rf ./dist
             python setup.py sdist bdist_wheel
 
       - name: Install Trivy
