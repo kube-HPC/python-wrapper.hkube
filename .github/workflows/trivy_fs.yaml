@@ -36,7 +36,7 @@ jobs:
         run: trivy fs /home/runner/work --scanners license --license-full --severity 'HIGH,CRITICAL' > trivy-license-filesystem.txt    
 
       - name: Run Trivy vulnerability scanner on the repo
-        run: rivy fs /home/runner/work --severity 'HIGH,CRITICAL' > trivy-vuln-filesystem.txt
+        run: trivy fs /home/runner/work --severity 'HIGH,CRITICAL' > trivy-vuln-filesystem.txt
 
       - name: Create branch for scan results
         run: |
