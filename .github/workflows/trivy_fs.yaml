@@ -32,32 +32,22 @@ jobs:
           wget https://github.com/aquasecurity/trivy/releases/download/v0.43.0/trivy_0.43.0_Linux-64bit.deb
           sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
       
-      - name: Run Trivy scan on filesystem
-        run: trivy fs /home/runner/work --scanners license --license-full > trivy-license-filesystem.txt    
+      - name: Run Trivy license scan on filesystem
+        run: trivy fs /home/runner/work --scanners license --license-full --severity 'HIGH,CRITICAL' > trivy-license-filesystem.txt    
+
+      - name: Run Trivy vulnerability scanner on the repo
+        run: rivy fs /home/runner/work --severity 'HIGH,CRITICAL' > trivy-vuln-filesystem.txt
 
       - name: Create branch for scan results
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git checkout -b trivy-scan-results
-          git add trivy-license-filesystem.txt
-          git commit -m "Add Trivy scan results"
+          mkdir -p TrivyScans
+          git add TrivyScans/trivy-license-filesystem.txt
+          git add TrivyScans/trivy-vuln-filesystem.txt
+          git commit -m "Add scan results to a specific folder"
           git push --force origin trivy-scan-results
 
       - name: Display branch and file path link
-        run: echo "Results uploaded to [trivy-scan-results branch](https://github.com/$GITHUB_REPOSITORY/tree/trivy-scan-results/trivy-license-filesystem.txt)"
-
-      - name: Run Trivy vulnerability scanner on the repo
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          severity: 'CRITICAL,HIGH'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
-      
+        run: echo "Results uploaded to [trivy-scan-results branch](https://github.com/$GITHUB_REPOSITORY/tree/trivy-scan-results/TrivyScans/)"
