@@ -64,6 +64,21 @@ jobs:
           password: ${{ secrets.PYPI_TOKEN }}
       - name: set version
         run: echo version=`python setup.py --version`>> $GITHUB_ENV
+
+      - name: Run Trivy vulnerability scanner on the repo
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
       - name: trigger artifacts registry
         uses: octokit/request-action@v2.x
         with:

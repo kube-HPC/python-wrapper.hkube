@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: TRIVY-SCAN-LICENSE
+name: TRIVY-SCAN
 
 # Controls when the action will run. 
 on:
@@ -46,4 +46,18 @@ jobs:
 
       - name: Display branch and file path link
         run: echo "Results uploaded to [trivy-scan-results branch](https://github.com/$GITHUB_REPOSITORY/tree/trivy-scan-results/trivy-license-filesystem.txt)"
+
+      - name: Run Trivy vulnerability scanner on the repo
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
       
