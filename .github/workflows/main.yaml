@@ -65,19 +65,26 @@ jobs:
       - name: set version
         run: echo version=`python setup.py --version`>> $GITHUB_ENV
 
-      - name: Run Trivy vulnerability scanner on the repo
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          severity: 'CRITICAL,HIGH'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+      - name: Install Trivy
+        run: |
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.43.0/trivy_0.43.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
+      
+      - name: Run Trivy license scan on filesystem
+        run: trivy fs /home/runner/work --scanners license --license-full --severity 'HIGH,CRITICAL' --format sarif  --output trivy_license.sarif
 
-      - name: Upload Trivy scan results to GitHub Security tab
+      - name: Run Trivy vulnerability scanner on the repo
+        run: trivy fs /home/runner/work --severity 'HIGH,CRITICAL' > trivy-vuln-filesystem.txt --format sarif  --output trivy_vulnerability.sarif
+
+      - name: Upload Trivy license scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: 'trivy_license.sarif'
+      
+      - name: Upload Trivy vulnerability scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy_vulnerability.sarif'
 
       - name: trigger artifacts registry
         uses: octokit/request-action@v2.x
