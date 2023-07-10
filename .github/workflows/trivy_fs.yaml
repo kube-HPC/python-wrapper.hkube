@@ -40,6 +40,10 @@ jobs:
 
       - name: Create branch for scan results
         run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git checkout -b trivy-scan-results
+          mkdir -p TrivyScans
           cp trivy-license-filesystem.txt TrivyScans/
           cp trivy-vuln-filesystem.txt TrivyScans/
           git add TrivyScans/trivy-license-filesystem.txt
