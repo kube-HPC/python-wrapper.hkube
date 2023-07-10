@@ -1,0 +1,99 @@
+
+_actions/actions/setup-python/v2/__tests__/data/requirements.txt (pip)
+======================================================================
+Total: 23 (HIGH: 17, CRITICAL: 6)
+
+┌──────────┬────────────────┬──────────┬───────────────────┬───────────────┬──────────────────────────────────────────────────────────────┐
+│ Library  │ Vulnerability  │ Severity │ Installed Version │ Fixed Version │                            Title                             │
+├──────────┼────────────────┼──────────┼───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ certifi  │ CVE-2022-23491 │ HIGH     │ 2020.6.20         │ 2022.12.7     │ untrusted root certificates                                  │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2022-23491                   │
+├──────────┼────────────────┤          ├───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ future   │ CVE-2022-40899 │          │ 0.18.2            │ 0.18.3        │ remote attackers can cause denial of service via crafted     │
+│          │                │          │                   │               │ Set-Cookie header from...                                    │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2022-40899                   │
+├──────────┼────────────────┼──────────┼───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ pillow   │ CVE-2021-25287 │ CRITICAL │ 7.2               │ 8.2.0         │ python-pillow: Out-of-bounds read in J2K image reader        │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-25287                   │
+│          ├────────────────┤          │                   │               ├──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-25288 │          │                   │               │ python-pillow: Out-of-bounds read in J2K image reader        │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-25288                   │
+│          ├────────────────┤          │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-25289 │          │                   │ 8.1.1         │ python-pillow: insufficent fix for CVE-2020-35654 due to     │
+│          │                │          │                   │               │ incorrect error checking in TiffDecode.c...                  │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-25289                   │
+│          ├────────────────┤          │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-34552 │          │                   │ 8.3.0         │ python-pillow: Buffer overflow in image convert function     │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-34552                   │
+│          ├────────────────┤          │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│          │ CVE-2022-22817 │          │                   │ 9.0.0         │ python-pillow: PIL.ImageMath.eval allows evaluation of       │
+│          │                │          │                   │               │ arbitrary expressions                                        │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2022-22817                   │
+│          ├────────────────┤          │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│          │ CVE-2022-24303 │          │                   │ 9.0.1         │ temporary directory with a space character allows removal of │
+│          │                │          │                   │               │ unrelated file after...                                      │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2022-24303                   │
+│          ├────────────────┼──────────┤                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│          │ CVE-2020-35653 │ HIGH     │                   │ 8.1.0         │ python-pillow: Buffer over-read in PCX image reader          │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2020-35653                   │
+│          ├────────────────┤          │                   │               ├──────────────────────────────────────────────────────────────┤
+│          │ CVE-2020-35654 │          │                   │               │ python-pillow: decoding crafted YCbCr files could result in  │
+│          │                │          │                   │               │ heap-based buffer overflow                                   │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2020-35654                   │
+│          ├────────────────┤          │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-23437 │          │                   │ 8.3.2         │ possible ReDoS via the getrgb function                       │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-23437                   │
+│          ├────────────────┤          │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-25290 │          │                   │ 8.1.1         │ python-pillow: Negative-offset memcpy in TIFF image reader   │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-25290                   │
+│          ├────────────────┤          │                   │               ├──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-25291 │          │                   │               │ python-pillow: out-of-bounds read in TiffReadRGBATile in     │
+│          │                │          │                   │               │ TiffDecode.c                                                 │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-25291                   │
+│          ├────────────────┤          │                   │               ├──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-25293 │          │                   │               │ python-pillow: Out-of-bounds read in SGI RLE image reader    │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-25293                   │
+│          ├────────────────┤          │                   │               ├──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-27921 │          │                   │               │ python-pillow: Excessive memory allocation in BLP image      │
+│          │                │          │                   │               │ reader                                                       │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-27921                   │
+│          ├────────────────┤          │                   │               ├──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-27922 │          │                   │               │ python-pillow: Excessive memory allocation in ICNS image     │
+│          │                │          │                   │               │ reader                                                       │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-27922                   │
+│          ├────────────────┤          │                   │               ├──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-27923 │          │                   │               │ python-pillow: Excessive memory allocation in ICO image      │
+│          │                │          │                   │               │ reader                                                       │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-27923                   │
+│          ├────────────────┤          │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-28676 │          │                   │ 8.2.0         │ python-pillow: Infinite loop in FLI image reader             │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-28676                   │
+│          ├────────────────┤          │                   │               ├──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-28677 │          │                   │               │ python-pillow: Excessive CPU use in EPS image reader         │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-28677                   │
+│          ├────────────────┤          │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│          │ CVE-2022-45198 │          │                   │ 9.2.0         │ Pillow before 9.2.0 performs Improper Handling of Highly     │
+│          │                │          │                   │               │ Compressed GI ...                                            │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2022-45198                   │
+├──────────┼────────────────┤          ├───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ pygments │ CVE-2021-20270 │          │ 2.6.1             │ 2.7.4         │ python-pygments: Infinite loop in SML lexer may lead to DoS  │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-20270                   │
+│          ├────────────────┤          │                   │               ├──────────────────────────────────────────────────────────────┤
+│          │ CVE-2021-27291 │          │                   │               │ python-pygments: ReDoS in multiple lexers                    │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-27291                   │
+├──────────┼────────────────┤          ├───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ urllib3  │ CVE-2021-33503 │          │ 1.25.9            │ 1.26.5        │ python-urllib3: ReDoS in the parsing of authority part of    │
+│          │                │          │                   │               │ URL                                                          │
+│          │                │          │                   │               │ https://avd.aquasec.com/nvd/cve-2021-33503                   │
+└──────────┴────────────────┴──────────┴───────────────────┴───────────────┴──────────────────────────────────────────────────────────────┘
+
+_actions/actions/setup-python/v2/package-lock.json (npm)
+========================================================
+Total: 1 (HIGH: 1, CRITICAL: 0)
+
+┌───────────┬───────────────┬──────────┬───────────────────┬───────────────┬───────────────────────────────────────────┐
+│  Library  │ Vulnerability │ Severity │ Installed Version │ Fixed Version │                   Title                   │
+├───────────┼───────────────┼──────────┼───────────────────┼───────────────┼───────────────────────────────────────────┤
+│ minimatch │ CVE-2022-3517 │ HIGH     │ 3.0.4             │ 3.0.5         │ ReDoS via the braceExpand function        │
+│           │               │          │                   │               │ https://avd.aquasec.com/nvd/cve-2022-3517 │
+└───────────┴───────────────┴──────────┴───────────────────┴───────────────┴───────────────────────────────────────────┘
