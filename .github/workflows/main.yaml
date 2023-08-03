@@ -71,20 +71,29 @@ jobs:
           sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
       
       - name: Run Trivy license scan on filesystem
-        run: trivy fs /home/runner/work --scanners license --license-full --severity 'HIGH,CRITICAL' --format sarif  --output trivy_license.sarif
+        run: trivy fs /home/runner/work --scanners license --license-full --severity 'HIGH,CRITICAL' > trivy-license-filesystem.txt
 
       - name: Run Trivy vulnerability scanner on the repo
         run: trivy fs /home/runner/work --severity 'HIGH,CRITICAL' > trivy-vuln-filesystem.txt --format sarif  --output trivy_vulnerability.sarif
 
-      - name: Upload Trivy license scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy_license.sarif'
-      
       - name: Upload Trivy vulnerability scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy_vulnerability.sarif'
+
+      - name: Create branch for scan results
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git checkout -b trivy-scan-results
+          mkdir -p TrivyScans
+          cp trivy-license-filesystem.txt TrivyScans/
+          git add TrivyScans/trivy-license-filesystem.txt
+          git commit -m "Add files to a specific folder"
+          git push --force origin trivy-scan-results
+
+      - name: Display branch and file path link
+        run: echo "Results uploaded to [trivy-scan-results branch](https://github.com/$GITHUB_REPOSITORY/tree/trivy-scan-results/TrivyScans/)"
 
       - name: trigger artifacts registry
         uses: octokit/request-action@v2.x
