@@ -1,14 +1,14 @@
 import logging
 import traceback
-
-from hkube_python_wrapper.util.type_check import isString
 from logging import LoggerAdapter
+
 from hkube_python_wrapper.config import config
+from hkube_python_wrapper.util.type_check import isString
 
 
 class Adapter(LoggerAdapter):
     def process(self, msg, kwargs):
-        if isString(msg):
+        if isString(msg) and kwargs:
             return msg.format(**kwargs), {}
         return msg, kwargs
 
