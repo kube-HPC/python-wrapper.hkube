@@ -18,6 +18,7 @@ class StreamingManager():
         self.parsedFlows = {}
         self.defaultFlow = None
         self._streamingListener = None
+        self.balcFetchSize = None
 
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
