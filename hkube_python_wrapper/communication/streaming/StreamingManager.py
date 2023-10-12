@@ -19,10 +19,12 @@ class StreamingManager():
         self.defaultFlow = None
         self._streamingListener = None
 
-
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
         self.defaultFlow = defaultFlow
+
+    def setListenerBalcFetchSize(self, balcFetchSize):
+        self.balcFetchSize = balcFetchSize
 
     def setupStreamingProducer(self, onStatistics, producerConfig, nextNodes, nodeName):
         self.messageProducer = MessageProducer(producerConfig, nextNodes, nodeName)
@@ -83,16 +85,18 @@ class StreamingManager():
         self.listeningToMessages = True
         if (self._isStarted is False):
             self._isStarted = True
-            self._streamingListener = StreamingListener(self._getMessageListeners)
+            self._streamingListener = StreamingListener(self._getMessageListeners, self.balcFetchSize)
             self._streamingListener.start()
 
     def sendMessage(self, msg, flowName=None):
         if (self.messageProducer is None):
-            raise Exception('Trying to send a message from a none stream pipeline or after close had been applied on algorithm')
+            raise Exception(
+                'Trying to send a message from a none stream pipeline or after close had been applied on algorithm')
         if (self.messageProducer.nodeNames):
             parsedFlow = None
             if (flowName is None):
-                if hasattr(self.threadLocalStorage, 'messageFlowPattern') and self.threadLocalStorage.messageFlowPattern:
+                if hasattr(self.threadLocalStorage,
+                           'messageFlowPattern') and self.threadLocalStorage.messageFlowPattern:
                     parsedFlow = self.threadLocalStorage.messageFlowPattern
                 else:
                     if (self.defaultFlow is None):

@@ -1,9 +1,11 @@
 import time
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
 
+
 class StreamingListener(DaemonThread):
 
-    def __init__(self, messageListeners):
+    def __init__(self, messageListeners, balcFetchSize=100):
+        self._balcFetchSize = balcFetchSize
         self._listeningToMessages = True
         self._working = True
         self._messageListeners = messageListeners
@@ -16,7 +18,11 @@ class StreamingListener(DaemonThread):
                 time.sleep(1)  # free some cpu
                 continue
             for listener in messageListeners:
-                listener.fetch()
+                hasMessage = True
+                count = 0
+                while hasMessage and count < self._balcFetchSize:
+                    hasMessage = listener.fetch()
+                    count = count + 1
         self._working = False
 
     def stop(self, force=True):

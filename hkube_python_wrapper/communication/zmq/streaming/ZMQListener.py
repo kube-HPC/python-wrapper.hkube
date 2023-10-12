@@ -51,11 +51,10 @@ class ZMQListener(object):
                 self._worker = self._worker_socket(self._remoteAddress)
 
             if (self._pollTimeoutCount > 0):
-                self._readMessage()
-                return
+                return self._readMessage()
 
             self._send(signals.PPP_READY)
-            self._readMessage()
+            return self._readMessage()
 
         except Exception as e:
             log.error('ZMQListener.fetch {e}', e=str(e))

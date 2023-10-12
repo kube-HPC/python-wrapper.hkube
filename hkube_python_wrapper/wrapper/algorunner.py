@@ -361,6 +361,7 @@ class Algorunner(DaemonThread):
     def _start(self, options):
         if (self._job.isStreaming):
             self.streamingManager.setParsedFlows(self._job.parsedFlow, self._job.defaultFlow)
+            self.streamingManager.setListenerBalcFetchSize(config.discovery["streaming"]["balcFetchSize"])
             if (self._job.childs):
                 self._setupStreamingProducer(self._job.nodeName)
                 self.streamingManager.clearMessageListeners()
