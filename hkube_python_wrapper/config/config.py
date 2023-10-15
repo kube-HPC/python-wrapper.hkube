@@ -33,9 +33,9 @@ discovery = {
         "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_MB', 1500),
         "port": os.environ.get('STREAMING_DISCOVERY_PORT', 9022),
         "statisticsInterval": os.environ.get('STREAMING_STATISTICS_INTERVAL', 2),
-        "stateful": getBoolEnv('STREAMING_STATEFUL', 'True')
+        "stateful": getBoolEnv('STREAMING_STATEFUL', 'True'),
+        "balcFetchSize": getIntEnv('STREAMING_BALC_SIZE', '100')
     }
-
 }
 algorithm = {
     "path": os.environ.get('ALGORITHM_PATH', "algorithm_unique_folder"),

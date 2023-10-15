@@ -24,6 +24,7 @@ def test_streaming_flow():
     listen_config = {'encoding': 'msgpack'}
     streamingManager = StreamingManager()
     streamingManager.setParsedFlows(parsedFlows, 'analyze')
+    streamingManager.setListenerBalcFetchSize(100)
     streamingManager.setupStreamingProducer(statsInvoked, producer_config, [nodeName], 'A')
     streamingManager.setupStreamingListeners(listen_config, parents, nodeName)
     streamingManager.registerInputListener(onMessage)
@@ -69,10 +70,12 @@ def test_streaming_manager():
 
     streamingManagerA = StreamingManager()
     streamingManagerA.setParsedFlows(parsedFlows, 'analyze')
+    streamingManagerA.setListenerBalcFetchSize(100)
     streamingManagerA.setupStreamingProducer(statsInvoked, producer_configA, ['B'], 'A')
 
     streamingManagerB = StreamingManager()
     streamingManagerB.setParsedFlows(parsedFlows, 'analyze')
+    streamingManagerB.setListenerBalcFetchSize(100)
     streamingManagerB.setupStreamingProducer(statsInvoked, producer_configB, ['C'], 'B')
     streamingManagerB.setupStreamingListeners(listen_config, parents1, 'B')
     streamingManagerB.registerInputListener(onMessageAtB)
@@ -81,10 +84,11 @@ def test_streaming_manager():
     streamingManagerC = StreamingManager()
     streamingManagerC.setupStreamingListeners(listen_config, parents2, 'C')
     streamingManagerC.registerInputListener(onMessageAtC)
+    streamingManagerC.setListenerBalcFetchSize(100)
     streamingManagerC.startMessageListening()
 
     streamingManagerA.sendMessage('msg from A')
-    time.sleep(1)
+    time.sleep(3)
     assert resultsAtB['data'] == 'msg from A'
     assert resultsAtB['origin'] == 'A'
     assert resultsAtC['data'] == 'msg from B'
