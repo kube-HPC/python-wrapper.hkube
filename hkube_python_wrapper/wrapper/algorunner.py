@@ -475,10 +475,6 @@ class Algorunner(DaemonThread):
         else:
             self._stopped = True
             try:
-                method = self._getMethod('stop')
-                if (method is not None):
-                    method(options)
-
                 forceStop = options.get('forceStop', False)
                 if (forceStop is True):
                     log.info('stopping using force flag')
@@ -503,7 +499,9 @@ class Algorunner(DaemonThread):
                         self._checkQueueSize(event='scale down')
                     else:
                         self._hkubeApi.stopStreaming(force=forceStop)
-
+                method = self._getMethod('stop')
+                if (method is not None):
+                    method(options)
                 if (self._runningStartThread):
                     self._runningStartThread.join()
                     log.info('Joined threads algorithm and stop algorithm')
