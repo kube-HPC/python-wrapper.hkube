@@ -31,7 +31,7 @@ class MessageListener():
         return self._encoding.encode({'duration': round(duration, 4)}, plainEncode=True)
 
     def fetch(self):
-        return self.adapater.fetch()
+        self.adapater.fetch()
 
     def close(self, force=True):
         closed = False

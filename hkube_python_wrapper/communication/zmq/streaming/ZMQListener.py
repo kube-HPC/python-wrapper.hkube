@@ -42,6 +42,7 @@ class ZMQListener(object):
         try:
             if (self._active is False):
                 time.sleep(0.2)
+                return
 
             if (self._pollTimeoutCount == MAX_POLLS):
                 log.warning('ZMQListener poll timeout reached')
@@ -50,14 +51,14 @@ class ZMQListener(object):
                 self._worker = self._worker_socket(self._remoteAddress)
 
             if (self._pollTimeoutCount > 0):
-                return self._readMessage()
+                self._readMessage()
+                return
 
             self._send(signals.PPP_READY)
-            return self._readMessage()
+            self._readMessage()
 
         except Exception as e:
             log.error('ZMQListener.fetch {e}', e=str(e))
-            return False
         finally:
             if(self._active is False):
                 self._working = False
