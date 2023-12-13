@@ -1,5 +1,7 @@
 import threading
 import time
+import uuid
+
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
 
 class StreamingListener(DaemonThread):
@@ -18,7 +20,8 @@ class StreamingListener(DaemonThread):
                 time.sleep(1)  # free some cpu
                 continue
             for listener in messageListeners:
-                listener.thread = threading.Thread(target=self.fetch, args=[listener])
+                threadName = listener.messageOriginNodeName + "_" + str(uuid.uuid4())
+                listener.thread = threading.Thread(name=threadName,target=self.fetch, args=[listener])
                 listener.thread.start()
             for listener in messageListeners:
                 listener.thread.join()
