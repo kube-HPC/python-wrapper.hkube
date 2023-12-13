@@ -22,8 +22,7 @@ discovery = {
     "encoding": os.environ.get('DISCOVERY_ENCODING', 'msgpack'),
     "timeout": getIntEnv('DISCOVERY_TIMEOUT', 5000),
     "networkTimeout": getIntEnv('DISCOVERY_NETWORK_TIMEOUT', 1000),
-    "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 400),
-    "balcFetchSize": getIntEnv('STREAMING_BALC_SIZE', '100')
+    "maxCacheSize": getIntEnv('DISCOVERY_MAX_CACHE_SIZE', 400)
 }
 algorithm = {
     "path": os.environ.get('ALGORITHM_PATH', "algorithm_unique_folder"),
