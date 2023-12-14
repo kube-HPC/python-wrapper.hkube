@@ -312,8 +312,6 @@ class Algorunner(DaemonThread):
     def _getMethod(self, name):
         if (self._algorithm):
             return self._algorithm.get(name)
-        else:
-            return None
 
     def _init(self, options):
         redirector = None
