@@ -16,7 +16,7 @@ from hkube_python_wrapper.communication.DataServer import DataServer
 from hkube_python_wrapper.communication.streaming.StreamingManager import StreamingManager
 from hkube_python_wrapper.util.queueImpl import Queue, Empty
 from hkube_python_wrapper.util.timerImpl import Timer
-from hkube_python_wrapper.util.logger import log ,algorithmLogger
+from hkube_python_wrapper.util.logger import log, algorithmLogger
 from hkube_python_wrapper.util.url_encode_impl import url_encode
 from hkube_python_wrapper.util.stdout_redirector import stdout_redirector
 import os
@@ -310,7 +310,10 @@ class Algorunner(DaemonThread):
             pass
 
     def _getMethod(self, name):
-        return self._algorithm.get(name)
+        if (self._algorithm):
+            return self._algorithm.get(name)
+        else:
+            return None
 
     def _init(self, options):
         redirector = None
