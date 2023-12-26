@@ -6,7 +6,9 @@ from hkube_python_wrapper.communication.zmq.streaming import signals
 
 context = zmq.Context()
 POLL_MS = 1000
+MAX_SKIPS = 150
 MAX_POLLS = 5
+
 
 class ZMQListener(object):
     def __init__(self, remoteAddress, onMessage, encoding, consumerType):
@@ -18,6 +20,8 @@ class ZMQListener(object):
         self._pollTimeoutCount = 0
         self._remoteAddress = remoteAddress
         self._worker = self._worker_socket(remoteAddress)
+        self._numberOfNoMsg = 0
+        self._numberOfTimesSkipped = 0
 
     def _worker_socket(self, remoteAddress):
         """Helper function that returns a new configured socket
@@ -43,24 +47,26 @@ class ZMQListener(object):
             if (self._active is False):
                 time.sleep(0.2)
                 return
-
-            if (self._pollTimeoutCount == MAX_POLLS):
-                log.warning('ZMQListener poll timeout reached')
-                self._pollTimeoutCount = 0
-                self._worker.close()
-                self._worker = self._worker_socket(self._remoteAddress)
-
-            if (self._pollTimeoutCount > 0):
+            skip = self._numberOfTimesSkipped < MAX_SKIPS and self._numberOfNoMsg > 0
+            if not skip:
+                self._numberOfTimesSkipped = 0
+                if (self._pollTimeoutCount == MAX_POLLS):
+                    log.warning('ZMQListener poll timeout reached')
+                    self._pollTimeoutCount = 0
+                    self._worker.close()
+                    self._worker = self._worker_socket(self._remoteAddress)
+                if (self._pollTimeoutCount > 0):
+                    self._readMessage()
+                    return
+                self._send(signals.PPP_READY)
                 self._readMessage()
-                return
-
-            self._send(signals.PPP_READY)
-            self._readMessage()
-
+            else:
+                time.sleep(0.01)
+                self._numberOfTimesSkipped += 1
         except Exception as e:
             log.error('ZMQListener.fetch {e}', e=str(e))
         finally:
-            if(self._active is False):
+            if (self._active is False):
                 self._working = False
 
     def _readMessage(self, timeout=POLL_MS):
@@ -75,7 +81,9 @@ class ZMQListener(object):
                 hasMsg = True
                 msgResult = self._handleAMessage(frames)
                 self._send(signals.PPP_DONE, msgResult)
+                self._numberOfNoMsg = 0
             else:
+                self._numberOfNoMsg += 1
                 time.sleep(0.005)
         else:
             self._pollTimeoutCount += 1
