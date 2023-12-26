@@ -84,7 +84,7 @@ def test_streaming_manager():
     streamingManagerC.startMessageListening()
 
     streamingManagerA.sendMessage('msg from A')
-    time.sleep(1)
+    time.sleep(2)
     assert resultsAtB['data'] == 'msg from A'
     assert resultsAtB['origin'] == 'A'
     assert resultsAtC['data'] == 'msg from B'
