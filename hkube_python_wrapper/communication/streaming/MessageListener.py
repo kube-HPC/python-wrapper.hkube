@@ -3,13 +3,15 @@ from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.util.logger import log
 import time
 
+
 class MessageListener():
 
     def __init__(self, options, receiverNode):
         remoteAddress = options['remoteAddress']
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
-        self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode)
+        delay = options['delay']
+        self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode, delay)
         self.messageOriginNodeName = options['messageOriginNodeName']
         self.messageListeners = []
 
