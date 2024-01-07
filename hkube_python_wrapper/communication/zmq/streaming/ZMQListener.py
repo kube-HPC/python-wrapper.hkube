@@ -6,13 +6,13 @@ from hkube_python_wrapper.communication.zmq.streaming import signals
 
 context = zmq.Context()
 POLL_MS = 1000
-MAX_SKIPS = 150
 MAX_POLLS = 5
 
 
 class ZMQListener(object):
-    def __init__(self, remoteAddress, onMessage, encoding, consumerType):
+    def __init__(self, remoteAddress, onMessage, encoding, consumerType,delay):
         self._encoding = encoding
+        self.max_skips = delay/10
         self._onMessage = onMessage
         self._consumerType = self._encoding.encode(consumerType, plainEncode=True)
         self._active = True
@@ -47,7 +47,7 @@ class ZMQListener(object):
             if (self._active is False):
                 time.sleep(0.2)
                 return
-            skip = self._numberOfTimesSkipped < MAX_SKIPS and self._numberOfNoMsg > 0
+            skip = self._numberOfTimesSkipped < self.max_skips and self._numberOfNoMsg > 0
             if not skip:
                 self._numberOfTimesSkipped = 0
                 if (self._pollTimeoutCount == MAX_POLLS):

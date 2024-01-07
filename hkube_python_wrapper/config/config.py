@@ -16,7 +16,8 @@ socket = {
     "host": os.environ.get('WORKER_SOCKET_HOST', "127.0.0.1"),
     "protocol": os.environ.get('WORKER_SOCKET_PROTOCOL', "ws"),
     "url": os.environ.get('WORKER_SOCKET_URL', None),
-    "encoding": os.environ.get('WORKER_ALGORITHM_ENCODING', 'bson')
+    "encoding": os.environ.get('WORKER_ALGORITHM_ENCODING', 'bson'),
+    "delay": getIntEnv('WORKER_TOLERABLE_DELAY',1500)
 }
 discovery = {
     "host": os.environ.get('POD_IP', '127.0.0.1'),
