@@ -4,9 +4,10 @@ from hkube_python_wrapper.communication.streaming.MessageProducer import Message
 import time
 
 parsedFlows = {
-    'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}], 
+    'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}],
     'master': [{'source': 'B', 'next': ['A', 'C']}, {'source': 'C', 'next': ['D']}, {'source': 'D', 'next': ['E']}]
 }
+
 
 def test_streaming_flow():
     messages = []
@@ -21,7 +22,7 @@ def test_streaming_flow():
     nodeName = 'B'
     parents = [{'nodeName': 'A', 'address': {'host': '127.0.0.1', 'port': port}, 'type': 'Add'}]
     producer_config = {'port': port, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
-    listen_config = {'encoding': 'msgpack'}
+    listen_config = {'encoding': 'msgpack', 'delay': 10}
     streamingManager = StreamingManager()
     streamingManager.setParsedFlows(parsedFlows, 'analyze')
     streamingManager.setupStreamingProducer(statsInvoked, producer_config, [nodeName], 'A')
@@ -42,6 +43,7 @@ def test_streaming_flow():
     assert messages[2] == {'msg': '3'}
     assert messages[3] == {'msg': '4'}
     streamingManager.stopStreaming()
+
 
 def test_streaming_manager():
     resultsAtB = {}
@@ -65,7 +67,7 @@ def test_streaming_manager():
     parents2 = [{'nodeName': 'B', 'address': {'host': '127.0.0.1', 'port': port2}, 'type': 'Add'}]
     producer_configA = {'port': port1, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
     producer_configB = {'port': port2, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
-    listen_config = {'encoding': 'msgpack'}
+    listen_config = {'encoding': 'msgpack', 'delay': 10}
 
     streamingManagerA = StreamingManager()
     streamingManagerA.setParsedFlows(parsedFlows, 'analyze')
@@ -92,8 +94,8 @@ def test_streaming_manager():
     streamingManagerA.stopStreaming()
     streamingManagerB.stopStreaming()
 
-def xtest_messaging():
 
+def xtest_messaging():
     producer_config = {'port': 9536, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
     listenr_config = {'remoteAddress': 'tcp://localhost:9536', 'encoding': 'msgpack', 'messageOriginNodeName': 'b'}
     asserts = {}
@@ -132,7 +134,7 @@ def xtest_messaging():
     assert asserts['stats'][0]['sent'] == 0
     messageListener = MessageListener(listenr_config, receiverNode='a')
     messageListener.registerMessageListener(onMessage)
-    for _ in range(1,5):
+    for _ in range(1, 5):
         if (asserts.get('field1')):
             break
         time.sleep(1)
@@ -154,12 +156,13 @@ def xtest_messaging():
     assert len(asserts['envelope']) == 1
     assert asserts['envelope'][0]['source'] == 'a'
 
+
 def xtest_messaging_split():
     producer_config = {'port': 9536, 'messagesMemoryBuff': 5000, 'encoding': 'msgpack', 'statisticsInterval': 1}
     listenr_config_c = {'remoteAddress': 'tcp://localhost:9536', 'encoding': 'msgpack', 'messageOriginNodeName': 'c'}
     asserts = {}
     asserts['responses'] = 0
-    messageProducer = MessageProducer(producer_config, ['a','b'], 'c')
+    messageProducer = MessageProducer(producer_config, ['a', 'b'], 'c')
 
     def onStatistics(statistics):
         asserts['stats'] = statistics
@@ -199,8 +202,8 @@ def xtest_messaging_split():
 
     messageListener = MessageListener(listenr_config_c, receiverNode='a')
     messageListener.registerMessageListener(onMessage)
-    for _ in range(1,5):
-        if ( asserts.get('field1')):
+    for _ in range(1, 5):
+        if (asserts.get('field1')):
             break
         time.sleep(1)
     time.sleep(2)
