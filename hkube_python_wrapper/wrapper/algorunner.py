@@ -343,7 +343,7 @@ class Algorunner(DaemonThread):
 
     def _discovery_update(self, discovery):
         log.debug('Got discovery update {discovery}', discovery=discovery)
-        messageListenerConfig = {'encoding': config.discovery['encoding'],'delay':config.socket['delay']}
+        messageListenerConfig = {'encoding': config.discovery['encoding'],'delay':config.discovery['delay']}
         self.streamingManager.setupStreamingListeners(
             messageListenerConfig, discovery, self._job.nodeName)
 
