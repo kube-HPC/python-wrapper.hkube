@@ -31,7 +31,7 @@ discovery = {
     "num_ping_threads": getIntEnv('DISCOVERY_SERVER_NUM_PING_THREADS', 5),
     "servingReportInterval": getIntEnv('DISCOVERY_SERVING_REPORT_INTERVAL', 5000),
     "streaming": {
-        "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_MB', 1500),
+        "messagesMemoryBuff": getIntEnv('STREAMING_MAX_BUFFER_MB', 10),
         "port": os.environ.get('STREAMING_DISCOVERY_PORT', 9022),
         "statisticsInterval": os.environ.get('STREAMING_STATISTICS_INTERVAL', 2),
         "stateful": getBoolEnv('STREAMING_STATEFUL', 'True')
