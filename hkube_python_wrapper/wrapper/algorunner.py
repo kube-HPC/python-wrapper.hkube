@@ -532,7 +532,7 @@ class Algorunner(DaemonThread):
             os._exit(0)
 
     def _checkQueueSize(self, event):
-        if (self._job.isStreaming):
+        if (self._job and self._job.isStreaming):
             if (self.streamingManager.messageProducer):
                 try:
                     log.info('Messages left in queue on {event}={queue}', event=event,
@@ -558,7 +558,7 @@ class Algorunner(DaemonThread):
                     'message': self._errorMsg(error)
                 }
             })
-            if (self._job.isStreaming):
+            if (self._job and self._job.isStreaming):
                 self._hkubeApi.stopStreaming(False)
         except Exception as e:
             log.error(e)
