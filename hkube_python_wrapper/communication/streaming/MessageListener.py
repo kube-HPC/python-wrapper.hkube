@@ -2,11 +2,12 @@ from hkube_python_wrapper.communication.zmq.streaming.ZMQListener import ZMQList
 from hkube_python_wrapper.util.encoding import Encoding
 from hkube_python_wrapper.util.logger import log
 import time
+from hkube_python_wrapper.util.DaemonThread import DaemonThread
 
+class MessageListener(DaemonThread):
 
-class MessageListener():
-
-    def __init__(self, options, receiverNode):
+    def __init__(self, options, receiverNode,isActiveFunc):
+        self.isActiveFunc = isActiveFunc
         remoteAddress = options['remoteAddress']
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
@@ -14,6 +15,7 @@ class MessageListener():
         self.adapater = ZMQListener(remoteAddress, self.onMessage, self._encoding, receiverNode, delay)
         self.messageOriginNodeName = options['messageOriginNodeName']
         self.messageListeners = []
+        DaemonThread.__init__(self, remoteAddress)
 
     def registerMessageListener(self, listener):
         self.messageListeners.append(listener)
@@ -34,6 +36,9 @@ class MessageListener():
 
     def fetch(self):
         self.adapater.fetch()
+    def run(self):
+        while(self.isActiveFunc()):
+            self.adapater.fetch()
 
     def close(self, force=True):
         closed = False
