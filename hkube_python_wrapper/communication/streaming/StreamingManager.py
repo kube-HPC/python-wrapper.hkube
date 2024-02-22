@@ -1,7 +1,7 @@
 import threading
+
 from .MessageListener import MessageListener
 from .MessageProducer import MessageProducer
-from .StreamingListener import StreamingListener
 from hkube_python_wrapper.util.logger import log, algorithmLogger
 
 
@@ -17,7 +17,6 @@ class StreamingManager():
         self._isStarted = False
         self.parsedFlows = {}
         self.defaultFlow = None
-        self._streamingListener = None
 
 
     def setParsedFlows(self, flows, defaultFlow):
@@ -48,9 +47,13 @@ class StreamingManager():
                 options.update(listenerConfig)
                 options['remoteAddress'] = remoteAddressUrl
                 options['messageOriginNodeName'] = parentName
-                listener = MessageListener(options, nodeName)
+                def is_active():
+                    return self._messageListeners[remoteAddressUrl] is not None and self.listeningToMessages # pylint: disable=cell-var-from-loop
+                listener = MessageListener(options, nodeName,is_active)
                 listener.registerMessageListener(self.onMessage)
                 self._messageListeners[remoteAddressUrl] = listener
+                if(self.listeningToMessages):
+                    listener.start()
 
             if (parent['type'] == 'Del'):
                 listener = self._messageListeners.get(remoteAddressUrl)
@@ -77,14 +80,15 @@ class StreamingManager():
         self.threadLocalStorage.messageFlowPattern = []
 
     def _getMessageListeners(self):
-        return list(self._messageListeners.values())
+        return self._messageListeners
 
     def startMessageListening(self):
         self.listeningToMessages = True
         if (self._isStarted is False):
             self._isStarted = True
-            self._streamingListener = StreamingListener(self._getMessageListeners)
-            self._streamingListener.start()
+            messageListeners = list(self._messageListeners.values())
+            for listener in messageListeners:
+                listener.start()
 
     def sendMessage(self, msg, flowName=None):
         if (self.messageProducer is None):
@@ -110,10 +114,13 @@ class StreamingManager():
         if (self.listeningToMessages):
             self._isStarted = False
             self.listeningToMessages = False
-            if (self._streamingListener):
-                self._streamingListener.stop(force)
+            messageListeners = list(self._messageListeners.values())
+            for listener in messageListeners:
+                listener.close(force)
+            for listener in messageListeners:
+                listener.join()
             self._messageListeners = dict()
-            self._inputListener = []
+            self._inputListener.clear()
 
         if (self.messageProducer is not None):
             self.messageProducer.close(force)
