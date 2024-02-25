@@ -75,8 +75,8 @@ class ZMQProducer(object):
                         message = self.messageQueue.pop(consumerType)
                         if (message):
                             messageFlowPattern, header, payload, appendTime = message
-                            flow = Flow(messageFlowPattern)
-                            flowMsg = self.encoding.encode(flow.getRestOfFlow(self.nodeName), plainEncode=True)
+                            flow = Flow(messageFlowPattern,self.nodeName)
+                            flowMsg = self.encoding.encode(flow.getRestOfFlow(), plainEncode=True)
                             frames = [address, signals.PPP_MSG, flowMsg, header, payload]
                             self.watingForResponse[address] = time.time()
                             queueTime = round((time.time() - appendTime) * 1000, 4)
