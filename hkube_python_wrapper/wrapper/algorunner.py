@@ -360,7 +360,7 @@ class Algorunner(DaemonThread):
             onStatistics, producerConfig, self._job.childs, nodeName)
 
     def _start(self, options):
-        if (self._job.isStreaming):
+        if (self._job and self._job.isStreaming):
             self.streamingManager.setParsedFlows(self._job.parsedFlow, self._job.defaultFlow)
             if (self._job.childs):
                 self._setupStreamingProducer(self._job.nodeName)
@@ -481,10 +481,9 @@ class Algorunner(DaemonThread):
                 else:
                     log.info('stopping gracefully')
 
-                if (self._job.isStreaming):
+                if (self._job and self._job.isStreaming):
                     if (forceStop is False):
                         stoppingState = True
-
                         def stopping():
                             while (stoppingState):
                                 self._sendCommand(messages.outgoing.stopping, None)

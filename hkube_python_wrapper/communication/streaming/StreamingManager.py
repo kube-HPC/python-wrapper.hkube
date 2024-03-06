@@ -48,7 +48,7 @@ class StreamingManager():
                 options['remoteAddress'] = remoteAddressUrl
                 options['messageOriginNodeName'] = parentName
                 def is_active():
-                    return self._messageListeners[remoteAddressUrl] is not None and self.listeningToMessages # pylint: disable=cell-var-from-loop
+                    return self._messageListeners.get(remoteAddressUrl) is not None and self.listeningToMessages # pylint: disable=cell-var-from-loop
                 listener = MessageListener(options, nodeName,is_active)
                 listener.registerMessageListener(self.onMessage)
                 self._messageListeners[remoteAddressUrl] = listener
