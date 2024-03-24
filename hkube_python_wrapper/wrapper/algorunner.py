@@ -357,7 +357,7 @@ class Algorunner(DaemonThread):
         producerConfig['encoding'] = config.discovery['encoding']
         producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
         self.streamingManager.setupStreamingProducer(
-            onStatistics, producerConfig, self._job.childs, nodeName)
+            config, producerConfig, self._job.childs, nodeName)
 
     def _start(self, options):
         if (self._job and self._job.isStreaming):

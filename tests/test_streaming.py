@@ -2,6 +2,7 @@ from hkube_python_wrapper.communication.streaming.StreamingManager import Stream
 from hkube_python_wrapper.communication.streaming.MessageListener import MessageListener
 from hkube_python_wrapper.communication.streaming.MessageProducer import MessageProducer
 import time
+from tests.configs import config
 
 parsedFlows = {
     'analyze': [{'source': 'A', 'next': ['B']}, {'source': 'B', 'next': ['C']}, {'source': 'C', 'next': ['D']}],
@@ -25,7 +26,7 @@ def test_streaming_flow():
     listen_config = {'encoding': 'msgpack', 'delay': 10}
     streamingManager = StreamingManager()
     streamingManager.setParsedFlows(parsedFlows, 'analyze')
-    streamingManager.setupStreamingProducer(statsInvoked, producer_config, [nodeName], 'A')
+    streamingManager.setupStreamingProducer(config, producer_config, [nodeName], 'A')
     streamingManager.setupStreamingListeners(listen_config, parents, nodeName)
     streamingManager.registerInputListener(onMessage)
     streamingManager.startMessageListening()
@@ -71,11 +72,11 @@ def test_streaming_manager():
 
     streamingManagerA = StreamingManager()
     streamingManagerA.setParsedFlows(parsedFlows, 'analyze')
-    streamingManagerA.setupStreamingProducer(statsInvoked, producer_configA, ['B'], 'A')
+    streamingManagerA.setupStreamingProducer(config, producer_configA, ['B'], 'A')
 
     streamingManagerB = StreamingManager()
     streamingManagerB.setParsedFlows(parsedFlows, 'analyze')
-    streamingManagerB.setupStreamingProducer(statsInvoked, producer_configB, ['C'], 'B')
+    streamingManagerB.setupStreamingProducer(config, producer_configB, ['C'], 'B')
     streamingManagerB.setupStreamingListeners(listen_config, parents1, 'B')
     streamingManagerB.registerInputListener(onMessageAtB)
     streamingManagerB.startMessageListening()
