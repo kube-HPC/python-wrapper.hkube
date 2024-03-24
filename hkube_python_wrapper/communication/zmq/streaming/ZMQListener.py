@@ -64,7 +64,7 @@ class ZMQListener(object):
                 time.sleep(0.01)
                 self._numberOfTimesSkipped += 1
         except Exception as e:
-            log.error('ZMQListener.fetch {e}', e=str(e))
+            log.error('Caught during fetch and handling {e}', e=str(e))
         finally:
             if (self._active is False):
                 self._working = False
