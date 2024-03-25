@@ -30,8 +30,14 @@ class ProducerRunner:
         while True:
             arg = self._processQueue.get()  # Get data from the queue
             if arg.get("action") == 'stop':
+                print ("got stop")
                 self.messageProducer.close(arg.get("force"))
+                print("stopeped")
+                self._processQueue.put("done");
+                print("sent back")
                 break  # Exit loop if 'exit' is received
+            if (arg.get("action")=="queuesize"):
+                self._processQueue.put(len(self.messageProducer.adapter.messageQueue.queue))
             self.messageProducer.produce(arg.get("flow"), arg.get("msg"))
 
     def _setupStreamingProducer(self, nodeName):
@@ -77,7 +83,7 @@ class ProducerRunner:
                 'command': messages.outgoing.error,
                 'error': {
                     'code': 'Failed',
-                    'message': self._errorMsg(error)
+                    'message': str(error)
                 }
             })
         except Exception as e:

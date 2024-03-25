@@ -532,14 +532,16 @@ class Algorunner(DaemonThread):
 
     def _checkQueueSize(self, event):
         if (self._job and self._job.isStreaming):
-            if (self.streamingManager.messageProducer):
+            if (self.streamingManager.processQueue):
                 try:
+                    self.streamingManager.processQueue.put({"action": "queuesize"})
+                    len = self.streamingManager.processQueue.get();
                     log.info('Messages left in queue on {event}={queue}', event=event,
-                             queue=str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
+                             queue=str(len))
                 except Exception:
                     log.error('Failed to print number of messages left in queue on {event}', event=event)
             else:
-                log.info('Queue size not reachable due to MessageProducer in different process {event}', event=event)
+                log.info('Queue size not reachable {event}', event=event)
 
     def _sendCommand(self, command, data):
         try:

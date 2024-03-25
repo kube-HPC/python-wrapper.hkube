@@ -26,8 +26,9 @@ class StreamingManager():
 
     def setupStreamingProducer(self, options, producerConfig, nextNodes, nodeName):
         self.nextNodes = nextNodes
+
         def method_in_new_process(queue, options, nextNodes, node):
-            producerRunner = ProducerRunner(queue, options, nextNodes,  producerConfig, node)
+            producerRunner = ProducerRunner(queue, options, nextNodes, producerConfig, node)
             producerRunner.run()
 
         self.processQueue = queue = multiprocessing.Queue()  # Create a queue
@@ -140,6 +141,9 @@ class StreamingManager():
 
         if (self.processQueue is not None):
             self.processQueue.put({"action": "stop", "force": True})
+            print("sent stop")
+            done = self.processQueue.get();
+            print("got " + str(done) + " stop from producer process")
 
     def clearMessageListeners(self):
         self._messageListeners = dict()
