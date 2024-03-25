@@ -539,7 +539,7 @@ class Algorunner(DaemonThread):
                 except Exception:
                     log.error('Failed to print number of messages left in queue on {event}', event=event)
             else:
-                log.info('MessageProducer already None on {event}', event=event)
+                log.info('Queue size not reachable due to MessageProducer in different process {event}', event=event)
 
     def _sendCommand(self, command, data):
         try:
