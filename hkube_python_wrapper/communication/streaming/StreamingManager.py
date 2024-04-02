@@ -17,24 +17,38 @@ class StreamingManager():
         self._isStarted = False
         self.parsedFlows = {}
         self.defaultFlow = None
-        self.processQueue = None
+        self.method_invoke_queue = None
         self.nextNodes = []
 
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
         self.defaultFlow = defaultFlow
 
-    def setupStreamingProducer(self, options, producerConfig, nextNodes, nodeName):
+    def setupStreamingProducer(self, options, onStatistics, producerConfig, nextNodes, nodeName):
         self.nextNodes = nextNodes
 
-        def method_in_new_process(queue, options, nextNodes, node):
-            producerRunner = ProducerRunner(queue, options, nextNodes, producerConfig, node)
+        def method_in_new_process(method_invoke_queue, statistics_queue, options, nextNodes, node):
+            producerRunner = ProducerRunner(method_invoke_queue, statistics_queue, options, nextNodes, producerConfig,
+                                            node)
             producerRunner.run()
 
-        self.processQueue = queue = multiprocessing.Queue()  # Create a queue
-
-        p = multiprocessing.Process(target=method_in_new_process, args=(queue, options, nextNodes, nodeName))
+        self.method_invoke_queue = multiprocessing.Queue()  # Create a queue
+        self.statistics_queue = multiprocessing.Queue()
+        p = multiprocessing.Process(target=method_in_new_process, args=(
+            self.method_invoke_queue, self.statistics_queue, options, nextNodes, nodeName))
         p.start()
+
+        def sendStatisticsEvery():
+            while (True):
+                try:
+                    statistics = self.statistics_queue.get()
+                    print("got stats")
+                    onStatistics(statistics)
+                except Exception as e:
+                    print(e)
+        runThread = threading.Thread(name="get-stats", target=sendStatisticsEvery)
+        runThread.daemon = True
+        runThread.start()
 
         # self.messageProducer = MessageProducer(producerConfig, nextNodes, nodeName)
         # self.messageProducer.registerStatisticsListener(onStatistics)
@@ -106,7 +120,7 @@ class StreamingManager():
                 listener.start()
 
     def sendMessage(self, msg, flowName=None):
-        if (self.processQueue is None):
+        if (self.method_invoke_queue is None):
             raise Exception(
                 'Trying to send a message from a none stream pipeline or after close had been applied on algorithm')
         if (self.nextNodes):
@@ -123,7 +137,7 @@ class StreamingManager():
                 parsedFlow = self.parsedFlows.get(flowName)
             if (parsedFlow is None):
                 raise Exception("No such flow " + flowName)
-            self.processQueue.put({"flow": parsedFlow, "msg": msg})
+            self.method_invoke_queue.put({"flow": parsedFlow, "msg": msg})
         else:
             log.error("messageProducer has no consumers")
 
@@ -139,10 +153,10 @@ class StreamingManager():
             self._messageListeners = dict()
             self._inputListener.clear()
 
-        if (self.processQueue is not None):
-            self.processQueue.put({"action": "stop", "force": True})
+        if (self.method_invoke_queue is not None):
+            self.method_invoke_queue.put({"action": "stop", "force": True})
             print("sent stop")
-            done = self.processQueue.get();
+            done = self.method_invoke_queue.get();
             print("got " + str(done) + " stop from producer process")
 
     def clearMessageListeners(self):

@@ -210,6 +210,7 @@ class Algorunner(DaemonThread):
         if (self._redirectLogs):
             self._url += '&hostname={hostname}'.format(hostname=url_encode(platform.node()))
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
+        self._wsc2 = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initDataAdapter(options)
         self.streamingManager = StreamingManager()
         self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage, self.streamingManager)
@@ -217,6 +218,7 @@ class Algorunner(DaemonThread):
 
         log.info('connecting to {url}', url=self._url)
         self._wsc.start()
+        self._wsc2.start()
         self.start()
         return [self._wsc, self]
 
@@ -357,14 +359,13 @@ class Algorunner(DaemonThread):
         producerConfig['encoding'] = config.discovery['encoding']
         producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
         self.streamingManager.setupStreamingProducer(
-            config, producerConfig, self._job.childs, nodeName)
+            config, onStatistics, producerConfig, self._job.childs, nodeName)
 
     def _start(self, options):
         if (self._job and self._job.isStreaming):
             self.streamingManager.setParsedFlows(self._job.parsedFlow, self._job.defaultFlow)
             if (self._job.childs):
                 self._setupStreamingProducer(self._job.nodeName)
-                self.streamingManager.clearMessageListeners()
         # pylint: disable=unused-argument
         span = None
         self._initDataServer(config)
@@ -532,10 +533,10 @@ class Algorunner(DaemonThread):
 
     def _checkQueueSize(self, event):
         if (self._job and self._job.isStreaming):
-            if (self.streamingManager.processQueue):
+            if (self.streamingManager.method_invoke_queue):
                 try:
-                    self.streamingManager.processQueue.put({"action": "queuesize"})
-                    len = self.streamingManager.processQueue.get();
+                    self.streamingManager.method_invoke_queue.put({"action": "queuesize"})
+                    len = self.streamingManager.method_invoke_queue.get();
                     log.info('Messages left in queue on {event}={queue}', event=event,
                              queue=str(len))
                 except Exception:
