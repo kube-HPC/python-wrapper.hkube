@@ -4,7 +4,7 @@
 Hkube python wrapper provides a simple interface for integrating algorithm in HKube
 
 For general information on HKube see [hkube.io](http://hkube.io/)
-## Installation
+## Installation 
 ```shell
 pip install hkube-python-wrapper
 ```
