@@ -1,7 +1,7 @@
 import zmq
 import uuid
 import time
-from hkube_python_wrapper.util.logger import log
+from hkube_python_wrapper.util.logger import log, algorithmLogger
 from hkube_python_wrapper.communication.zmq.streaming import signals
 
 context = zmq.Context()
@@ -61,9 +61,10 @@ class ZMQListener(object):
                 self._send(signals.PPP_READY)
                 self._readMessage()
             else:
-                time.sleep(0.01)
+                time.sleep(0.2)
                 self._numberOfTimesSkipped += 1
         except Exception as e:
+            algorithmLogger.exception(e)
             log.error('Caught during fetch and handling {e}', e=str(e))
         finally:
             if (self._active is False):

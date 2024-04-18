@@ -360,6 +360,7 @@ class Algorunner(DaemonThread):
             config, onStatistics, producerConfig, self._job.childs, nodeName)
 
     def _start(self, options):
+        log.debug("My IP IS " + str(config.discovery['host']))
         if (self._job and self._job.isStreaming):
             self.streamingManager.setParsedFlows(self._job.parsedFlow, self._job.defaultFlow)
             if (self._job.childs):
