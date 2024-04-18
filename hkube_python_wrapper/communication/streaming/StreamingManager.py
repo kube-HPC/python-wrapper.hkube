@@ -19,6 +19,7 @@ class StreamingManager():
         self.defaultFlow = None
         self.method_invoke_queue = None
         self.nextNodes = []
+        self.statistics_queue = None
 
     def setParsedFlows(self, flows, defaultFlow):
         self.parsedFlows = flows
@@ -156,7 +157,7 @@ class StreamingManager():
         if (self.method_invoke_queue is not None):
             self.method_invoke_queue.put({"action": "stop", "force": True})
             print("sent stop")
-            done = self.method_invoke_queue.get();
+            done = self.method_invoke_queue.get()
             print("got " + str(done) + " stop from producer process")
 
     def clearMessageListeners(self):

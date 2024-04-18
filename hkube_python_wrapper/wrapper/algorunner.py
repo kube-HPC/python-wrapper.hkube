@@ -210,7 +210,6 @@ class Algorunner(DaemonThread):
         if (self._redirectLogs):
             self._url += '&hostname={hostname}'.format(hostname=url_encode(platform.node()))
         self._wsc = WebsocketClient(self._msg_queue, encoding, self._url)
-        self._wsc2 = WebsocketClient(self._msg_queue, encoding, self._url)
         self._initDataAdapter(options)
         self.streamingManager = StreamingManager()
         self._hkubeApi = HKubeApi(self._wsc, self, self._dataAdapter, self._storage, self.streamingManager)
@@ -218,7 +217,6 @@ class Algorunner(DaemonThread):
 
         log.info('connecting to {url}', url=self._url)
         self._wsc.start()
-        self._wsc2.start()
         self.start()
         return [self._wsc, self]
 
@@ -536,7 +534,7 @@ class Algorunner(DaemonThread):
             if (self.streamingManager.method_invoke_queue):
                 try:
                     self.streamingManager.method_invoke_queue.put({"action": "queuesize"})
-                    len = self.streamingManager.method_invoke_queue.get();
+                    len = self.streamingManager.method_invoke_queue.get()
                     log.info('Messages left in queue on {event}={queue}', event=event,
                              queue=str(len))
                 except Exception:
