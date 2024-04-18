@@ -357,14 +357,13 @@ class Algorunner(DaemonThread):
         producerConfig['encoding'] = config.discovery['encoding']
         producerConfig['statisticsInterval'] = config.discovery['streaming']['statisticsInterval']
         self.streamingManager.setupStreamingProducer(
-            onStatistics, producerConfig, self._job.childs, nodeName)
+            config, onStatistics, producerConfig, self._job.childs, nodeName)
 
     def _start(self, options):
         if (self._job and self._job.isStreaming):
             self.streamingManager.setParsedFlows(self._job.parsedFlow, self._job.defaultFlow)
             if (self._job.childs):
                 self._setupStreamingProducer(self._job.nodeName)
-                self.streamingManager.clearMessageListeners()
         # pylint: disable=unused-argument
         span = None
         self._initDataServer(config)
@@ -532,14 +531,16 @@ class Algorunner(DaemonThread):
 
     def _checkQueueSize(self, event):
         if (self._job and self._job.isStreaming):
-            if (self.streamingManager.messageProducer):
+            if (self.streamingManager.method_invoke_queue):
                 try:
+                    self.streamingManager.method_invoke_queue.put({"action": "queuesize"})
+                    len = self.streamingManager.method_invoke_queue.get()
                     log.info('Messages left in queue on {event}={queue}', event=event,
-                             queue=str(len(self.streamingManager.messageProducer.adapter.messageQueue.queue)))
+                             queue=str(len))
                 except Exception:
                     log.error('Failed to print number of messages left in queue on {event}', event=event)
             else:
-                log.info('MessageProducer already None on {event}', event=event)
+                log.info('Queue size not reachable {event}', event=event)
 
     def _sendCommand(self, command, data):
         try:

@@ -56,6 +56,7 @@ class HKubeApi:
         return self.streamingManager.listeningToMessages
 
     def get_streaming_statistics(self):
+        # Not supported since done in separate process
         if (self.streamingManager.messageProducer is not None):
             return self.streamingManager.messageProducer.getStatistics()
         print("get_streaming_statistics returns no value in debug")
@@ -245,12 +246,14 @@ class HKubeApi:
         return self._waitForResult(execution)
     # reset all pending messages to zero.
     def resetQueue(self):
+        # Not supported since done in separate process
         if (self.streamingManager.messageProducer is not None):
             self.streamingManager.resetQueue()
         else:
             log.info('reset queue does not work when debuging localy')
 
     def resetQueuePartial(self, numberOfMessagesToRemove):
+        # Not supported since done in separate process
         if (self.streamingManager.messageProducer is not None):
             self.streamingManager.resetQueuePartial(numberOfMessagesToRemove)
         else:
