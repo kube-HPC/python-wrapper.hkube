@@ -6,8 +6,8 @@ from hkube_python_wrapper.util.DaemonThread import DaemonThread
 
 class MessageListener(DaemonThread):
 
-    def __init__(self, options, receiverNode,isActiveFunc):
-        self.isActiveFunc = isActiveFunc
+    def __init__(self, options, receiverNode):
+        self.isActive = True
         remoteAddress = options['remoteAddress']
         encodingType = options['encoding']
         self._encoding = Encoding(encodingType)
@@ -37,10 +37,12 @@ class MessageListener(DaemonThread):
     def fetch(self):
         self.adapater.fetch()
     def run(self):
-        while(self.isActiveFunc()):
+        while(self.isActive):
             self.adapater.fetch()
+        log.debug("done fetching")
 
     def close(self, force=True):
+        self.isActive = False
         closed = False
         try:
             closed = self.adapater.close(force)
