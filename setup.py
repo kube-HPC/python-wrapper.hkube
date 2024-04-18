@@ -6,7 +6,9 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-VERSION = '2.6.0-dev12'
+
+VERSION = '2.6.0-dev13'
+
 
 
 
