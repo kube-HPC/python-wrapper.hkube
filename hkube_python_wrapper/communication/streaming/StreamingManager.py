@@ -43,7 +43,6 @@ class StreamingManager():
             while (True):
                 try:
                     statistics = self.statistics_queue.get()
-                    print("got stats")
                     onStatistics(statistics)
                 except Exception as e:
                     print(e)
