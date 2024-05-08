@@ -37,6 +37,7 @@ class MessageListener(DaemonThread):
     def fetch(self):
         self.adapater.fetch()
     def run(self):
+        log.debug("Thread started for " + str(self.messageOriginNodeName) + " active:" + str(self.isActive))
         while(self.isActive):
             self.adapater.fetch()
         log.debug("done fetching")

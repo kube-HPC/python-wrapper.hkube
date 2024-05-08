@@ -107,6 +107,7 @@ class StreamingManager():
         return self._messageListeners
 
     def startMessageListening(self):
+        log.debug("starting message listening")
         self.listeningToMessages = True
         if (self._isStarted is False):
             self._isStarted = True
