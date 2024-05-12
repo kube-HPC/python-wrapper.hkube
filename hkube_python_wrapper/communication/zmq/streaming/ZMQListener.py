@@ -10,9 +10,9 @@ MAX_POLLS = 5
 
 
 class ZMQListener(object):
-    def __init__(self, remoteAddress, onMessage, encoding, consumerType,delay):
+    def __init__(self, remoteAddress, onMessage, encoding, consumerType, delay):
         self._encoding = encoding
-        self.max_skips = delay/10
+        self.max_skips = delay / 10
         self._onMessage = onMessage
         self._consumerType = self._encoding.encode(consumerType, plainEncode=True)
         self._active = True
@@ -64,8 +64,13 @@ class ZMQListener(object):
                 time.sleep(0.2)
                 self._numberOfTimesSkipped += 1
         except Exception as e:
-            algorithmLogger.exception(e)
-            log.error('Caught during fetch and handling {e}', e=str(e))
+            print("Error occurred during fetching,readingMessage or message handling by algorithm")
+            print("Error occurred error is" + str(e))
+            try:
+                algorithmLogger.exception(e)
+                log.error('Caught during fetch and handling {e}', e=str(e))
+            except Exception as e:
+                print("Exception during error handling " + str(e))
         finally:
             if (self._active is False):
                 self._working = False
