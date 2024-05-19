@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
+import threading
 import time
 
 from hkube_python_wrapper.util.DaemonThread import DaemonThread
@@ -50,6 +51,7 @@ class Algorunner(DaemonThread):
         self._runningStartThread = None
         self._stopped = False
         self._redirectLogs = False
+        self._printThread = 0
         DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
@@ -349,6 +351,12 @@ class Algorunner(DaemonThread):
 
     def _setupStreamingProducer(self, nodeName):
         def onStatistics(statistics):
+            thread_list = ""
+            self._printThread = self._printThread  + 1
+            for thread in threading.enumerate():
+                thread_list = thread_list + " " + str(thread.name)
+            if (self._printThread % 30 == 0):
+                log.debug("thread list: " + thread_list)
             self._sendCommand(messages.outgoing.streamingStatistics, statistics)
 
         producerConfig = {}
