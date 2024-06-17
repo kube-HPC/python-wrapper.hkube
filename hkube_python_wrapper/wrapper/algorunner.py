@@ -315,6 +315,7 @@ class Algorunner(DaemonThread):
         if (self._algorithm):
             return self._algorithm.get(name)
         return None
+
     def _init(self, options):
         redirector = None
         try:
@@ -345,14 +346,14 @@ class Algorunner(DaemonThread):
 
     def _discovery_update(self, discovery):
         log.debug('Got discovery update {discovery}', discovery=discovery)
-        messageListenerConfig = {'encoding': config.discovery['encoding'],'delay':config.discovery['delay']}
+        messageListenerConfig = {'encoding': config.discovery['encoding'], 'delay': config.discovery['delay']}
         self.streamingManager.setupStreamingListeners(
             messageListenerConfig, discovery, self._job.nodeName)
 
     def _setupStreamingProducer(self, nodeName):
         def onStatistics(statistics):
             thread_list = ""
-            self._printThread = self._printThread  + 1
+            self._printThread = self._printThread + 1
             for thread in threading.enumerate():
                 thread_list = thread_list + " " + str(thread.name)
             if (self._printThread % 30 == 0):
@@ -492,6 +493,7 @@ class Algorunner(DaemonThread):
                 if (self._job and self._job.isStreaming):
                     if (forceStop is False):
                         stoppingState = True
+
                         def stopping():
                             while (stoppingState):
                                 self._sendCommand(messages.outgoing.stopping, None)
@@ -559,7 +561,7 @@ class Algorunner(DaemonThread):
 
     def sendError(self, error):
         try:
-            log.error(error)
+            log.error("Sending error to worker " + str(error))
             self._wsc.send({
                 'command': messages.outgoing.error,
                 'error': {
