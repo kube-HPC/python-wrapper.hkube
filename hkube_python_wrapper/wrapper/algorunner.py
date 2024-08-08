@@ -52,6 +52,7 @@ class Algorunner(DaemonThread):
         self._stopped = False
         self._redirectLogs = False
         self._printThread = 0
+        self._done = False
         DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
@@ -316,6 +317,16 @@ class Algorunner(DaemonThread):
             return self._algorithm.get(name)
         return None
 
+    def _aliveSignal(self):
+        def routine():
+            while not self._done:
+                time.sleep(5)
+                self._sendCommand(messages.outgoing.alive, None)
+                print("stopped is: ", self._stopped)
+
+        thread = threading.Thread(target=routine)
+        thread.start()
+
     def _init(self, options):
         redirector = None
         try:
@@ -335,6 +346,8 @@ class Algorunner(DaemonThread):
                     if (method is not None):
                         method(options)
                 self._sendCommand(messages.outgoing.initialized, None)
+                self._done = False
+                self._aliveSignal()
 
         except Exception as e:
             self.sendError(e)
@@ -343,6 +356,7 @@ class Algorunner(DaemonThread):
                 redirector.flush()
                 redirector.events.on_data -= self._log_message
                 redirector.cleanup()
+
 
     def _discovery_update(self, discovery):
         log.debug('Got discovery update {discovery}', discovery=discovery)
@@ -405,6 +419,7 @@ class Algorunner(DaemonThread):
             method = self._getMethod('start')
             algorithmData = method(self._input, self._hkubeApi)
             if not (self._stopped):
+                self._done = True
                 self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)
 
         except Exception as e:
