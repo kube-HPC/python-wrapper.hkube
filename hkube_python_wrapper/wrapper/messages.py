@@ -22,6 +22,7 @@ class Outgoing(object):
         self.streamingOutMessage = "streamingOutMessage"
         self.streamingInMessageDone = "streamingInMessageDone"
         self.logData = "logData"
+        self.alive = "alive"
 
 
 class Incoming(object):
