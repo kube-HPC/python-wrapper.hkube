@@ -418,8 +418,8 @@ class Algorunner(DaemonThread):
                     method(self._input)
             method = self._getMethod('start')
             algorithmData = method(self._input, self._hkubeApi)
+            self._done = True
             if not (self._stopped):
-                self._done = True
                 self._handle_response(algorithmData, jobId, taskId, nodeName, savePaths, span)
 
         except Exception as e:
