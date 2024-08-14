@@ -52,7 +52,7 @@ class Algorunner(DaemonThread):
         self._stopped = False
         self._redirectLogs = False
         self._printThread = 0
-        self._done = False
+        self._done = True
         DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
@@ -319,10 +319,10 @@ class Algorunner(DaemonThread):
 
     def _aliveSignal(self):
         def routine():
-            while not self._done:
-                time.sleep(5)
+            while not self._done and not self.stopped:
                 self._sendCommand(messages.outgoing.alive, None)
                 print("stopped is: ", self._stopped)
+                time.sleep(5)
 
         thread = threading.Thread(target=routine)
         thread.start()
@@ -356,7 +356,6 @@ class Algorunner(DaemonThread):
                 redirector.flush()
                 redirector.events.on_data -= self._log_message
                 redirector.cleanup()
-
 
     def _discovery_update(self, discovery):
         log.debug('Got discovery update {discovery}', discovery=discovery)
