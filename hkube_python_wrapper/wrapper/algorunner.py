@@ -53,6 +53,7 @@ class Algorunner(DaemonThread):
         self._redirectLogs = False
         self._printThread = 0
         self._done = True
+        self._error = False
         DaemonThread.__init__(self, "WorkerListener")
 
     @staticmethod
@@ -319,9 +320,8 @@ class Algorunner(DaemonThread):
 
     def _aliveSignal(self):
         def routine():
-            while not self._done and not self.stopped:
+            while not self._done and not self._stopped and not self._error:
                 self._sendCommand(messages.outgoing.alive, None)
-                print("stopped is: ", self._stopped)
                 time.sleep(5)
 
         thread = threading.Thread(target=routine)
@@ -575,6 +575,7 @@ class Algorunner(DaemonThread):
 
     def sendError(self, error):
         try:
+            self._error = True
             log.error("Sending error to worker " + str(error))
             self._wsc.send({
                 'command': messages.outgoing.error,
