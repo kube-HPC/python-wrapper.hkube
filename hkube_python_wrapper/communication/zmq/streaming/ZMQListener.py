@@ -64,13 +64,16 @@ class ZMQListener(object):
                 time.sleep(0.2)
                 self._numberOfTimesSkipped += 1
         except Exception as e:
-            print("Error occurred during fetching,readingMessage or message handling by algorithm")
-            print("Error occurred error is" + str(e))
-            try:
-                algorithmLogger.exception(e)
-                log.error('Caught during fetch and handling {e}', e=str(e))
-            except Exception as e:
-                print("Exception during error handling " + str(e))
+            if(hasattr(e, 'strerror') and e.strerror == 'Socket operation on non-socket'):
+                log.info(self._remoteAddress + " already closed")
+            else:
+                print("Error occurred during fetching,readingMessage or message handling by algorithm")
+                print("Error occurred error is" + str(e))
+                try:
+                    algorithmLogger.exception(e)
+                    log.error('Caught during fetch and handling {e}', e=str(e))
+                except Exception as e:
+                    print("Exception during error handling " + str(e))
         finally:
             if (self._active is False):
                 self._working = False
@@ -106,11 +109,16 @@ class ZMQListener(object):
                 time.sleep(0.02)
 
             if (self._pollTimeoutCount):
-                log.warning('trying to read message from socket after close')
-                hasMsg = self._readMessage(timeout=POLL_MS * 5)
-                if (hasMsg):
-                    log.warning('success reading message from socket after close')
-
+                try:
+                    hasMsg = self._readMessage(timeout=POLL_MS * 5)
+                except Exception as e:
+                    print("Error occurred readingMessage or message handling by algorithm during close")
+                    print("Error occurred error is" + str(e))
+                    try:
+                        algorithmLogger.exception(e)
+                        log.error('Caught during close and message handling {e}', e=str(e))
+                    except Exception as e:
+                        print("Exception during error handling " + str(e))
             self._worker.close()
             closed = True
         return closed
