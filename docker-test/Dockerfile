@@ -1,4 +1,4 @@
-FROM python:3.6
+FROM python:3.14.0a3
 ADD requirements.txt /hkube/algorithm-runner/requirements.txt
 WORKDIR /hkube/algorithm-runner
 RUN pip3 install -r requirements.txt
