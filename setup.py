@@ -20,7 +20,7 @@ requires = [
     'Events==0.4',
     'websocket-client==0.57.0',
     'simplejson==3.17.2',
-    'pymongo==8.0.4',
+    'pymongo==4.10.1',
     'msgpack==1.0.2',
     'boto3<=1.17.20',
     "wsaccel==0.6.2",
