@@ -110,7 +110,7 @@ class ZMQListener(object):
 
             if (self._pollTimeoutCount):
                 try:
-                    hasMsg = self._readMessage(timeout=POLL_MS * 5)
+                    self._readMessage(timeout=POLL_MS * 5)
                 except Exception as e:
                     print("Error occurred readingMessage or message handling by algorithm during close")
                     print("Error occurred error is" + str(e))
