@@ -13,7 +13,6 @@ VERSION = '2.6.0-dev26'
 
 
 
-
 packages = setuptools.find_packages()
 
 requires = [
