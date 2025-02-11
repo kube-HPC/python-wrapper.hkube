@@ -84,7 +84,7 @@ class ZMQListener(object):
         if (result == zmq.POLLIN):
             self._pollTimeoutCount = 0
             frames = self._worker.recv_multipart()
-            signal = frames[0]
+            signal = frames[0] # pylint: disable=E1136
 
             if (signal == signals.PPP_MSG):
                 hasMsg = True
