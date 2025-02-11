@@ -29,8 +29,8 @@ class DataRequest:
             responseFrames = adapter.invokeAdapter()
             results = []
             for i in range(0, int(len(responseFrames)/2)):
-                header = responseFrames[i*2]
-                content = responseFrames[i*2+1]
+                header = responseFrames[i*2]     # pylint: disable=E1136
+                content = responseFrames[i*2+1]   # pylint: disable=E1136
                 decoded = self.encoding.decode(header=header, value=content)
                 results.append((len(content), decoded))
             return results
